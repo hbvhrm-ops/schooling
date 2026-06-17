@@ -1,20 +1,32 @@
-# Use an official Python runtime as a parent image
-FROM python:3.10-slim
+# Stage 1: Build the application
+FROM node:20-alpine AS builder
+WORKDIR /app
 
-# Set the working directory in the container
-WORKDIR /code
+# Install dependencies based on the preferred package manager
+COPY package*.json ./
+RUN npm ci
 
-# Copy the requirements file first to leverage Docker cache
-COPY ./requirements.txt /code/requirements.txt
-
-# Install dependencies
-RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
-
-# Copy the rest of your application code
+# Copy project files and build the Next.js app
 COPY . .
+RUN npm run build
 
-# Expose the port Hugging Face expects (Default is 7860)
+# Stage 2: Production image runner
+FROM node:20-alpine AS runner
+WORKDIR /app
+
+# Hugging Face Spaces environment configurations
+ENV NODE_ENV=production
+ENV PORT=7860
+ENV HOSTNAME="0.0.0.0"
+
+# Copy built application and required production assets
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Expose the specific port Hugging Face demands
 EXPOSE 7860
 
-# Command to run your app (adjust this to your specific entry point, e.g., app.py or main.py)
-CMD ["python", "app.py"]
+# Start the Next.js production server
+CMD ["npm", "run", "start"]
