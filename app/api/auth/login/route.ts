@@ -18,8 +18,8 @@ export async function POST(req: NextRequest) {
       const response = NextResponse.json({ role: 'admin', success: true })
       response.cookies.set('session', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         maxAge: 60 * 60 * 24 * 7, // 7 days
         path: '/',
       })
@@ -56,8 +56,8 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json({ role: 'school', success: true, schoolName: school.name })
     response.cookies.set('session', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 60 * 60 * 24 * 7,
       path: '/',
     })
