@@ -21,12 +21,12 @@ export async function GET() {
       supabase.from('fee_invoices').select('amount, status, paid_date, students(name)').eq('school_id', schoolId).order('paid_date', { ascending: false }).limit(5),
     ])
 
-    const students = studentsRes.data || []
-    const totalStudents = students.filter(s => s.status === 'active').length
-    const dischargedStudents = students.filter(s => s.status === 'discharged').length
-    const newAdmissions = students.filter(s => new Date(s.created_at) >= new Date(monthStart)).length
-    const feeCollected = (feeRes.data || []).reduce((sum, f) => sum + (Number(f.amount) || 0), 0)
-    const totalExpenses = (expensesRes.data || []).reduce((sum, e) => sum + (Number(e.amount) || 0), 0)
+    const students = (studentsRes.data || []) as any[]
+    const totalStudents = students.filter((s: any) => s.status === 'active').length
+    const dischargedStudents = students.filter((s: any) => s.status === 'discharged').length
+    const newAdmissions = students.filter((s: any) => new Date(s.created_at) >= new Date(monthStart)).length
+    const feeCollected = (feeRes.data || []).reduce((sum: number, f: any) => sum + (Number(f.amount) || 0), 0)
+    const totalExpenses = (expensesRes.data || []).reduce((sum: number, e: any) => sum + (Number(e.amount) || 0), 0)
     const profit = feeCollected - totalExpenses
 
     const recentFee = (recentFeeRes.data || []).map((f: { students?: { name: string } | { name: string }[] | null; amount: number; paid_date: string; status: string }) => ({

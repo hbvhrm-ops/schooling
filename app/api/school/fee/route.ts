@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
 
     const invoices = []
     for (const student of (students || [])) {
-      const applicableTemplates = (templates || []).filter(t => {
+      const applicableTemplates = (templates || []).filter((t: any) => {
         const c = (criteria || []).find((cr: { fee_template_id: string; class_id: string }) => cr.fee_template_id === t.id)
         return !c || c.class_id === student.class_id
       })

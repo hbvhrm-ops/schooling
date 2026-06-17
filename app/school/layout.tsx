@@ -3,7 +3,19 @@ import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { useState } from 'react'
 
-const navGroups = [
+interface NavItem {
+  href: string;
+  label: string;
+  icon: string;
+  exact?: boolean;
+}
+
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
     label: 'Overview',
     items: [
