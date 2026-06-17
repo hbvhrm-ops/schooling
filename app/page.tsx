@@ -22,8 +22,18 @@ export default function LoginPage() {
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error || 'Invalid credentials'); return }
-      if (data.role === 'admin') router.push('/admin')
-      else router.push('/school')
+      const redirectPath = data.role === 'admin' ? '/admin' : '/school'
+      if (typeof window !== 'undefined') {
+        try {
+          if (window.top) {
+            window.top.location.href = redirectPath
+          } else {
+            window.location.href = redirectPath
+          }
+        } catch {
+          window.location.href = redirectPath
+        }
+      }
     } catch {
       setError('Connection error. Please try again.')
     } finally {
