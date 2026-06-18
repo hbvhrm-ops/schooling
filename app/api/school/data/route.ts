@@ -9,6 +9,25 @@ function toCSV(data: Record<string, unknown>[]): string {
   return [headers.join(','), ...rows].join('\n')
 }
 
+function normalizeDate(dateStr: string | undefined | null): string | null {
+  if (!dateStr || !dateStr.trim()) return null
+  const cleaned = dateStr.trim()
+  
+  // Match DD/MM/YYYY or DD-MM-YYYY
+  const dmyMatch = cleaned.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})$/)
+  if (dmyMatch) {
+    const [, d, m, y] = dmyMatch
+    return `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`
+  }
+
+  // Pass through if already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleaned)) {
+    return cleaned
+  }
+  
+  return null
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -74,13 +93,13 @@ export async function POST(req: NextRequest) {
 
     const studentsToInsert = validRows.map(row => {
       const className = row.class || row.class_name || ''
-      const classObj = classesList.find((c: any) => c.name.trim().toLowerCase() === className.trim().toLowerCase())
+      const classObj = classesList.find((c: { id: string; name: string }) => c.name.trim().toLowerCase() === className.trim().toLowerCase())
       const classId = classObj ? classObj.id : null
 
       let sectionId = null
       const sectionName = row.section || row.section_name || ''
       if (classId && sectionName) {
-        const sectionObj = sectionsList.find((s: any) => s.class_id === classId && s.name.trim().toLowerCase() === sectionName.trim().toLowerCase())
+        const sectionObj = sectionsList.find((s: { id: string; name: string; class_id: string }) => s.class_id === classId && s.name.trim().toLowerCase() === sectionName.trim().toLowerCase())
         sectionId = sectionObj ? sectionObj.id : null
       }
 
@@ -92,7 +111,7 @@ export async function POST(req: NextRequest) {
         section_id: sectionId,
         roll_no: row.roll_no?.trim() || null,
         gender: row.gender?.trim() || 'Male',
-        dob: row.dob?.trim() ? row.dob.trim() : null,
+        dob: normalizeDate(row.dob),
         contact: row.contact?.trim() || null,
         address: row.address?.trim() || null,
         status: 'active',
