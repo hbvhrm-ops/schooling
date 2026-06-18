@@ -103,12 +103,20 @@ export default function SlcPage() {
     setSavingTemplate(true)
     setMsg(null)
 
+    const logoUrl = logoUrlForm.trim()
+    const logoRegex = /\.(pdf|png|jpg|jpeg)(\?.*)?$/i
+    if (logoUrl && !logoRegex.test(logoUrl)) {
+      setMsg({ type: 'danger', text: 'Logo URL must point to a .pdf, .png, .jpg, or .jpeg file.' })
+      setSavingTemplate(false)
+      return
+    }
+
     try {
       const res = await fetch('/api/school/slc-template', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          logo_url: logoUrlForm.trim(),
+          logo_url: logoUrl,
           title: titleForm.trim(),
           body_text: bodyTextForm,
           signature_title: signatureTitleForm.trim(),
