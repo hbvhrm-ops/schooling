@@ -105,6 +105,26 @@ export default function StudentsPage() {
     load()
   }
 
+  async function handleDeleteCustomField(id: string) {
+    if (!confirm('Are you sure you want to remove this custom field requirement? Existing student data won\'t be deleted, but this field will no longer be asked during registration.')) return
+    try {
+      const res = await fetch('/api/school/registration-fields', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMsg({ type: 'success', text: 'Field requirement removed successfully.' })
+        load()
+      } else {
+        setMsg({ type: 'danger', text: data.error || 'Failed to delete field' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Error connecting to the server' })
+    }
+  }
+
   function printID(student: Student) {
     const win = window.open('', '_blank')
     if (!win) return
@@ -289,9 +309,32 @@ export default function StudentsPage() {
                     const isRequired = field.is_required
                     return (
                       <div className="form-group" key={field.id}>
-                        <label className="form-label">
-                          {key} {isRequired && ' *'}
-                        </label>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                          <label className="form-label" style={{ margin: 0 }}>
+                            {key} {isRequired && ' *'}
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomField(field.id)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--danger)',
+                              fontSize: '0.75rem',
+                              cursor: 'pointer',
+                              padding: '0 0.25rem',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                              opacity: 0.7,
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
+                            onMouseLeave={e => { e.currentTarget.style.opacity = '0.7' }}
+                            title="Delete this custom field"
+                          >
+                            🗑️ Remove
+                          </button>
+                        </div>
                         {field.field_type === 'dropdown' ? (
                           <select
                             className="form-select"
@@ -524,9 +567,32 @@ export default function StudentsPage() {
                         const isRequired = field.is_required
                         return (
                           <div className="form-group" key={field.id}>
-                            <label className="form-label">
-                              {key} {isRequired && ' *'}
-                            </label>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.25rem' }}>
+                              <label className="form-label" style={{ margin: 0 }}>
+                                {key} {isRequired && ' *'}
+                              </label>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCustomField(field.id)}
+                                style={{
+                                  background: 'none',
+                                  border: 'none',
+                                  color: 'var(--danger)',
+                                  fontSize: '0.75rem',
+                                  cursor: 'pointer',
+                                  padding: '0 0.25rem',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '0.25rem',
+                                  opacity: 0.7,
+                                }}
+                                onMouseEnter={e => { e.currentTarget.style.opacity = '1' }}
+                                onMouseLeave={e => { e.currentTarget.style.opacity = '0.7' }}
+                                title="Delete this custom field"
+                              >
+                                🗑️ Remove
+                              </button>
+                            </div>
                             {field.field_type === 'dropdown' ? (
                               <select
                                 className="form-select"
