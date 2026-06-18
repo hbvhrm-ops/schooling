@@ -49,13 +49,61 @@ export async function POST(req: NextRequest) {
   const type = formData.get('type') as string
   if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 })
   const text = await file.text()
-  const lines = text.split('\n').filter(Boolean)
+  const lines = text.split(/\r?\n/).filter(Boolean)
   if (lines.length < 2) return NextResponse.json({ error: 'Empty CSV' }, { status: 400 })
   const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''))
   const rows = lines.slice(1).map(line => {
     const vals = line.split(',').map(v => v.trim().replace(/^"|"$/g, ''))
     return Object.fromEntries(headers.map((h, i) => [h, vals[i] || '']))
   })
-  // For now just return the count — actual DB insert depends on type
+
+  if (type === 'students') {
+    const validRows = rows.filter(row => row.name && row.name.trim())
+    if (validRows.length === 0) {
+      return NextResponse.json({ error: 'No valid student records with names found' }, { status: 400 })
+    }
+
+    const supabase = createServerClient()
+    const [classesRes, sectionsRes] = await Promise.all([
+      supabase.from('classes').select('id, name').eq('school_id', session.schoolId),
+      supabase.from('sections').select('id, name, class_id').eq('school_id', session.schoolId)
+    ])
+    
+    const classesList = classesRes.data || []
+    const sectionsList = sectionsRes.data || []
+
+    const studentsToInsert = validRows.map(row => {
+      const className = row.class || row.class_name || ''
+      const classObj = classesList.find((c: any) => c.name.trim().toLowerCase() === className.trim().toLowerCase())
+      const classId = classObj ? classObj.id : null
+
+      let sectionId = null
+      const sectionName = row.section || row.section_name || ''
+      if (classId && sectionName) {
+        const sectionObj = sectionsList.find((s: any) => s.class_id === classId && s.name.trim().toLowerCase() === sectionName.trim().toLowerCase())
+        sectionId = sectionObj ? sectionObj.id : null
+      }
+
+      return {
+        school_id: session.schoolId,
+        name: row.name.trim(),
+        father_name: row.father_name?.trim() || null,
+        class_id: classId,
+        section_id: sectionId,
+        roll_no: row.roll_no?.trim() || null,
+        gender: row.gender?.trim() || 'Male',
+        dob: row.dob?.trim() ? row.dob.trim() : null,
+        contact: row.contact?.trim() || null,
+        address: row.address?.trim() || null,
+        status: 'active',
+        additional_info: {}
+      }
+    })
+
+    const { error: insertError } = await supabase.from('students').insert(studentsToInsert)
+    if (insertError) return NextResponse.json({ error: insertError.message }, { status: 400 })
+    return NextResponse.json({ success: true, count: studentsToInsert.length })
+  }
+
   return NextResponse.json({ success: true, count: rows.length })
 }

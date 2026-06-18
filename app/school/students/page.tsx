@@ -55,6 +55,7 @@ export default function StudentsPage() {
   const [promoteFromClass, setPromoteFromClass] = useState('')
   const [promoteToClass, setPromoteToClass] = useState('')
   const [promoting, setPromoting] = useState(false)
+  const [uploadingCsv, setUploadingCsv] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -135,6 +136,42 @@ export default function StudentsPage() {
     setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
     setCustomForm({})
     load(); setSubmitting(false)
+  }
+
+  const handleCsvUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (!file.name.endsWith('.csv')) {
+      alert('Please upload a valid CSV file.')
+      return
+    }
+
+    setUploadingCsv(true)
+    setMsg(null)
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('type', 'students')
+
+    try {
+      const res = await fetch('/api/school/data', {
+        method: 'POST',
+        body: formData,
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMsg({ type: 'success', text: `Successfully enrolled ${data.count} students from CSV!` })
+        load()
+      } else {
+        setMsg({ type: 'danger', text: data.error || 'Failed to import CSV' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Error uploading file to server' })
+    } finally {
+      setUploadingCsv(false)
+      e.target.value = ''
+    }
   }
 
   async function handleDischarge(id: string) {
@@ -505,9 +542,15 @@ export default function StudentsPage() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Upload a CSV file to register multiple students at once.</p>
           <div style={{ background: 'var(--bg-surface)', borderRadius: '12px', padding: '1.5rem', border: '2px dashed var(--border)', textAlign: 'center', marginBottom: '1rem' }}>
             <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📄</div>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Drag & drop your CSV file here or click to browse</p>
-            <input type="file" accept=".csv" style={{ display: 'none' }} id="csv-upload" onChange={e => { const f = e.target.files?.[0]; if (f) alert(`File "${f.name}" selected. CSV import will be processed after Supabase is connected.`) }} />
-            <label htmlFor="csv-upload" className="btn btn-primary">📂 Choose CSV File</label>
+            {uploadingCsv ? (
+              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.2rem' }}>⏳ Processing enrollment CSV...</p>
+            ) : (
+              <>
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Drag & drop your CSV file here or click to browse</p>
+                <input type="file" accept=".csv" style={{ display: 'none' }} id="csv-upload" onChange={handleCsvUpload} />
+                <label htmlFor="csv-upload" className="btn btn-primary" style={{ cursor: 'pointer' }}>📂 Choose CSV File</label>
+              </>
+            )}
           </div>
           <div className="alert alert-info">
             <span>ℹ️</span> CSV columns: name, father_name, class, section, roll_no, gender, dob, contact, address
