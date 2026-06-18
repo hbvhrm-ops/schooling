@@ -220,6 +220,18 @@ CREATE TABLE IF NOT EXISTS budget (
   UNIQUE(school_id, month, year)
 );
 
+-- ── SLC Templates ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS slc_templates (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id       UUID REFERENCES schools(id) ON DELETE CASCADE,
+  logo_url        TEXT,
+  title           TEXT DEFAULT 'SCHOOL LEAVING CERTIFICATE',
+  body_text       TEXT NOT NULL,
+  signature_title TEXT DEFAULT 'Principal',
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(school_id)
+);
+
 -- ============================================================
 -- Row Level Security (RLS) — Recommended for production
 -- Disable anon access, only allow authenticated requests
@@ -232,6 +244,7 @@ ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
 ALTER TABLE registration_fields ENABLE ROW LEVEL SECURITY;
+ALTER TABLE slc_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exam_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE results ENABLE ROW LEVEL SECURITY;
@@ -256,6 +269,7 @@ CREATE POLICY "Allow all via anon" ON sections FOR ALL USING (true) WITH CHECK (
 CREATE POLICY "Allow all via anon" ON subjects FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON students FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON registration_fields FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all via anon" ON slc_templates FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON attendance FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON exam_types FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON results FOR ALL USING (true) WITH CHECK (true);
