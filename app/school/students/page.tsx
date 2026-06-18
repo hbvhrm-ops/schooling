@@ -49,6 +49,11 @@ export default function StudentsPage() {
   const [newFieldOptions, setNewFieldOptions] = useState('')
   const [addingField, setAddingField] = useState(false)
 
+  // Student promotion states
+  const [promoteFromClass, setPromoteFromClass] = useState('')
+  const [promoteToClass, setPromoteToClass] = useState('')
+  const [promoting, setPromoting] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
     const [sr, cr, fr] = await Promise.all([
@@ -122,6 +127,41 @@ export default function StudentsPage() {
       }
     } catch {
       setMsg({ type: 'danger', text: 'Error connecting to the server' })
+    }
+  }
+
+  async function handlePromoteStudents() {
+    if (!promoteFromClass || !promoteToClass) {
+      setMsg({ type: 'danger', text: 'Please select both source and target classes' })
+      return
+    }
+    if (promoteFromClass === promoteToClass) {
+      setMsg({ type: 'danger', text: 'Source and target classes must be different' })
+      return
+    }
+    if (!confirm('Are you sure you want to promote all active students from the selected class to the target class?')) return
+
+    setPromoting(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/school/students/promote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromClassId: promoteFromClass, toClassId: promoteToClass }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMsg({ type: 'success', text: 'Students promoted successfully!' })
+        setPromoteFromClass('')
+        setPromoteToClass('')
+        load() // Refresh students list
+      } else {
+        setMsg({ type: 'danger', text: data.error || 'Failed to promote students' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Error connecting to the server' })
+    } finally {
+      setPromoting(false)
     }
   }
 
@@ -411,14 +451,22 @@ export default function StudentsPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group">
               <label className="form-label">From Class</label>
-              <select className="form-select"><option value="">Select current class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <select className="form-select" value={promoteFromClass} onChange={e => setPromoteFromClass(e.target.value)}>
+                <option value="">Select current class</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
             <div className="form-group">
               <label className="form-label">To Class</label>
-              <select className="form-select"><option value="">Select target class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <select className="form-select" value={promoteToClass} onChange={e => setPromoteToClass(e.target.value)}>
+                <option value="">Select target class</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
             <div className="alert alert-warning"><span>⚠️</span> This will move all active students from the selected class to the new class.</div>
-            <button className="btn btn-primary">⬆️ Promote Students</button>
+            <button onClick={handlePromoteStudents} disabled={promoting} className="btn btn-primary">
+              {promoting ? '⏳ Promoting...' : '⬆️ Promote Students'}
+            </button>
           </div>
         </div>
       )}
