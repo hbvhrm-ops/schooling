@@ -47,20 +47,32 @@ CREATE TABLE IF NOT EXISTS subjects (
 
 -- ── Students ─────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS students (
-  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  school_id   UUID REFERENCES schools(id) ON DELETE CASCADE,
-  name        TEXT NOT NULL,
-  father_name TEXT,
-  class_id    UUID REFERENCES classes(id) ON DELETE SET NULL,
-  section_id  UUID REFERENCES sections(id) ON DELETE SET NULL,
-  roll_no     TEXT,
-  gender      TEXT DEFAULT 'Male',
-  dob         DATE,
-  contact     TEXT,
-  address     TEXT,
-  photo_url   TEXT,
-  status      TEXT DEFAULT 'active' CHECK (status IN ('active','discharged')),
-  created_at  TIMESTAMPTZ DEFAULT NOW()
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id       UUID REFERENCES schools(id) ON DELETE CASCADE,
+  name            TEXT NOT NULL,
+  father_name     TEXT,
+  class_id        UUID REFERENCES classes(id) ON DELETE SET NULL,
+  section_id      UUID REFERENCES sections(id) ON DELETE SET NULL,
+  roll_no         TEXT,
+  gender          TEXT DEFAULT 'Male',
+  dob             DATE,
+  contact         TEXT,
+  address         TEXT,
+  photo_url       TEXT,
+  status          TEXT DEFAULT 'active' CHECK (status IN ('active','discharged')),
+  additional_info JSONB DEFAULT '{}'::jsonb,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ── Registration Fields ──────────────────────────────────
+CREATE TABLE IF NOT EXISTS registration_fields (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id     UUID REFERENCES schools(id) ON DELETE CASCADE,
+  field_label   TEXT NOT NULL,
+  field_type    TEXT NOT NULL CHECK (field_type IN ('text', 'number', 'dropdown')),
+  field_options TEXT, -- comma-separated choices for dropdown
+  is_required   BOOLEAN DEFAULT FALSE,
+  created_at    TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ── Attendance ────────────────────────────────────────────
@@ -219,6 +231,7 @@ ALTER TABLE classes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subjects ENABLE ROW LEVEL SECURITY;
 ALTER TABLE students ENABLE ROW LEVEL SECURITY;
+ALTER TABLE registration_fields ENABLE ROW LEVEL SECURITY;
 ALTER TABLE attendance ENABLE ROW LEVEL SECURITY;
 ALTER TABLE exam_types ENABLE ROW LEVEL SECURITY;
 ALTER TABLE results ENABLE ROW LEVEL SECURITY;
@@ -242,6 +255,7 @@ CREATE POLICY "Allow all via anon" ON classes FOR ALL USING (true) WITH CHECK (t
 CREATE POLICY "Allow all via anon" ON sections FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON subjects FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON students FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all via anon" ON registration_fields FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON attendance FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON exam_types FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON results FOR ALL USING (true) WITH CHECK (true);

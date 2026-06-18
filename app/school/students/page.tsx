@@ -3,10 +3,18 @@ import { useState, useEffect, useCallback } from 'react'
 
 interface Student {
   id: string; name: string; father_name: string; class_name: string; section_name: string;
-  roll_no: string; gender: string; contact: string; status: string; reg_date: string; dob?: string
+  roll_no: string; gender: string; contact: string; status: string; reg_date: string; dob?: string;
+  additional_info?: Record<string, any>;
 }
 interface ClassItem { id: string; name: string }
 interface SectionItem { id: string; name: string; class_id: string }
+interface CustomField {
+  id: string
+  field_label: string
+  field_type: 'text' | 'number' | 'dropdown'
+  field_options: string | null
+  is_required: boolean
+}
 
 type Tab = 'list' | 'register' | 'bulk' | 'promote'
 
@@ -22,18 +30,22 @@ export default function StudentsPage() {
   const [showModal, setShowModal] = useState(false)
   const [viewStudent, setViewStudent] = useState<Student | null>(null)
   const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+  const [customFields, setCustomFields] = useState<CustomField[]>([])
+  const [customForm, setCustomForm] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
-    const [sr, cr] = await Promise.all([
+    const [sr, cr, fr] = await Promise.all([
       fetch('/api/school/students').then(r => r.json()).catch(() => ({})),
       fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
+      fetch('/api/school/registration-fields').then(r => r.json()).catch(() => ({})),
     ])
     setStudents(sr.students || [])
     setClasses(cr.classes || [])
     setSections(cr.sections || [])
+    setCustomFields(fr.fields || [])
     setLoading(false)
   }, [])
   useEffect(() => { load() }, [load])
@@ -48,11 +60,22 @@ export default function StudentsPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSubmitting(true); setMsg(null)
-    const r = await fetch('/api/school/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) })
+    
+    // Validate custom fields
+    const missing = customFields.filter(f => f.is_required && !customForm[f.field_label]?.trim())
+    if (missing.length > 0) {
+      setMsg({ type: 'danger', text: `Please fill in all required fields: ${missing.map(m => m.field_label).join(', ')}` })
+      setSubmitting(false)
+      return
+    }
+
+    const payload = { ...form, additional_info: customForm }
+    const r = await fetch('/api/school/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const d = await r.json()
     if (!r.ok) { setMsg({ type: 'danger', text: d.error || 'Failed' }); setSubmitting(false); return }
     setMsg({ type: 'success', text: 'Student registered successfully!' })
     setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+    setCustomForm({})
     load(); setSubmitting(false)
   }
 
@@ -221,9 +244,56 @@ export default function StudentsPage() {
               <div className="form-group"><label className="form-label">Contact</label><input className="form-input" value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></div>
             </div>
             <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
-            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+            
+            {/* Custom Dynamic Fields */}
+            {customFields.length > 0 && (
+              <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 2' }}>
+                <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Additional Information</h4>
+                <div className="grid-2" style={{ gap: '1rem' }}>
+                  {customFields.map(field => {
+                    const key = field.field_label
+                    const isRequired = field.is_required
+                    return (
+                      <div className="form-group" key={field.id}>
+                        <label className="form-label">
+                          {key} {isRequired && ' *'}
+                        </label>
+                        {field.field_type === 'dropdown' ? (
+                          <select
+                            className="form-select"
+                            value={customForm[key] || ''}
+                            onChange={e => setCustomForm(prev => ({ ...prev, [key]: e.target.value }))}
+                            required={isRequired}
+                          >
+                            <option value="">Select option</option>
+                            {(field.field_options || '').split(',').map(opt => {
+                              const trimmedOpt = opt.trim()
+                              return <option key={trimmedOpt} value={trimmedOpt}>{trimmedOpt}</option>
+                            })}
+                          </select>
+                        ) : (
+                          <input
+                            className="form-input"
+                            type={field.field_type === 'number' ? 'number' : 'text'}
+                            placeholder={`Enter ${key.toLowerCase()}`}
+                            value={customForm[key] || ''}
+                            onChange={e => setCustomForm(prev => ({ ...prev, [key]: e.target.value }))}
+                            required={isRequired}
+                          />
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', gridColumn: 'span 2' }}>
               <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? '⏳ Saving...' : '✅ Register Student'}</button>
-              <button type="button" className="btn btn-secondary" onClick={() => setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })}>🔄 Reset</button>
+              <button type="button" className="btn btn-secondary" onClick={() => {
+                setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+                setCustomForm({})
+              }}>🔄 Reset</button>
             </div>
           </form>
         </div>
@@ -293,6 +363,21 @@ export default function StudentsPage() {
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{v || '—'}</div>
                   </div>
                 ))}
+                
+                {/* Custom Dynamic Fields */}
+                {viewStudent.additional_info && Object.entries(viewStudent.additional_info).length > 0 && (
+                  <div style={{ gridColumn: 'span 2', marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                    <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem' }}>Additional Information</h4>
+                    <div className="grid-2" style={{ gap: '0.75rem' }}>
+                      {Object.entries(viewStudent.additional_info).map(([k, v]) => (
+                        <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
+                          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{String(v) || '—'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className="modal-footer">

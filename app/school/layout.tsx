@@ -54,6 +54,7 @@ const navGroups: NavGroup[] = [
       { href: '/school/staff', label: 'Staff', icon: '👥' },
       { href: '/school/data', label: 'Data Import/Export', icon: '🗄️' },
       { href: '/school/security', label: 'Security', icon: '🔐' },
+      { href: '/school/settings', label: 'Settings', icon: '⚙️' },
     ]
   },
 ]

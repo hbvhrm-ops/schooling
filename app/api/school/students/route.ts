@@ -11,11 +11,12 @@ export async function GET() {
     .select('*, classes(name), sections(name)')
     .eq('school_id', session.schoolId)
     .order('name')
-  const students = (data || []).map((s: { id: string; name: string; father_name: string; roll_no: string; gender: string; dob: string; contact: string; address: string; status: string; created_at: string; classes: { name: string } | null; sections: { name: string } | null }) => ({
+  const students = (data || []).map((s: any) => ({
     ...s,
     class_name: s.classes?.name || '',
     section_name: s.sections?.name || '',
     reg_date: s.created_at,
+    additional_info: s.additional_info || {},
   }))
   return NextResponse.json({ students })
 }
@@ -37,6 +38,7 @@ export async function POST(req: NextRequest) {
     contact: body.contact || null,
     address: body.address || null,
     status: 'active',
+    additional_info: body.additional_info || {},
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ student: data }, { status: 201 })
