@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 interface Student {
   id: string; name: string; father_name: string; class_name: string; section_name: string;
   roll_no: string; gender: string; contact: string; status: string; reg_date: string; dob?: string;
+  address?: string;
   additional_info?: Record<string, any>;
 }
 interface ClassItem { id: string; name: string }
@@ -34,6 +35,19 @@ export default function StudentsPage() {
   const [customForm, setCustomForm] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
+
+  // Edit student states
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null)
+  const [editForm, setEditForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+  const [editCustomForm, setEditCustomForm] = useState<Record<string, string>>({})
+  const [editingSubmitting, setEditingSubmitting] = useState(false)
+
+  // Inline custom field creation states
+  const [showAddFieldModal, setShowAddFieldModal] = useState(false)
+  const [newFieldLabel, setNewFieldLabel] = useState('')
+  const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'dropdown'>('text')
+  const [newFieldOptions, setNewFieldOptions] = useState('')
+  const [addingField, setAddingField] = useState(false)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -192,7 +206,22 @@ export default function StudentsPage() {
                         <td><span className={`badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{s.status}</span></td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
-                            <button onClick={() => setViewStudent(s)} className="btn btn-secondary btn-sm">👁️</button>
+                            <button onClick={() => setViewStudent(s)} className="btn btn-secondary btn-sm" title="View Profile">👁️</button>
+                            <button type="button" onClick={() => {
+                              setEditingStudent(s)
+                              setEditForm({
+                                name: s.name || '',
+                                father_name: s.father_name || '',
+                                class_id: classes.find(c => c.name === s.class_name)?.id || '',
+                                section_id: sections.find(sec => sec.name === s.section_name)?.id || '',
+                                roll_no: s.roll_no || '',
+                                gender: s.gender || 'Male',
+                                dob: s.dob || '',
+                                contact: s.contact || '',
+                                address: s.address || '',
+                              })
+                              setEditCustomForm(s.additional_info || {})
+                            }} className="btn btn-secondary btn-sm" title="Edit Student">✏️</button>
                             <button onClick={() => printID(s)} className="btn btn-secondary btn-sm" title="Print ID Card">🪪</button>
                             {s.status === 'active' && <button onClick={() => handleDischarge(s.id)} className="btn btn-warning btn-sm">📤 Discharge</button>}
                             <button onClick={() => handleDelete(s.id)} className="btn btn-danger btn-sm">🗑️</button>
@@ -246,9 +275,14 @@ export default function StudentsPage() {
             <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
             
             {/* Custom Dynamic Fields */}
-            {customFields.length > 0 && (
-              <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 2' }}>
+            <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 2' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
                 <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Additional Information</h4>
+                <button type="button" onClick={() => setShowAddFieldModal(true)} className="btn btn-secondary btn-sm" style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}>
+                  ➕ Add Custom Field
+                </button>
+              </div>
+              {customFields.length > 0 ? (
                 <div className="grid-2" style={{ gap: '1rem' }}>
                   {customFields.map(field => {
                     const key = field.field_label
@@ -285,8 +319,12 @@ export default function StudentsPage() {
                     )
                   })}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
+                  No custom fields configured for this school. Click 'Add Custom Field' to create one.
+                </p>
+              )}
+            </div>
 
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', gridColumn: 'span 2' }}>
               <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? '⏳ Saving...' : '✅ Register Student'}</button>
@@ -383,6 +421,219 @@ export default function StudentsPage() {
             <div className="modal-footer">
               <button onClick={() => printID(viewStudent)} className="btn btn-primary">🖨️ Print ID Card</button>
               <button onClick={() => setViewStudent(null)} className="btn btn-secondary">Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Student Modal */}
+      {editingStudent && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setEditingStudent(null)}>
+          <div className="modal animate-slide" style={{ maxWidth: '700px' }}>
+            <div className="modal-header">
+              <h3 style={{ fontWeight: 700 }}>✏️ Edit Student Details</h3>
+              <button onClick={() => setEditingStudent(null)} className="btn btn-secondary btn-icon">✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                setEditingSubmitting(true)
+                setMsg(null)
+
+                // Validate custom fields
+                const missing = customFields.filter(f => f.is_required && !editCustomForm[f.field_label]?.trim())
+                if (missing.length > 0) {
+                  setMsg({ type: 'danger', text: `Please fill in all required fields: ${missing.map(m => m.field_label).join(', ')}` })
+                  setEditingSubmitting(false)
+                  return
+                }
+
+                try {
+                  const res = await fetch('/api/school/students', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      id: editingStudent.id,
+                      name: editForm.name,
+                      father_name: editForm.father_name || null,
+                      class_id: editForm.class_id || null,
+                      section_id: editForm.section_id || null,
+                      roll_no: editForm.roll_no || null,
+                      gender: editForm.gender,
+                      dob: editForm.dob || null,
+                      contact: editForm.contact || null,
+                      address: editForm.address || null,
+                      additional_info: editCustomForm,
+                    })
+                  })
+                  
+                  if (res.ok) {
+                    setMsg({ type: 'success', text: 'Student record updated successfully!' })
+                    setEditingStudent(null)
+                    load()
+                  } else {
+                    const d = await res.json()
+                    setMsg({ type: 'danger', text: d.error || 'Failed to update student' })
+                  }
+                } catch {
+                  setMsg({ type: 'danger', text: 'Connection error' })
+                } finally {
+                  setEditingSubmitting(false)
+                }
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                
+                <div className="grid-2">
+                  <div className="form-group"><label className="form-label">Student Name *</label><input className="form-input" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required /></div>
+                  <div className="form-group"><label className="form-label">Father's Name</label><input className="form-input" value={editForm.father_name} onChange={e => setEditForm(f => ({ ...f, father_name: e.target.value }))} /></div>
+                </div>
+                <div className="grid-2">
+                  <div className="form-group"><label className="form-label">Class *</label>
+                    <select className="form-select" value={editForm.class_id} onChange={e => setEditForm(f => ({ ...f, class_id: e.target.value, section_id: '' }))} required>
+                      <option value="">Select Class</option>
+                      {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  </div>
+                  <div className="form-group"><label className="form-label">Section</label>
+                    <select className="form-select" value={editForm.section_id} onChange={e => setEditForm(f => ({ ...f, section_id: e.target.value }))}>
+                      <option value="">Select Section</option>
+                      {sections.filter(s => !editForm.class_id || s.class_id === editForm.class_id).map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid-2">
+                  <div className="form-group"><label className="form-label">Roll Number</label><input className="form-input" value={editForm.roll_no} onChange={e => setEditForm(f => ({ ...f, roll_no: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">Gender *</label>
+                    <select className="form-select" value={editForm.gender} onChange={e => setEditForm(f => ({ ...f, gender: e.target.value }))}>
+                      <option>Male</option><option>Female</option><option>Other</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="grid-2">
+                  <div className="form-group"><label className="form-label">Date of Birth</label><input className="form-input" type="date" value={editForm.dob} onChange={e => setEditForm(f => ({ ...f, dob: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">Contact</label><input className="form-input" value={editForm.contact} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))} /></div>
+                </div>
+                <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                
+                {/* Custom Dynamic Fields */}
+                {customFields.length > 0 && (
+                  <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <h4 style={{ fontWeight: 700, fontSize: '1rem' }}>Additional Information</h4>
+                    <div className="grid-2" style={{ gap: '1rem' }}>
+                      {customFields.map(field => {
+                        const key = field.field_label
+                        const isRequired = field.is_required
+                        return (
+                          <div className="form-group" key={field.id}>
+                            <label className="form-label">
+                              {key} {isRequired && ' *'}
+                            </label>
+                            {field.field_type === 'dropdown' ? (
+                              <select
+                                className="form-select"
+                                value={editCustomForm[key] || ''}
+                                onChange={e => setEditCustomForm(prev => ({ ...prev, [key]: e.target.value }))}
+                                required={isRequired}
+                              >
+                                <option value="">Select option</option>
+                                {(field.field_options || '').split(',').map(opt => {
+                                  const trimmedOpt = opt.trim()
+                                  return <option key={trimmedOpt} value={trimmedOpt}>{trimmedOpt}</option>
+                                })}
+                              </select>
+                            ) : (
+                              <input
+                                className="form-input"
+                                type={field.field_type === 'number' ? 'number' : 'text'}
+                                placeholder={`Enter ${key.toLowerCase()}`}
+                                value={editCustomForm[key] || ''}
+                                onChange={e => setEditCustomForm(prev => ({ ...prev, [key]: e.target.value }))}
+                                required={isRequired}
+                              />
+                            )}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', justifyContent: 'flex-end' }}>
+                  <button type="button" onClick={() => setEditingStudent(null)} className="btn btn-secondary">Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={editingSubmitting}>
+                    {editingSubmitting ? '⏳ Saving...' : '✅ Save Changes'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Inline Custom Field Modal */}
+      {showAddFieldModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowAddFieldModal(false)}>
+          <div className="modal animate-slide" style={{ maxWidth: '450px' }}>
+            <div className="modal-header">
+              <h3 style={{ fontWeight: 700 }}>➕ Add Custom Registration Field</h3>
+              <button type="button" onClick={() => setShowAddFieldModal(false)} className="btn btn-secondary btn-icon">✕</button>
+            </div>
+            <div className="modal-body">
+              <form onSubmit={async (e) => {
+                e.preventDefault()
+                if (!newFieldLabel.trim()) return
+                setAddingField(true)
+                try {
+                  const res = await fetch('/api/school/registration-fields', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      field_label: newFieldLabel.trim(),
+                      field_type: newFieldType,
+                      field_options: newFieldType === 'dropdown' ? newFieldOptions.trim() : null,
+                      is_required: true
+                    })
+                  })
+                  if (res.ok) {
+                    setNewFieldLabel('')
+                    setNewFieldType('text')
+                    setNewFieldOptions('')
+                    setShowAddFieldModal(false)
+                    load() // Reload custom fields dynamically
+                  } else {
+                    const data = await res.json()
+                    alert(data.error || 'Failed to add custom field')
+                  }
+                } catch {
+                  alert('Network error connecting to the server')
+                } finally {
+                  setAddingField(false)
+                }
+              }} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Field Label (e.g. Blood Group) *</label>
+                  <input className="form-input" placeholder="Enter field label" value={newFieldLabel} onChange={e => setNewFieldLabel(e.target.value)} required />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Input Type *</label>
+                  <select className="form-select" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                    <option value="text">Text Input</option>
+                    <option value="number">Number Input</option>
+                    <option value="dropdown">Dropdown Select</option>
+                  </select>
+                </div>
+                {newFieldType === 'dropdown' && (
+                  <div className="form-group">
+                    <label className="form-label">Dropdown Choices (comma-separated list) *</label>
+                    <input className="form-input" placeholder="e.g. A+, B+, AB+, O+" value={newFieldOptions} onChange={e => setNewFieldOptions(e.target.value)} required />
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                  <button type="button" onClick={() => setShowAddFieldModal(false)} className="btn btn-secondary">Cancel</button>
+                  <button type="submit" className="btn btn-primary" disabled={addingField}>
+                    {addingField ? '⏳ Adding Field...' : '➕ Add Field'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>

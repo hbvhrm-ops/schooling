@@ -55,7 +55,7 @@ const navGroups: NavGroup[] = [
       { href: '/school/staff', label: 'Staff', icon: '👥' },
       { href: '/school/data', label: 'Data Import/Export', icon: '🗄️' },
       { href: '/school/security', label: 'Security', icon: '🔐' },
-      { href: '/school/settings', label: 'Settings', icon: '⚙️' },
+      { href: '/school/settings', label: 'Customize Fields', icon: '⚙️' },
     ]
   },
 ]
@@ -78,7 +78,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
   return (
     <div className="main-layout">
       {/* Sidebar */}
-      <aside className="sidebar" style={{ width: collapsed ? '70px' : '260px', transition: 'width 0.25s ease', overflow: collapsed ? 'visible' : 'auto' }}>
+      <aside className="sidebar" style={{ width: collapsed ? '70px' : '260px', height: '100vh', transition: 'width 0.25s ease', overflowY: collapsed ? 'visible' : 'auto' }}>
         <div className="sidebar-logo" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: collapsed ? 'center' : 'space-between' }}>
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>

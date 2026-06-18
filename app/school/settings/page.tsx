@@ -19,7 +19,6 @@ export default function SettingsPage() {
   const [label, setLabel] = useState('')
   const [type, setType] = useState<'text' | 'number' | 'dropdown'>('text')
   const [options, setOptions] = useState('')
-  const [required, setRequired] = useState(false)
 
   async function loadFields() {
     setLoading(true)
@@ -60,7 +59,7 @@ export default function SettingsPage() {
           field_label: label.trim(),
           field_type: type,
           field_options: type === 'dropdown' ? options.trim() : null,
-          is_required: required,
+          is_required: true, // Automatically required for all students
         }),
       })
       const data = await res.json()
@@ -70,7 +69,6 @@ export default function SettingsPage() {
         setLabel('')
         setType('text')
         setOptions('')
-        setRequired(false)
         loadFields()
       } else {
         setMsg({ type: 'danger', text: data.error || 'Failed to add field' })
@@ -107,8 +105,8 @@ export default function SettingsPage() {
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>⚙️ Tenant Settings</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Configure custom registration requirements for student intake</p>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>⚙️ Customize Registration Fields</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Configure custom required fields for student registration</p>
       </div>
 
       {msg && <div className={`alert alert-${msg.type} animate-fade`} style={{ marginBottom: '1.5rem', maxWidth: '900px' }}>{msg.text}</div>}
@@ -158,16 +156,9 @@ export default function SettingsPage() {
             )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem' }}>
-              <input
-                type="checkbox"
-                id="required-checkbox"
-                checked={required}
-                onChange={e => setRequired(e.target.checked)}
-                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-              />
-              <label htmlFor="required-checkbox" style={{ fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', userSelect: 'none' }}>
-                Make this field required on registration
-              </label>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontStyle: 'italic' }}>
+                * Added custom fields are automatically required for all registered students.
+              </span>
             </div>
 
             <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }} disabled={submitting}>

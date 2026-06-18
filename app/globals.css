@@ -225,7 +225,7 @@ tbody tr:last-child td { border-bottom: none; }
 /* ── Sidebar ───────────────────────────────────────────── */
 .sidebar {
   width: 260px;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--bg-sidebar);
   border-right: 1px solid var(--border);
   display: flex;
