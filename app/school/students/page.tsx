@@ -5,7 +5,9 @@ interface Student {
   id: string; name: string; father_name: string; class_name: string; section_name: string;
   roll_no: string; gender: string; contact: string; status: string; reg_date: string; dob?: string;
   address?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_info?: Record<string, any>;
+  photo_url?: string;
 }
 interface ClassItem { id: string; name: string }
 interface SectionItem { id: string; name: string; class_id: string }
@@ -30,7 +32,7 @@ export default function StudentsPage() {
   const [classFilter, setClassFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [viewStudent, setViewStudent] = useState<Student | null>(null)
-  const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+  const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
   const [customFields, setCustomFields] = useState<CustomField[]>([])
   const [customForm, setCustomForm] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -38,7 +40,7 @@ export default function StudentsPage() {
 
   // Edit student states
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+  const [editForm, setEditForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
   const [editCustomForm, setEditCustomForm] = useState<Record<string, string>>({})
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
@@ -67,7 +69,44 @@ export default function StudentsPage() {
     setCustomFields(fr.fields || [])
     setLoading(false)
   }, [])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File is too large. Please select an image under 2MB.')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result
+        if (typeof result === 'string') {
+          setForm(f => ({ ...f, photo_url: result }))
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        alert('File is too large. Please select an image under 2MB.')
+        return
+      }
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const result = event.target?.result
+        if (typeof result === 'string') {
+          setEditForm(f => ({ ...f, photo_url: result }))
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const filteredSections = sections.filter(s => !form.class_id || s.class_id === form.class_id)
   const filtered = students.filter(s => {
@@ -93,7 +132,7 @@ export default function StudentsPage() {
     const d = await r.json()
     if (!r.ok) { setMsg({ type: 'danger', text: d.error || 'Failed' }); setSubmitting(false); return }
     setMsg({ type: 'success', text: 'Student registered successfully!' })
-    setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+    setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
     setCustomForm({})
     load(); setSubmitting(false)
   }
@@ -177,14 +216,14 @@ export default function StudentsPage() {
         .header { background: linear-gradient(135deg,#6366f1,#22d3ee); color:white; padding:15px; border-radius:8px; text-align:center; margin-bottom:15px; }
         .header h2 { margin:0; font-size:16px; } .header p { margin:3px 0; font-size:11px; opacity:0.9; }
         .photo-placeholder { width:80px; height:80px; border-radius:50%; background:#e5e7eb; border:3px solid #6366f1;
-          display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 10px; }
+          display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 10px; overflow:hidden; }
         .info { font-size:13px; } .info tr td { padding:4px 8px; }
         .info tr td:first-child { color:#666; font-weight:600; }
         .footer { text-align:center; margin-top:12px; font-size:10px; color:#999; }
       </style></head><body>
       <div class="id-card">
         <div class="header"><h2>🏫 Student ID Card</h2><p>Academic Year ${new Date().getFullYear()}</p></div>
-        <div class="photo-placeholder">👤</div>
+        <div class="photo-placeholder">${student.photo_url ? `<img src="${student.photo_url}" style="width:100%;height:100%;object-fit:cover;" />` : '👤'}</div>
         <table class="info" width="100%">
           <tr><td>Name:</td><td><strong>${student.name}</strong></td></tr>
           <tr><td>Father:</td><td>${student.father_name || '—'}</td></tr>
@@ -257,7 +296,16 @@ export default function StudentsPage() {
                     {filtered.map((s, i) => (
                       <tr key={s.id}>
                         <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
-                        <td style={{ fontWeight: 600 }}>{s.name}</td>
+                        <td style={{ fontWeight: 600 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                            {s.photo_url ? (
+                              <img src={s.photo_url} alt={s.name} style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1.5px solid var(--primary)' }} />
+                            ) : (
+                              <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: 'var(--text-secondary)', border: '1.5px solid var(--border)' }}>👤</div>
+                            )}
+                            <span>{s.name}</span>
+                          </div>
+                        </td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.father_name || '—'}</td>
                         <td><span className="badge badge-primary">{s.class_name || '—'} {s.section_name && `(${s.section_name})`}</span></td>
                         <td>{s.roll_no || '—'}</td>
@@ -279,6 +327,7 @@ export default function StudentsPage() {
                                 dob: s.dob || '',
                                 contact: s.contact || '',
                                 address: s.address || '',
+                                photo_url: s.photo_url || '',
                               })
                               setEditCustomForm(s.additional_info || {})
                             }} className="btn btn-secondary btn-sm" title="Edit Student">✏️</button>
@@ -302,9 +351,38 @@ export default function StudentsPage() {
         <div className="card" style={{ maxWidth: '700px' }}>
           <h3 style={{ fontWeight: 700, marginBottom: '1.5rem' }}>📝 Register New Student</h3>
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            
+            {/* Photo Upload Section */}
+            <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)' }}>
+              <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {form.photo_url ? (
+                  <img src={form.photo_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>👤</span>
+                )}
+              </div>
+              <div>
+                <label className="form-label" style={{ marginBottom: '0.4rem', display: 'block', fontWeight: 600 }}>Student Photo (Optional)</label>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
+                    📷 Choose Photo
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                  </label>
+                  {form.photo_url && (
+                    <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setForm(f => ({ ...f, photo_url: '' }))}>
+                      Remove
+                    </button>
+                  )}
+                </div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                  Supports JPG, PNG, WEBP (Max 2MB)
+                </span>
+              </div>
+            </div>
+
             <div className="grid-2">
               <div className="form-group"><label className="form-label">Student Name *</label><input className="form-input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required /></div>
-              <div className="form-group"><label className="form-label">Father's Name</label><input className="form-input" value={form.father_name} onChange={e => setForm(f => ({ ...f, father_name: e.target.value }))} /></div>
+              <div className="form-group"><label className="form-label">Father&apos;s Name</label><input className="form-input" value={form.father_name} onChange={e => setForm(f => ({ ...f, father_name: e.target.value }))} /></div>
             </div>
             <div className="grid-2">
               <div className="form-group"><label className="form-label">Class *</label>
@@ -404,7 +482,7 @@ export default function StudentsPage() {
                 </div>
               ) : (
                 <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', fontStyle: 'italic' }}>
-                  No custom fields configured for this school. Click 'Add Custom Field' to create one.
+                  No custom fields configured for this school. Click &apos;Add Custom Field&apos; to create one.
                 </p>
               )}
             </div>
@@ -412,7 +490,7 @@ export default function StudentsPage() {
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', gridColumn: 'span 2' }}>
               <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? '⏳ Saving...' : '✅ Register Student'}</button>
               <button type="button" className="btn btn-secondary" onClick={() => {
-                setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '' })
+                setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
                 setCustomForm({})
               }}>🔄 Reset</button>
             </div>
@@ -481,7 +559,13 @@ export default function StudentsPage() {
             </div>
             <div className="modal-body">
               <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 0.75rem', border: '3px solid var(--primary)' }}>👤</div>
+                <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', margin: '0 auto 0.75rem', border: '3px solid var(--primary)', overflow: 'hidden' }}>
+                  {viewStudent.photo_url ? (
+                    <img src={viewStudent.photo_url} alt={viewStudent.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  ) : (
+                    '👤'
+                  )}
+                </div>
                 <h3 style={{ fontWeight: 800 }}>{viewStudent.name}</h3>
                 <span className={`badge ${viewStudent.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{viewStudent.status}</span>
               </div>
@@ -554,6 +638,7 @@ export default function StudentsPage() {
                       dob: editForm.dob || null,
                       contact: editForm.contact || null,
                       address: editForm.address || null,
+                      photo_url: editForm.photo_url || null,
                       additional_info: editCustomForm,
                     })
                   })
@@ -573,9 +658,37 @@ export default function StudentsPage() {
                 }
               }} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 
+                {/* Photo Upload Section */}
+                <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)' }}>
+                  <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    {editForm.photo_url ? (
+                      <img src={editForm.photo_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>👤</span>
+                    )}
+                  </div>
+                  <div>
+                    <label className="form-label" style={{ marginBottom: '0.4rem', display: 'block', fontWeight: 600 }}>Student Photo (Optional)</label>
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
+                        📷 Change Photo
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleEditPhotoChange} />
+                      </label>
+                      {editForm.photo_url && (
+                        <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setEditForm(f => ({ ...f, photo_url: '' }))}>
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '0.25rem' }}>
+                      Supports JPG, PNG, WEBP (Max 2MB)
+                    </span>
+                  </div>
+                </div>
+
                 <div className="grid-2">
                   <div className="form-group"><label className="form-label">Student Name *</label><input className="form-input" value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required /></div>
-                  <div className="form-group"><label className="form-label">Father's Name</label><input className="form-input" value={editForm.father_name} onChange={e => setEditForm(f => ({ ...f, father_name: e.target.value }))} /></div>
+                  <div className="form-group"><label className="form-label">Father&apos;s Name</label><input className="form-input" value={editForm.father_name} onChange={e => setEditForm(f => ({ ...f, father_name: e.target.value }))} /></div>
                 </div>
                 <div className="grid-2">
                   <div className="form-group"><label className="form-label">Class *</label>
@@ -729,7 +842,7 @@ export default function StudentsPage() {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Input Type *</label>
-                  <select className="form-select" value={newFieldType} onChange={e => setNewFieldType(e.target.value as any)}>
+                  <select className="form-select" value={newFieldType} onChange={e => setNewFieldType(e.target.value as 'text' | 'number' | 'dropdown')}>
                     <option value="text">Text Input</option>
                     <option value="number">Number Input</option>
                     <option value="dropdown">Dropdown Select</option>

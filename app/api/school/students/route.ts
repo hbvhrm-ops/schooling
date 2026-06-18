@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
     dob: body.dob || null,
     contact: body.contact || null,
     address: body.address || null,
+    photo_url: body.photo_url || null,
     status: 'active',
     additional_info: body.additional_info || {},
   }).select().single()
