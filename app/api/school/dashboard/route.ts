@@ -36,9 +36,9 @@ export async function GET() {
       status: f.status,
     }))
 
-    return NextResponse.json({ stats: { totalStudents, newAdmissions, dischargedStudents, feeCollected, totalExpenses, profit }, recentFee })
+    return NextResponse.json({ schoolName: session.schoolName, stats: { totalStudents, newAdmissions, dischargedStudents, feeCollected, totalExpenses, profit }, recentFee })
   } catch (err) {
     console.error(err)
-    return NextResponse.json({ stats: { totalStudents: 0, newAdmissions: 0, dischargedStudents: 0, feeCollected: 0, totalExpenses: 0, profit: 0 }, recentFee: [] })
+    return NextResponse.json({ schoolName: '', stats: { totalStudents: 0, newAdmissions: 0, dischargedStudents: 0, feeCollected: 0, totalExpenses: 0, profit: 0 }, recentFee: [] })
   }
 }

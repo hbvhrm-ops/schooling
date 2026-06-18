@@ -14,12 +14,14 @@ export default function SchoolDashboard() {
   })
   const [recentFee, setRecentFee] = useState<{ student: string; amount: number; date: string; status: string }[]>([])
   const [loading, setLoading] = useState(true)
+  const [schoolName, setSchoolName] = useState('')
   const today = new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   useEffect(() => {
     Promise.all([
       fetch('/api/school/dashboard').then(r => r.json()).catch(() => ({})),
     ]).then(([dash]) => {
+      if (dash.schoolName) setSchoolName(dash.schoolName)
       if (dash.stats) setStats(dash.stats)
       if (dash.recentFee) setRecentFee(dash.recentFee)
     }).finally(() => setLoading(false))
@@ -49,7 +51,7 @@ export default function SchoolDashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-            School <span className="gradient-text">Dashboard</span>
+            {schoolName || 'School'} <span className="gradient-text">Dashboard</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{today}</p>
         </div>

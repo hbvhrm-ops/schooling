@@ -36,6 +36,7 @@ export default function SlcPage() {
   const [loading, setLoading] = useState(true)
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
+  const [schoolName, setSchoolName] = useState('')
 
   // Certificate variables state
   const [selectedStudentId, setSelectedStudentId] = useState('')
@@ -65,6 +66,9 @@ export default function SlcPage() {
         setSelectedStudentId(fetchedStudents[0].id)
       }
 
+      if (tr.schoolName) {
+        setSchoolName(tr.schoolName)
+      }
       if (tr.template) {
         setTemplate(tr.template)
         setLogoUrlForm(tr.template.logo_url || '')
@@ -104,8 +108,9 @@ export default function SlcPage() {
     setMsg(null)
 
     const logoUrl = logoUrlForm.trim()
+    const isBase64 = logoUrl.startsWith('data:image/') || logoUrl.startsWith('data:application/pdf')
     const logoRegex = /\.(pdf|png|jpg|jpeg)(\?.*)?$/i
-    if (logoUrl && !logoRegex.test(logoUrl)) {
+    if (logoUrl && !isBase64 && !logoRegex.test(logoUrl)) {
       setMsg({ type: 'danger', text: 'Logo URL must point to a .pdf, .png, .jpg, or .jpeg file.' })
       setSavingTemplate(false)
       return
@@ -126,6 +131,9 @@ export default function SlcPage() {
 
       if (res.ok) {
         setMsg({ type: 'success', text: 'Certificate template updated successfully!' })
+        if (data.schoolName) {
+          setSchoolName(data.schoolName)
+        }
         if (data.template) {
           setTemplate(data.template)
         }
@@ -295,7 +303,7 @@ export default function SlcPage() {
                 <div class="content-wrapper">
                   <div class="header">
                     ${template.logo_url ? `<img class="logo" src="${template.logo_url}" alt="School Logo" />` : '<div class="logo-placeholder">🏫</div>'}
-                    <div class="school-title">EduManage School System</div>
+                    <div class="school-title">${schoolName || 'EduManage School System'}</div>
                     <div class="cert-title">${template.title}</div>
                     <div class="cert-subtitle">Official Academic Release Certificate</div>
                   </div>
@@ -465,7 +473,7 @@ export default function SlcPage() {
                         <div style={{ fontSize: '2.5rem', marginBottom: '5px' }}>🏫</div>
                       )}
                       <div style={{ fontFamily: 'Georgia, serif', fontSize: '1.1rem', fontWeight: 'bold', color: '#4a3e28' }}>
-                        EduManage School System
+                        {schoolName || 'EduManage School System'}
                       </div>
                       <div style={{ fontSize: '1.4rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '8px 0 2px', textTransform: 'uppercase' }}>
                         {template.title}
@@ -508,14 +516,59 @@ export default function SlcPage() {
 
               <form onSubmit={handleSaveTemplate} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
                 <div className="form-group">
-                  <label className="form-label">School Logo URL</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="https://example.com/logo.png"
-                    value={logoUrlForm}
-                    onChange={e => setLogoUrlForm(e.target.value)}
-                  />
+                  <label className="form-label">School Logo (Upload Image/PDF or paste URL)</label>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <input
+                      type="text"
+                      className="form-input"
+                      style={{ flex: 1, minWidth: '200px' }}
+                      placeholder="Paste image/PDF URL or upload below..."
+                      value={logoUrlForm}
+                      onChange={e => setLogoUrlForm(e.target.value)}
+                    />
+                    <label className="btn btn-secondary btn-sm" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                      📁 Choose File
+                      <input
+                        type="file"
+                        accept="image/png, image/jpeg, image/jpg, application/pdf"
+                        style={{ display: 'none' }}
+                        onChange={e => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'application/pdf']
+                            if (!validTypes.includes(file.type)) {
+                              alert('Invalid file type. Please upload a PNG, JPG, JPEG, or PDF file.')
+                              return
+                            }
+                            
+                            const reader = new FileReader()
+                            reader.onload = (event) => {
+                              const result = event.target?.result
+                              if (typeof result === 'string') {
+                                setLogoUrlForm(result)
+                              }
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                  {logoUrlForm && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', background: 'var(--bg-base)', padding: '0.5rem 1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      {logoUrlForm.startsWith('data:image/') || logoUrlForm.startsWith('http') ? (
+                        <img src={logoUrlForm} alt="Preview Logo" style={{ maxHeight: '40px', maxWidth: '40px', objectFit: 'contain' }} onError={(e) => { (e.target as HTMLElement).style.display = 'none' }} />
+                      ) : (
+                        <div style={{ fontSize: '1.5rem' }}>📄</div>
+                      )}
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                        {logoUrlForm.startsWith('data:') ? 'Uploaded local file' : logoUrlForm}
+                      </div>
+                      <button type="button" onClick={() => setLogoUrlForm('')} className="btn btn-danger btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}>
+                        Remove
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="form-group">

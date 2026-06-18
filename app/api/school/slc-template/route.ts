@@ -30,6 +30,7 @@ export async function GET() {
   if (!data) {
     // Return default template content if none has been saved yet
     return NextResponse.json({
+      schoolName: session.schoolName,
       template: {
         logo_url: '',
         title: 'SCHOOL LEAVING CERTIFICATE',
@@ -39,7 +40,7 @@ export async function GET() {
     })
   }
 
-  return NextResponse.json({ template: data })
+  return NextResponse.json({ schoolName: session.schoolName, template: data })
 }
 
 export async function POST(req: NextRequest) {
@@ -72,5 +73,5 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  return NextResponse.json({ template: data })
+  return NextResponse.json({ schoolName: session.schoolName, template: data })
 }
