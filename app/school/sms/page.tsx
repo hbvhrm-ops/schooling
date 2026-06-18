@@ -17,11 +17,27 @@ export default function SMSPage() {
   const [editType, setEditType] = useState('')
   const [editMsg, setEditMsg] = useState('')
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
+  
+  // Settings state
+  const [schoolPhone, setSchoolPhone] = useState('')
+  const [schoolName, setSchoolName] = useState('')
+  const [loadingSettings, setLoadingSettings] = useState(false)
+  const [savingSettings, setSavingSettings] = useState(false)
 
   const load = useCallback(async () => {
-    const r = await fetch('/api/school/sms').then(res => res.json()).catch(() => ({}))
+    setLoadingSettings(true)
+    const [r, settingsRes] = await Promise.all([
+      fetch('/api/school/sms').then(res => res.json()).catch(() => ({})),
+      fetch('/api/school/sms/settings').then(res => res.json()).catch(() => ({}))
+    ])
     setTemplates(r.templates || [])
+    if (settingsRes && settingsRes.name !== undefined) {
+      setSchoolName(settingsRes.name || '')
+      setSchoolPhone(settingsRes.contact || '')
+    }
+    setLoadingSettings(false)
   }, [])
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
   async function saveTemplate(type: string, message: string) {
@@ -31,6 +47,30 @@ export default function SMSPage() {
     const r = await fetch('/api/school/sms', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (r.ok) { setMsg({ type: 'success', text: 'Template saved!' }); load() }
     else setMsg({ type: 'danger', text: 'Failed to save' })
+  }
+
+  async function handleSaveSettings(e: React.FormEvent) {
+    e.preventDefault()
+    setSavingSettings(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/school/sms/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: schoolName, contact: schoolPhone })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMsg({ type: 'success', text: 'School settings saved successfully!' })
+        load()
+      } else {
+        setMsg({ type: 'danger', text: data.error || 'Failed to save settings' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Error connecting to the server' })
+    } finally {
+      setSavingSettings(false)
+    }
   }
 
   function openWhatsApp(message: string) {
@@ -153,11 +193,34 @@ export default function SMSPage() {
           <div className="alert alert-info" style={{ marginBottom: '1.5rem' }}>
             <span>💡</span> This system uses free native SMS/WhatsApp — no API key or gateway needed!
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">School Phone Number</label><input className="form-input" placeholder="+92 3xx xxxxxxx" /></div>
-            <div className="form-group"><label className="form-label">SMS Sender Name (for display only)</label><input className="form-input" placeholder="School name for reference" /></div>
-            <button className="btn btn-primary">💾 Save Settings</button>
-          </div>
+          {loadingSettings ? (
+            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)' }}>⏳ Loading settings...</div>
+          ) : (
+            <form onSubmit={handleSaveSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">School Phone Number</label>
+                <input
+                  className="form-input"
+                  placeholder="+92 3xx xxxxxxx"
+                  value={schoolPhone}
+                  onChange={e => setSchoolPhone(e.target.value)}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">SMS Sender Name (for display only)</label>
+                <input
+                  className="form-input"
+                  placeholder="School name for reference"
+                  value={schoolName}
+                  onChange={e => setSchoolName(e.target.value)}
+                  required
+                />
+              </div>
+              <button type="submit" className="btn btn-primary" disabled={savingSettings}>
+                {savingSettings ? '⏳ Saving...' : '💾 Save Settings'}
+              </button>
+            </form>
+          )}
         </div>
       )}
     </div>
