@@ -1,10 +1,51 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
 
+const getLocalDateString = () => {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 interface Student { id: string; name: string; class_name: string; section_name: string }
 interface ClassItem { id: string; name: string }
 interface SectionItem { id: string; name: string; class_id: string }
-interface AttRecord { student_id: string; status: 'present' | 'absent' | 'leave' }
+
+interface DailyRecord {
+  id: string
+  name: string
+  roll_no: string
+  section_id: string | null
+  section_name: string
+  status: 'present' | 'absent' | 'leave' | 'unmarked'
+}
+
+interface MonthlyStudentStats {
+  id: string
+  name: string
+  roll_no: string
+  section_id: string | null
+  section_name: string
+  present: number
+  absent: number
+  leave: number
+  pct: number
+}
+
+interface SessionalStudentStats {
+  id: string
+  name: string
+  roll_no: string
+  section_id: string | null
+  section_name: string
+  total: number
+  present: number
+  absent: number
+  leave: number
+  pct: number
+}
 
 type Tab = 'mark' | 'daily' | 'monthly' | 'sessional' | 'history'
 
@@ -15,12 +56,27 @@ export default function AttendancePage() {
   const [students, setStudents] = useState<Student[]>([])
   const [selClass, setSelClass] = useState('')
   const [selSection, setSelSection] = useState('')
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState(getLocalDateString())
   const [attendance, setAttendance] = useState<Record<string, 'present' | 'absent' | 'leave'>>({})
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [report, setReport] = useState<{ date: string; present: number; absent: number; leave: number }[]>([])
+
+  // Daily Report States
+  const [dailyRecords, setDailyRecords] = useState<DailyRecord[]>([])
+  const [dailySearch, setDailySearch] = useState('')
+  const [dailyLoading, setDailyLoading] = useState(false)
+
+  // Monthly Report States
+  const [monthlyStudentStats, setMonthlyStudentStats] = useState<MonthlyStudentStats[]>([])
+  const [monthlySearch, setMonthlySearch] = useState('')
+  const [activeMonthlyTab, setActiveMonthlyTab] = useState<'students' | 'trends'>('students')
+
+  // Sessional Report States
+  const [sessionalStudentStats, setSessionalStudentStats] = useState<SessionalStudentStats[]>([])
+  const [sessionalSearch, setSessionalSearch] = useState('')
+  const [sessionalLoading, setSessionalLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/school/classes').then(r => r.json()).then(d => {
@@ -34,34 +90,154 @@ export default function AttendancePage() {
   const loadStudents = useCallback(async () => {
     if (!selClass) return
     setLoading(true)
-    const params = new URLSearchParams({ class_id: selClass, ...(selSection ? { section_id: selSection } : {}) })
-    const r = await fetch(`/api/school/students?${params}`)
-    const d = await r.json()
-    const list = (d.students || []).filter((s: Student & { status?: string }) => s.status !== 'discharged' || !s.status)
-    setStudents(list)
-    // Initialize all as present
-    const init: Record<string, 'present' | 'absent' | 'leave'> = {}
-    list.forEach((s: Student) => { init[s.id] = 'present' })
-    setAttendance(init)
-    setLoading(false)
+    try {
+      const params = new URLSearchParams({ class_id: selClass, ...(selSection ? { section_id: selSection } : {}) })
+      const r = await fetch(`/api/school/students?${params}`)
+      const d = await r.json()
+      const list = (d.students || []).filter((s: Student & { status?: string }) => s.status !== 'discharged' || !s.status)
+      setStudents(list)
+
+      // Fetch existing daily attendance for the selected date to pre-fill the form
+      const dailyParams = new URLSearchParams({
+        type: 'daily',
+        class_id: selClass,
+        ...(selSection ? { section_id: selSection } : {}),
+        date
+      })
+      const dailyRes = await fetch(`/api/school/attendance?${dailyParams}`)
+      const dailyData = await dailyRes.json()
+      const dailyList = dailyData.report || []
+
+      const init: Record<string, 'present' | 'absent' | 'leave'> = {}
+      list.forEach((s: Student) => {
+        const saved = dailyList.find((item: DailyRecord) => item.id === s.id)
+        if (saved && (saved.status === 'present' || saved.status === 'absent' || saved.status === 'leave')) {
+          init[s.id] = saved.status
+        } else {
+          init[s.id] = 'present'
+        }
+      })
+      setAttendance(init)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [selClass, selSection, date])
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadStudents() }, [loadStudents])
+
+  const loadReport = useCallback(async () => {
+    if (!selClass) return
+    setLoading(true)
+    const params = new URLSearchParams({
+      type: 'monthly',
+      class_id: selClass,
+      ...(selSection ? { section_id: selSection } : {}),
+      month: date.slice(0, 7)
+    })
+    try {
+      const r = await fetch(`/api/school/attendance?${params}`)
+      const d = await r.json()
+      setReport(d.report || [])
+      setMonthlyStudentStats(d.studentsReport || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [selClass, selSection, date])
+
+  useEffect(() => {
+    if (tab === 'monthly') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadReport()
+    }
+  }, [tab, loadReport])
+
+  const loadDailyReport = useCallback(async () => {
+    if (!selClass) return
+    setDailyLoading(true)
+    const params = new URLSearchParams({
+      type: 'daily',
+      class_id: selClass,
+      ...(selSection ? { section_id: selSection } : {}),
+      date
+    })
+    try {
+      const r = await fetch(`/api/school/attendance?${params}`)
+      const d = await r.json()
+      setDailyRecords(d.report || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setDailyLoading(false)
+    }
+  }, [selClass, selSection, date])
+
+  useEffect(() => {
+    if (tab === 'daily') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadDailyReport()
+    }
+  }, [tab, loadDailyReport])
+
+  const loadSessionalReport = useCallback(async () => {
+    if (!selClass) return
+    setSessionalLoading(true)
+    const params = new URLSearchParams({
+      type: 'sessional',
+      class_id: selClass,
+      ...(selSection ? { section_id: selSection } : {})
+    })
+    try {
+      const r = await fetch(`/api/school/attendance?${params}`)
+      const d = await r.json()
+      setSessionalStudentStats(d.report || [])
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setSessionalLoading(false)
+    }
   }, [selClass, selSection])
 
-  useEffect(() => { loadStudents() }, [loadStudents])
+  useEffect(() => {
+    if (tab === 'sessional') {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      loadSessionalReport()
+    }
+  }, [tab, loadSessionalReport])
 
   async function saveAttendance() {
     setSaving(true); setMsg(null)
     const records = Object.entries(attendance).map(([student_id, status]) => ({ student_id, status, date }))
     const r = await fetch('/api/school/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ records }) })
-    if (r.ok) setMsg({ type: 'success', text: `Attendance saved for ${records.length} students on ${date}!` })
-    else setMsg({ type: 'danger', text: 'Failed to save attendance' })
+    if (r.ok) {
+      setMsg({ type: 'success', text: `Attendance saved for ${records.length} students on ${date}!` })
+      loadDailyReport()
+      loadReport()
+      loadSessionalReport()
+    } else {
+      setMsg({ type: 'danger', text: 'Failed to save attendance' })
+    }
     setSaving(false)
   }
 
-  async function loadReport() {
-    const r = await fetch(`/api/school/attendance?class_id=${selClass}&month=${date.slice(0, 7)}`)
-    const d = await r.json()
-    setReport(d.report || [])
-  }
+  const filteredDailyRecords = dailyRecords.filter(r => 
+    r.name.toLowerCase().includes(dailySearch.toLowerCase()) ||
+    (r.roll_no && r.roll_no.toString().toLowerCase().includes(dailySearch.toLowerCase()))
+  )
+
+  const filteredMonthlyStudents = monthlyStudentStats.filter(r => 
+    r.name.toLowerCase().includes(monthlySearch.toLowerCase()) ||
+    (r.roll_no && r.roll_no.toString().toLowerCase().includes(monthlySearch.toLowerCase()))
+  )
+
+  const filteredSessionalStudents = sessionalStudentStats.filter(r => 
+    r.name.toLowerCase().includes(sessionalSearch.toLowerCase()) ||
+    (r.roll_no && r.roll_no.toString().toLowerCase().includes(sessionalSearch.toLowerCase()))
+  )
 
   const presentCount = Object.values(attendance).filter(v => v === 'present').length
   const absentCount = Object.values(attendance).filter(v => v === 'absent').length
@@ -167,16 +343,211 @@ export default function AttendancePage() {
 
       {tab === 'daily' && (
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>📋 Daily Absent Students — {date}</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Select a class and date to view absent students. Data loads from saved attendance records.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>📋 Daily Attendance Report — {date}</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View student attendance details for the selected class and date.</p>
+            </div>
+            {selClass && (
+              <button className="btn btn-secondary btn-sm" onClick={loadDailyReport} disabled={dailyLoading}>
+                🔄 Refresh
+              </button>
+            )}
+          </div>
+
+          {!selClass ? (
+            <div className="empty-state"><div className="empty-icon">📋</div><p>Select a class to view the daily report</p></div>
+          ) : dailyLoading ? (
+            <div className="empty-state"><div className="empty-icon">⏳</div><p>Loading records...</p></div>
+          ) : dailyRecords.length === 0 ? (
+            <div className="empty-state"><div className="empty-icon">🎓</div><p>No student records or attendance data found for this date.</p></div>
+          ) : (
+            <>
+              {/* Daily Status Summary */}
+              {(() => {
+                const total = dailyRecords.length
+                const present = dailyRecords.filter(r => r.status === 'present').length
+                const absent = dailyRecords.filter(r => r.status === 'absent').length
+                const leave = dailyRecords.filter(r => r.status === 'leave').length
+                const unmarked = dailyRecords.filter(r => r.status === 'unmarked').length
+
+                return (
+                  <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                    {[['Total', total, 'var(--text-secondary)', 'var(--border-color)'],
+                      ['Present', present, '#10b981', '#10b98115'],
+                      ['Absent', absent, '#ef4444', '#ef444415'],
+                      ['Leave', leave, '#f59e0b', '#f59e0b15'],
+                      ['Unmarked', unmarked, '#6b7280', 'var(--border-color)']
+                    ].map(([l, v, c, bg]) => (
+                      <div key={String(l)} style={{ background: String(bg), border: `1px solid ${String(c)}30`, borderRadius: '12px', padding: '0.75rem 1.25rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <span style={{ fontWeight: 800, fontSize: '1.2rem', color: String(c) }}>{v}</span>
+                        <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{l}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
+
+              {/* Search Bar */}
+              <div style={{ marginBottom: '1rem', maxWidth: '350px' }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search by name or roll no..."
+                  className="form-input"
+                  value={dailySearch}
+                  onChange={e => setDailySearch(e.target.value)}
+                />
+              </div>
+
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Roll No</th>
+                      <th>Student Name</th>
+                      <th>Section</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDailyRecords.map((r, i) => (
+                      <tr key={r.id}>
+                        <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ fontWeight: 500 }}>{r.roll_no || '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{r.name}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{r.section_name || '—'}</td>
+                        <td>
+                          {r.status === 'present' ? (
+                            <span className="badge badge-success">✅ Present</span>
+                          ) : r.status === 'absent' ? (
+                            <span className="badge badge-danger">❌ Absent</span>
+                          ) : r.status === 'leave' ? (
+                            <span className="badge badge-warning">🏠 Leave</span>
+                          ) : (
+                            <span className="badge" style={{ background: 'rgba(107, 114, 128, 0.1)', color: '#6b7280', border: '1px solid rgba(107, 114, 128, 0.2)' }}>❓ Unmarked</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredDailyRecords.length === 0 && (
+                      <tr>
+                        <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                          No students matched your search criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
       {tab === 'monthly' && (
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>📅 Monthly Attendance Report</h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>📅 Monthly Attendance Report</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View student summary and daily trends for {date.slice(0, 7)}.</p>
+            </div>
+            {report.length > 0 && (
+              <div style={{ display: 'flex', background: 'var(--border-color)', padding: '0.2rem', borderRadius: '8px', gap: '0.2rem' }}>
+                <button
+                  onClick={() => setActiveMonthlyTab('students')}
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: activeMonthlyTab === 'students' ? 'var(--bg-surface)' : 'transparent',
+                    color: activeMonthlyTab === 'students' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  👤 Student Summary
+                </button>
+                <button
+                  onClick={() => setActiveMonthlyTab('trends')}
+                  style={{
+                    padding: '0.4rem 0.8rem',
+                    borderRadius: '6px',
+                    border: 'none',
+                    background: activeMonthlyTab === 'trends' ? 'var(--bg-surface)' : 'transparent',
+                    color: activeMonthlyTab === 'trends' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                    fontWeight: 600,
+                    fontSize: '0.8rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  📈 Daily Trends
+                </button>
+              </div>
+            )}
+          </div>
+
           {report.length === 0 ? (
             <div className="empty-state"><div className="empty-icon">📊</div><p>Select a class and click Load Report</p></div>
+          ) : activeMonthlyTab === 'students' ? (
+            <>
+              {/* Search Bar */}
+              <div style={{ marginBottom: '1rem', maxWidth: '350px' }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search by name or roll no..."
+                  className="form-input"
+                  value={monthlySearch}
+                  onChange={e => setMonthlySearch(e.target.value)}
+                />
+              </div>
+
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Roll No</th>
+                      <th>Student Name</th>
+                      <th>Section</th>
+                      <th>Present</th>
+                      <th>Absent</th>
+                      <th>Leave</th>
+                      <th>Attendance %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredMonthlyStudents.map((r, i) => (
+                      <tr key={r.id}>
+                        <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ fontWeight: 500 }}>{r.roll_no || '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{r.name}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{r.section_name || '—'}</td>
+                        <td><span className="badge badge-success">{r.present}</span></td>
+                        <td><span className="badge badge-danger">{r.absent}</span></td>
+                        <td><span className="badge badge-warning">{r.leave}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div className="progress-bar" style={{ width: '80px' }}>
+                              <div className="progress-fill" style={{ width: `${r.pct}%` }} />
+                            </div>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{r.pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredMonthlyStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={8} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                          No students matched your search criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <div className="table-wrap">
               <table>
@@ -211,8 +582,85 @@ export default function AttendancePage() {
 
       {tab === 'sessional' && (
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📊 Sessional Report</h3>
-          <p style={{ color: 'var(--text-secondary)' }}>Full session attendance summary per student will appear here once data is collected.</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <div>
+              <h3 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>📊 Sessional Attendance Report</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Overall attendance summary for each student in the selected class.</p>
+            </div>
+            {selClass && (
+              <button className="btn btn-secondary btn-sm" onClick={loadSessionalReport} disabled={sessionalLoading}>
+                🔄 Refresh
+              </button>
+            )}
+          </div>
+
+          {!selClass ? (
+            <div className="empty-state"><div className="empty-icon">📊</div><p>Select a class to view the sessional report</p></div>
+          ) : sessionalLoading ? (
+            <div className="empty-state"><div className="empty-icon">⏳</div><p>Loading records...</p></div>
+          ) : sessionalStudentStats.length === 0 ? (
+            <div className="empty-state"><div className="empty-icon">🎓</div><p>No student records or attendance data found for this session.</p></div>
+          ) : (
+            <>
+              {/* Search Bar */}
+              <div style={{ marginBottom: '1rem', maxWidth: '350px' }}>
+                <input
+                  type="text"
+                  placeholder="🔍 Search by name or roll no..."
+                  className="form-input"
+                  value={sessionalSearch}
+                  onChange={e => setSessionalSearch(e.target.value)}
+                />
+              </div>
+
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Roll No</th>
+                      <th>Student Name</th>
+                      <th>Section</th>
+                      <th>Total Days</th>
+                      <th>Present</th>
+                      <th>Absent</th>
+                      <th>Leave</th>
+                      <th>Attendance %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredSessionalStudents.map((r, i) => (
+                      <tr key={r.id}>
+                        <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
+                        <td style={{ fontWeight: 500 }}>{r.roll_no || '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{r.name}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{r.section_name || '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{r.total}</td>
+                        <td><span className="badge badge-success">{r.present}</span></td>
+                        <td><span className="badge badge-danger">{r.absent}</span></td>
+                        <td><span className="badge badge-warning">{r.leave}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div className="progress-bar" style={{ width: '80px' }}>
+                              <div className="progress-fill" style={{ width: `${r.pct}%` }} />
+                            </div>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700 }}>{r.pct}%</span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredSessionalStudents.length === 0 && (
+                      <tr>
+                        <td colSpan={9} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                          No students matched your search criteria.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       )}
 
