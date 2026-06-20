@@ -303,37 +303,43 @@ export default function CertificatesPage() {
             @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
             @page {
               size: A4 landscape;
-              margin: 10mm;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              height: 100%;
+              background: #fff;
             }
             body {
               font-family: 'Playfair Display', serif;
-              margin: 0;
-              padding: 0;
-              background: #fff;
               color: #2c2c2c;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             .certificate-container {
-              max-width: 1000px;
-              margin: 0 auto;
-              padding: 10px;
+              width: 297mm;
+              height: 210mm;
+              padding: 15mm 20mm;
               box-sizing: border-box;
-              height: 100%;
               display: flex;
               flex-direction: column;
-              justify-content: center;
+              justify-content: space-between;
+              background: #fdfbf7;
             }
             .border-outer {
               border: 12px double #4a3e28;
               padding: 6px;
-              background: #fdfbf7;
               height: 100%;
               box-sizing: border-box;
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 40px 60px;
+              padding: 35px 50px;
               position: relative;
               height: 100%;
               display: flex;
@@ -362,33 +368,33 @@ export default function CertificatesPage() {
             }
             .header {
               text-align: center;
-              margin-bottom: 20px;
+              margin-bottom: 15px;
             }
             .logo {
-              max-height: 70px;
-              margin-bottom: 8px;
+              max-height: 65px;
+              margin-bottom: 6px;
               object-fit: contain;
             }
             .logo-placeholder {
-              font-size: 40px;
-              margin-bottom: 8px;
+              font-size: 35px;
+              margin-bottom: 6px;
               color: #4a3e28;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 20px;
+              font-size: 18px;
               font-weight: 800;
               color: #4a3e28;
               letter-spacing: 1.5px;
-              margin-bottom: 5px;
+              margin-bottom: 3px;
               text-transform: uppercase;
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 24px;
+              font-size: 22px;
               font-weight: 800;
               letter-spacing: 3px;
-              margin: 10px 0 5px;
+              margin: 8px 0 3px;
               color: #6e5a3c;
               text-transform: uppercase;
               border-bottom: 2px double #6e5a3c;
@@ -396,17 +402,17 @@ export default function CertificatesPage() {
               padding-bottom: 4px;
             }
             .cert-subtitle {
-              font-size: 10px;
+              font-size: 9px;
               color: #777;
               letter-spacing: 2px;
               text-transform: uppercase;
-              margin-bottom: 15px;
+              margin-bottom: 10px;
             }
             .cert-body {
-              font-size: 17px;
-              line-height: 1.9;
+              font-size: 16.5px;
+              line-height: 1.8;
               text-align: justify;
-              margin: 20px 0;
+              margin: 15px 0;
               white-space: pre-line;
               text-indent: 30px;
               flex: 1;
@@ -423,10 +429,10 @@ export default function CertificatesPage() {
             }
             .sig-line {
               border-top: 1px solid #777;
-              margin-top: 40px;
+              margin-top: 30px;
               padding-top: 6px;
               font-family: 'Cinzel', serif;
-              font-size: 11px;
+              font-size: 10px;
               font-weight: 800;
               color: #4a3e28;
               text-transform: uppercase;
@@ -439,12 +445,8 @@ export default function CertificatesPage() {
               }
               .certificate-container {
                 margin: 0;
-                max-width: 100%;
-                width: 100%;
-                height: 100%;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
+                width: 297mm;
+                height: 210mm;
               }
             }
           </style>
