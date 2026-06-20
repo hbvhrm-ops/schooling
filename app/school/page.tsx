@@ -28,7 +28,7 @@ export default function SchoolDashboard() {
   }, [])
 
   const statCards = [
-    { label: 'Total Active Students', value: stats.totalStudents, icon: '🎓', color: '#6366f1', glow: 'rgba(99,102,241,0.15)', href: '/school/students', suffix: '' },
+    { label: 'Total Active Students', value: stats.totalStudents, icon: '🎓', color: '#0093cb', glow: 'rgba(0,147,203,0.15)', href: '/school/students', suffix: '' },
     { label: 'New Admissions', value: stats.newAdmissions, icon: '📥', color: '#10b981', glow: 'rgba(16,185,129,0.15)', href: '/school/students', suffix: '' },
     { label: 'Discharged Students', value: stats.dischargedStudents, icon: '📤', color: '#f59e0b', glow: 'rgba(245,158,11,0.15)', href: '/school/students', suffix: '' },
     { label: 'Fee Collected (Month)', value: stats.feeCollected, icon: '💰', color: '#22d3ee', glow: 'rgba(34,211,238,0.15)', href: '/school/fee', suffix: '₨', isAmount: true },
@@ -37,7 +37,7 @@ export default function SchoolDashboard() {
   ]
 
   const quickLinks = [
-    { label: 'Mark Attendance', icon: '📋', href: '/school/attendance', color: '#6366f1' },
+    { label: 'Mark Attendance', icon: '📋', href: '/school/attendance', color: '#0093cb' },
     { label: 'Add Student', icon: '➕', href: '/school/students', color: '#10b981' },
     { label: 'Collect Fee', icon: '💳', href: '/school/fee', color: '#22d3ee' },
     { label: 'Add Expense', icon: '💸', href: '/school/expenses', color: '#f59e0b' },

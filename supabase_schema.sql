@@ -232,6 +232,20 @@ CREATE TABLE IF NOT EXISTS slc_templates (
   UNIQUE(school_id)
 );
 
+-- ── Certificate Templates ───────────────────────────────────
+CREATE TABLE IF NOT EXISTS certificate_templates (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id       UUID REFERENCES schools(id) ON DELETE CASCADE,
+  type            TEXT NOT NULL, -- 'slc', 'birth', 'character', 'sports', 'top_positions'
+  logo_url        TEXT,
+  title           TEXT,
+  body_text       TEXT NOT NULL,
+  signature_title TEXT DEFAULT 'Principal',
+  created_at      TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(school_id, type)
+);
+
+
 -- ============================================================
 -- Row Level Security (RLS) — Recommended for production
 -- Disable anon access, only allow authenticated requests
@@ -258,6 +272,7 @@ ALTER TABLE expenses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sms_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budget ENABLE ROW LEVEL SECURITY;
+ALTER TABLE certificate_templates ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations via service role (used by Next.js API routes)
 -- Since we use anon key from server, we grant full access via policy
@@ -283,6 +298,7 @@ CREATE POLICY "Allow all via anon" ON expenses FOR ALL USING (true) WITH CHECK (
 CREATE POLICY "Allow all via anon" ON staff FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON sms_templates FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON budget FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all via anon" ON certificate_templates FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================
 -- Indexes for performance

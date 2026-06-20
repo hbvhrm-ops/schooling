@@ -249,10 +249,10 @@ export default function StudentsPage() {
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
         .id-card { background: white; border-radius: 12px; padding: 20px; max-width: 350px; margin: auto;
-          border: 2px solid #6366f1; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg,#6366f1,#22d3ee); color:white; padding:15px; border-radius:8px; text-align:center; margin-bottom:15px; }
+          border: 2px solid #0093cb; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg,#0093cb,#22d3ee); color:white; padding:15px; border-radius:8px; text-align:center; margin-bottom:15px; }
         .header h2 { margin:0; font-size:16px; } .header p { margin:3px 0; font-size:11px; opacity:0.9; }
-        .photo-placeholder { width:80px; height:80px; border-radius:50%; background:#e5e7eb; border:3px solid #6366f1;
+        .photo-placeholder { width:80px; height:80px; border-radius:50%; background:#e5e7eb; border:3px solid #0093cb;
           display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 10px; overflow:hidden; }
         .info { font-size:13px; } .info tr td { padding:4px 8px; }
         .info tr td:first-child { color:#666; font-weight:600; }

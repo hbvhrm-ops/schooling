@@ -72,6 +72,8 @@ class MockQueryBuilder {
   action: 'select' | 'insert' | 'update' | 'delete'
   actionData: any
   limitCount: number | null
+  isUpsert?: boolean
+  upsertOnConflict?: string
 
   constructor(table: string) {
     this.table = table
@@ -132,6 +134,14 @@ class MockQueryBuilder {
     return this
   }
 
+  upsert(data: any, options: any = {}) {
+    this.action = 'insert'
+    this.isUpsert = true
+    this.actionData = data
+    this.upsertOnConflict = options.onConflict
+    return this
+  }
+
   update(data: any) {
     this.action = 'update'
     this.actionData = data
@@ -165,13 +175,34 @@ class MockQueryBuilder {
     if (this.action === 'insert') {
       const insertItems = Array.isArray(this.actionData) ? this.actionData : [this.actionData]
       const newItems = insertItems.map((item: any) => {
+        if (this.isUpsert && this.upsertOnConflict) {
+          const conflictKeys = this.upsertOnConflict.split(',')
+          const existingIndex = db[this.table].findIndex((row: any) => {
+            return conflictKeys.every((key: string) => {
+              const k = key.trim()
+              return String(row[k]) === String(item[k])
+            })
+          })
+          if (existingIndex > -1) {
+            db[this.table][existingIndex] = {
+              ...db[this.table][existingIndex],
+              ...item,
+              updated_at: new Date().toISOString()
+            }
+            return db[this.table][existingIndex]
+          }
+        }
         return {
           id: uuid(),
           created_at: new Date().toISOString(),
           ...item
         }
       })
-      db[this.table].push(...newItems)
+      
+      const toPush = newItems.filter((item: any) => {
+        return !db[this.table].some((row: any) => row.id === item.id)
+      })
+      db[this.table].push(...toPush)
       writeDb(db)
       
       const responseData = Array.isArray(this.actionData) ? newItems : newItems[0]

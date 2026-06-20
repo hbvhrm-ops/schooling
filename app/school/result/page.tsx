@@ -53,8 +53,8 @@ export default function ResultPage() {
     const win = window.open('', '_blank')
     if (!win || students.length === 0) return
     const slipsHTML = students.map(s => `
-      <div style="border:2px solid #6366f1;border-radius:8px;padding:12px;width:280px;display:inline-block;margin:8px;font-size:12px;font-family:Arial">
-        <div style="background:linear-gradient(135deg,#6366f1,#22d3ee);color:white;padding:8px;border-radius:4px;text-align:center;margin-bottom:8px">
+      <div style="border:2px solid #0093cb;border-radius:8px;padding:12px;width:280px;display:inline-block;margin:8px;font-size:12px;font-family:Arial">
+        <div style="background:linear-gradient(135deg,#0093cb,#22d3ee);color:white;padding:8px;border-radius:4px;text-align:center;margin-bottom:8px">
           <strong>Roll Number Slip</strong><br/>${examTypes.find(e => e.id === selExam)?.name || 'Exam'}
         </div>
         <table width="100%"><tr><td style="color:#666">Name:</td><td><strong>${s.name}</strong></td></tr>

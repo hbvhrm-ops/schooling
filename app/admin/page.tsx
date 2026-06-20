@@ -23,7 +23,7 @@ export default function AdminDashboard() {
   }, [])
 
   const statCards = [
-    { label: 'Total Schools', value: stats.total, icon: '🏫', color: '#6366f1', glow: 'rgba(99,102,241,0.15)' },
+    { label: 'Total Schools', value: stats.total, icon: '🏫', color: '#0093cb', glow: 'rgba(0,147,203,0.15)' },
     { label: 'Active Schools', value: stats.active, icon: '✅', color: '#10b981', glow: 'rgba(16,185,129,0.15)' },
     { label: 'Inactive Schools', value: stats.total - stats.active, icon: '⏸️', color: '#f59e0b', glow: 'rgba(245,158,11,0.15)' },
   ]

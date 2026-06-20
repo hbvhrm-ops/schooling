@@ -44,7 +44,7 @@ export default function StaffPage() {
   const totalSalary = staff.filter(s => s.status === 'active').reduce((sum, s) => sum + Number(s.salary || 0), 0)
   const roles = ['Teacher', 'Principal', 'Vice Principal', 'Admin Staff', 'Peon', 'Guard', 'Accountant', 'Lab Assistant', 'Driver', 'Other']
 
-  const roleColors: Record<string, string> = { 'Teacher': '#6366f1', 'Principal': '#10b981', 'Vice Principal': '#22d3ee', 'Admin Staff': '#f59e0b', 'Accountant': '#8b5cf6' }
+  const roleColors: Record<string, string> = { 'Teacher': '#0093cb', 'Principal': '#10b981', 'Vice Principal': '#22d3ee', 'Admin Staff': '#f59e0b', 'Accountant': '#8b5cf6' }
 
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
@@ -61,7 +61,7 @@ export default function StaffPage() {
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
         {[
-          ['Total Staff', staff.length, '#6366f1'],
+          ['Total Staff', staff.length, '#0093cb'],
           ['Active', staff.filter(s => s.status === 'active').length, '#10b981'],
           ['Monthly Salary', `₨ ${totalSalary.toLocaleString()}`, '#f59e0b'],
         ].map(([l, v, c]) => (
@@ -99,7 +99,7 @@ export default function StaffPage() {
                     <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
                     <td style={{ fontWeight: 700 }}>{s.name}</td>
                     <td>
-                      <span className="badge badge-primary" style={{ background: `${roleColors[s.role] || '#6366f1'}18`, color: roleColors[s.role] || '#818cf8' }}>
+                      <span className="badge badge-primary" style={{ background: `${roleColors[s.role] || '#0093cb'}18`, color: roleColors[s.role] || '#818cf8' }}>
                         {s.role}
                       </span>
                     </td>

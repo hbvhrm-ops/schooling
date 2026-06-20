@@ -59,7 +59,7 @@ export default function FeePage() {
       body{font-family:Arial;margin:20px;} .challan{border:2px solid #333;padding:15px;max-width:400px;margin:auto;}
       .header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:10px;}
       .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #ccc;}
-      .amount{font-size:20px;font-weight:bold;text-align:center;margin:10px 0;color:#6366f1;}
+      .amount{font-size:20px;font-weight:bold;text-align:center;margin:10px 0;color:#0093cb;}
     </style></head><body>
     <div class="challan">
       <div class="header"><h2>💳 Fee Challan</h2></div>
