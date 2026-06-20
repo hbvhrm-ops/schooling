@@ -301,6 +301,10 @@ export default function CertificatesPage() {
           <title>${template.title} - ${selectedStudent.name}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+            @page {
+              size: A4 landscape;
+              margin: 10mm;
+            }
             body {
               font-family: 'Playfair Display', serif;
               margin: 0;
@@ -311,20 +315,31 @@ export default function CertificatesPage() {
               print-color-adjust: exact;
             }
             .certificate-container {
-              max-width: 850px;
-              margin: 30px auto;
+              max-width: 1000px;
+              margin: 0 auto;
               padding: 10px;
               box-sizing: border-box;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
             }
             .border-outer {
               border: 12px double #4a3e28;
               padding: 6px;
               background: #fdfbf7;
+              height: 100%;
+              box-sizing: border-box;
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 50px 60px;
+              padding: 40px 60px;
               position: relative;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              box-sizing: border-box;
             }
             .badge-watermark {
               position: absolute;
@@ -340,24 +355,28 @@ export default function CertificatesPage() {
             .content-wrapper {
               position: relative;
               z-index: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              height: 100%;
             }
             .header {
               text-align: center;
-              margin-bottom: 35px;
+              margin-bottom: 20px;
             }
             .logo {
-              max-height: 80px;
-              margin-bottom: 12px;
+              max-height: 70px;
+              margin-bottom: 8px;
               object-fit: contain;
             }
             .logo-placeholder {
-              font-size: 45px;
-              margin-bottom: 10px;
+              font-size: 40px;
+              margin-bottom: 8px;
               color: #4a3e28;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 22px;
+              font-size: 20px;
               font-weight: 800;
               color: #4a3e28;
               letter-spacing: 1.5px;
@@ -366,10 +385,10 @@ export default function CertificatesPage() {
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 26px;
+              font-size: 24px;
               font-weight: 800;
               letter-spacing: 3px;
-              margin: 15px 0 5px;
+              margin: 10px 0 5px;
               color: #6e5a3c;
               text-transform: uppercase;
               border-bottom: 2px double #6e5a3c;
@@ -377,25 +396,26 @@ export default function CertificatesPage() {
               padding-bottom: 4px;
             }
             .cert-subtitle {
-              font-size: 11px;
+              font-size: 10px;
               color: #777;
               letter-spacing: 2px;
               text-transform: uppercase;
-              margin-bottom: 25px;
+              margin-bottom: 15px;
             }
             .cert-body {
-              font-size: 17.5px;
-              line-height: 2.1;
+              font-size: 17px;
+              line-height: 1.9;
               text-align: justify;
-              margin: 35px 0;
+              margin: 20px 0;
               white-space: pre-line;
               text-indent: 30px;
+              flex: 1;
             }
             .footer {
               display: flex;
               justify-content: space-between;
               align-items: flex-end;
-              margin-top: 60px;
+              margin-top: auto;
             }
             .sig-block {
               text-align: center;
@@ -403,10 +423,10 @@ export default function CertificatesPage() {
             }
             .sig-line {
               border-top: 1px solid #777;
-              margin-top: 50px;
+              margin-top: 40px;
               padding-top: 6px;
               font-family: 'Cinzel', serif;
-              font-size: 12px;
+              font-size: 11px;
               font-weight: 800;
               color: #4a3e28;
               text-transform: uppercase;
@@ -421,7 +441,7 @@ export default function CertificatesPage() {
                 margin: 0;
                 max-width: 100%;
                 width: 100%;
-                height: 100vh;
+                height: 100%;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -1088,33 +1108,47 @@ export default function CertificatesPage() {
                   </h3>
                   
                   {selectedStudent ? (
-                    <div style={{ border: '4px double #6e5a3c', padding: '2rem 1.75rem', background: '#fff', color: '#2c2c2c', fontFamily: 'Georgia, serif', lineHeight: '1.8', fontSize: '0.95rem' }}>
-                      <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                    <div style={{ 
+                      border: '4px double #6e5a3c', 
+                      padding: '2.25rem 2.5rem', 
+                      background: '#fff', 
+                      color: '#2c2c2c', 
+                      fontFamily: 'Georgia, serif', 
+                      lineHeight: '1.7', 
+                      fontSize: '0.9rem',
+                      aspectRatio: '1.414 / 1',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                    }}>
+                      <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
                         {template.logo_url ? (
-                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '60px', marginBottom: '8px', objectFit: 'contain' }} />
+                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '55px', marginBottom: '6px', objectFit: 'contain' }} />
                         ) : (
-                          <div style={{ fontSize: '2.5rem', marginBottom: '5px' }}>🎓</div>
+                          <div style={{ fontSize: '2.2rem', marginBottom: '4px' }}>🎓</div>
                         )}
-                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {schoolName}
                         </div>
-                        <div style={{ fontSize: '1.35rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '8px 0 2px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '3px' }}>
+                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '6px 0 2px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
                           {template.title || 'CERTIFICATE'}
                         </div>
-                        <div style={{ fontSize: '0.62rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '0.6rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
                           Official Institution Release Document
                         </div>
                       </div>
 
-                      <div style={{ margin: '1.5rem 0', textAlign: 'justify', whiteSpace: 'pre-line' }}>
+                      <div style={{ margin: '1rem 0', textAlign: 'justify', whiteSpace: 'pre-line', flex: 1 }}>
                         {compiledPreviewBody}
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '3.5rem' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#555' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
+                        <div style={{ fontSize: '0.78rem', color: '#555' }}>
                           <strong>Date:</strong> {new Date().toLocaleDateString()}
                         </div>
-                        <div style={{ textAlign: 'center', borderTop: '1px solid #777', width: '150px', paddingTop: '4px', fontSize: '0.8rem', fontWeight: 'bold', color: '#4a3e28' }}>
+                        <div style={{ textAlign: 'center', borderTop: '1px solid #777', width: '140px', paddingTop: '4px', fontSize: '0.78rem', fontWeight: 'bold', color: '#4a3e28' }}>
                           {template.signature_title}
                         </div>
                       </div>
