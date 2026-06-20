@@ -1140,8 +1140,46 @@ export default function CertificatesPage() {
                 <form onSubmit={handleSaveTemplate} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
                   
                   <div className="form-group">
-                    <label className="form-label">School Logo URL (Optional)</label>
-                    <input type="text" className="form-input" placeholder="Paste .png, .jpg or base64 URL..." value={logoUrlForm} onChange={e => setLogoUrlForm(e.target.value)} />
+                    <label className="form-label">School Logo (Upload from device)</label>
+                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <label className="btn btn-secondary btn-sm" style={{ margin: 0, display: 'inline-flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+                        📁 Choose Logo Image
+                        <input
+                          type="file"
+                          accept="image/png, image/jpeg, image/jpg"
+                          style={{ display: 'none' }}
+                          onChange={e => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const validTypes = ['image/png', 'image/jpeg', 'image/jpg']
+                              if (!validTypes.includes(file.type)) {
+                                alert('Please upload a PNG, JPG, or JPEG image file.')
+                                return
+                              }
+                              const reader = new FileReader()
+                              reader.onload = (event) => {
+                                const result = event.target?.result
+                                if (typeof result === 'string') {
+                                  setLogoUrlForm(result)
+                                }
+                              }
+                              reader.readAsDataURL(file)
+                            }
+                          }}
+                        />
+                      </label>
+                      {logoUrlForm ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', background: 'var(--bg-input)', padding: '0.4rem 0.8rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                          <img src={logoUrlForm} alt="Preview Logo" style={{ maxHeight: '36px', maxWidth: '36px', objectFit: 'contain' }} />
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Logo Uploaded</span>
+                          <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setLogoUrlForm('')}>
+                            Remove
+                          </button>
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>No logo selected</span>
+                      )}
+                    </div>
                   </div>
 
                   <div className="form-group">
