@@ -302,7 +302,7 @@ export default function CertificatesPage() {
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
             @page {
-              size: A4 landscape;
+              size: landscape;
               margin: 0;
             }
             html, body {
@@ -322,9 +322,9 @@ export default function CertificatesPage() {
               justify-content: center;
             }
             .certificate-container {
-              width: 297mm;
-              height: 210mm;
-              padding: 15mm 20mm;
+              width: 100vw;
+              height: 100vh;
+              padding: 5vh 6vw;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
@@ -339,7 +339,7 @@ export default function CertificatesPage() {
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 35px 50px;
+              padding: 4vh 5vw;
               position: relative;
               height: 100%;
               display: flex;
@@ -445,8 +445,10 @@ export default function CertificatesPage() {
               }
               .certificate-container {
                 margin: 0;
-                width: 297mm;
-                height: 210mm;
+                width: 100vw;
+                height: 100vh;
+                max-width: 100%;
+                max-height: 100%;
               }
             }
           </style>

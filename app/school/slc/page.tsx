@@ -159,30 +159,51 @@ export default function SlcPage() {
           <title>SLC - ${selectedStudent.name}</title>
           <style>
             @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
-            body {
-              font-family: 'Playfair Display', serif;
+            @page {
+              size: landscape;
+              margin: 0;
+            }
+            html, body {
               margin: 0;
               padding: 0;
+              width: 100%;
+              height: 100%;
               background: #fff;
+            }
+            body {
+              font-family: 'Playfair Display', serif;
               color: #2c2c2c;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+              display: flex;
+              align-items: center;
+              justify-content: center;
             }
             .certificate-container {
-              max-width: 800px;
-              margin: 30px auto;
-              padding: 10px;
+              width: 100vw;
+              height: 100vh;
+              padding: 5vh 6vw;
               box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              background: #fdfbf7;
             }
             .border-outer {
               border: 10px double #4a3e28;
               padding: 5px;
-              background: #fdfbf7;
+              height: 100%;
+              box-sizing: border-box;
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 40px 50px;
+              padding: 4vh 5vw;
               position: relative;
+              height: 100%;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              box-sizing: border-box;
             }
             .badge-watermark {
               position: absolute;
@@ -198,10 +219,14 @@ export default function SlcPage() {
             .content-wrapper {
               position: relative;
               z-index: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              height: 100%;
             }
             .header {
               text-align: center;
-              margin-bottom: 35px;
+              margin-bottom: 20px;
             }
             .logo {
               max-height: 80px;
@@ -244,9 +269,10 @@ export default function SlcPage() {
               font-size: 18px;
               line-height: 2.1;
               text-align: justify;
-              margin: 35px 0;
+              margin: 20px 0;
               white-space: pre-line;
               text-indent: 30px;
+              flex: 1;
             }
             .cert-body strong {
               font-weight: 600;
@@ -258,7 +284,7 @@ export default function SlcPage() {
               display: flex;
               justify-content: space-between;
               align-items: flex-end;
-              margin-top: 60px;
+              margin-top: auto;
             }
             .sig-block {
               text-align: center;
@@ -282,12 +308,10 @@ export default function SlcPage() {
               }
               .certificate-container {
                 margin: 0;
-                max-width: 100%;
-                width: 100%;
+                width: 100vw;
                 height: 100vh;
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
+                max-width: 100%;
+                max-height: 100%;
               }
               .border-outer {
                 border-width: 12px;
