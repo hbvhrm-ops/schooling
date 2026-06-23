@@ -86,8 +86,40 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { id, ...updates } = await req.json()
+  const { type, id, ...updates } = await req.json()
   const supabase = createServerClient()
-  await supabase.from('fee_invoices').update(updates).eq('id', id).eq('school_id', session.schoolId)
+
+  if (type === 'template') {
+    const { error } = await supabase.from('fee_templates').update({
+      name: updates.name,
+      amount: parseFloat(updates.amount),
+      frequency: updates.frequency,
+    }).eq('id', id).eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  } else {
+    const { error } = await supabase.from('fee_invoices').update(updates).eq('id', id).eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  }
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { searchParams } = new URL(req.url)
+  const type = searchParams.get('type')
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing ID' }, { status: 400 })
+  const supabase = createServerClient()
+
+  if (type === 'template') {
+    const { error } = await supabase.from('fee_templates').delete().eq('id', id).eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  } else if (type === 'invoice') {
+    const { error } = await supabase.from('fee_invoices').delete().eq('id', id).eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  } else {
+    return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
+  }
   return NextResponse.json({ success: true })
 }

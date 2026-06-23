@@ -19,6 +19,10 @@ export default function FeePage() {
   const [selYear, setSelYear] = useState(new Date().getFullYear())
   const [selClass, setSelClass] = useState('')
 
+  const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
+  const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', status: '', paid_date: '' })
+
   const load = useCallback(async () => {
     setLoading(true)
     const [tr, cr, ir] = await Promise.all([
@@ -34,11 +38,99 @@ export default function FeePage() {
 
   useEffect(() => { load() }, [load])
 
-  async function addTemplate(e: React.FormEvent) {
+  async function saveTemplate(e: React.FormEvent) {
     e.preventDefault()
-    const r = await fetch('/api/school/fee', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'template', ...form }) })
-    if (r.ok) { setMsg({ type: 'success', text: 'Fee template added!' }); setForm({ name: '', amount: '', frequency: 'Monthly' }); load() }
-    else setMsg({ type: 'danger', text: 'Failed to add template' })
+    if (editingTemplateId) {
+      const r = await fetch('/api/school/fee', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'template', id: editingTemplateId, ...form })
+      })
+      if (r.ok) {
+        setMsg({ type: 'success', text: 'Fee template updated!' })
+        setForm({ name: '', amount: '', frequency: 'Monthly' })
+        setEditingTemplateId(null)
+        load()
+      } else {
+        setMsg({ type: 'danger', text: 'Failed to update template' })
+      }
+    } else {
+      const r = await fetch('/api/school/fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'template', ...form })
+      })
+      if (r.ok) {
+        setMsg({ type: 'success', text: 'Fee template added!' })
+        setForm({ name: '', amount: '', frequency: 'Monthly' })
+        load()
+      } else {
+        setMsg({ type: 'danger', text: 'Failed to add template' })
+      }
+    }
+  }
+
+  async function deleteTemplate(id: string) {
+    if (!confirm('Are you sure you want to delete this fee template?')) return
+    const r = await fetch(`/api/school/fee?type=template&id=${id}`, { method: 'DELETE' })
+    if (r.ok) {
+      setMsg({ type: 'success', text: 'Template deleted!' })
+      load()
+    } else {
+      setMsg({ type: 'danger', text: 'Failed to delete template' })
+    }
+  }
+
+  function startEditTemplate(t: FeeTemplate) {
+    setEditingTemplateId(t.id)
+    setForm({ name: t.name, amount: String(t.amount), frequency: t.frequency })
+  }
+
+  function cancelEditTemplate() {
+    setEditingTemplateId(null)
+    setForm({ name: '', amount: '', frequency: 'Monthly' })
+  }
+
+  function startEditInvoice(inv: Invoice) {
+    setEditingInvoice(inv)
+    setEditInvoiceForm({
+      amount: String(inv.amount),
+      status: inv.status,
+      paid_date: inv.paid_date || new Date().toISOString().split('T')[0]
+    })
+  }
+
+  async function saveInvoiceEdit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!editingInvoice) return
+    const updates = {
+      amount: parseFloat(editInvoiceForm.amount),
+      status: editInvoiceForm.status,
+      paid_date: editInvoiceForm.status === 'paid' ? editInvoiceForm.paid_date : null
+    }
+    const r = await fetch('/api/school/fee', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: editingInvoice.id, ...updates })
+    })
+    if (r.ok) {
+      setMsg({ type: 'success', text: 'Fee record updated!' })
+      setEditingInvoice(null)
+      load()
+    } else {
+      setMsg({ type: 'danger', text: 'Failed to update fee record' })
+    }
+  }
+
+  async function deleteInvoice(id: string) {
+    if (!confirm('Are you sure you want to delete this fee record?')) return
+    const r = await fetch(`/api/school/fee?type=invoice&id=${id}`, { method: 'DELETE' })
+    if (r.ok) {
+      setMsg({ type: 'success', text: 'Fee record deleted!' })
+      load()
+    } else {
+      setMsg({ type: 'danger', text: 'Failed to delete fee record' })
+    }
   }
 
   async function generateInvoices() {
@@ -95,8 +187,8 @@ export default function FeePage() {
       {tab === 'templates' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>📄 Step 1: Create Fee Template</h3>
-            <form onSubmit={addTemplate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>{editingTemplateId ? '✏️ Edit Fee Template' : '📄 Create Fee Template'}</h3>
+            <form onSubmit={saveTemplate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div className="form-group"><label className="form-label">Template Name *</label><input className="form-input" placeholder="e.g. Monthly Tuition Fee" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} required /></div>
               <div className="form-group"><label className="form-label">Amount (₨) *</label><input className="form-input" type="number" placeholder="0" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} required /></div>
               <div className="form-group"><label className="form-label">Frequency</label>
@@ -104,7 +196,10 @@ export default function FeePage() {
                   <option>Monthly</option><option>Quarterly</option><option>Annual</option><option>One-Time</option>
                 </select>
               </div>
-              <button type="submit" className="btn btn-primary">➕ Add Template</button>
+              <div style={{ display: 'flex', gap: '0.75rem' }}>
+                {editingTemplateId && <button type="button" className="btn btn-secondary" style={{ flex: 1 }} onClick={cancelEditTemplate}>Cancel</button>}
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>{editingTemplateId ? '💾 Update Template' : '➕ Add Template'}</button>
+              </div>
             </form>
           </div>
           <div className="card">
@@ -119,7 +214,13 @@ export default function FeePage() {
                       <div style={{ fontWeight: 600 }}>{t.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{t.frequency}</div>
                     </div>
-                    <div style={{ fontWeight: 800, color: 'var(--success)', fontSize: '1.1rem' }}>₨ {Number(t.amount).toLocaleString()}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      <div style={{ fontWeight: 800, color: 'var(--success)', fontSize: '1.1rem' }}>₨ {Number(t.amount).toLocaleString()}</div>
+                      <div style={{ display: 'flex', gap: '0.3rem' }}>
+                        <button onClick={() => startEditTemplate(t)} className="btn btn-secondary btn-sm" style={{ padding: '0.2rem 0.4rem' }} title="Edit">✏️</button>
+                        <button onClick={() => deleteTemplate(t.id)} className="btn btn-danger btn-sm" style={{ padding: '0.2rem 0.4rem' }} title="Delete">🗑️</button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -201,7 +302,9 @@ export default function FeePage() {
                         <td>
                           <div style={{ display: 'flex', gap: '0.3rem' }}>
                             {inv.status !== 'paid' && <button onClick={() => markPaid(inv.id)} className="btn btn-success btn-sm">✅ Mark Paid</button>}
-                            <button onClick={() => printChallan(inv)} className="btn btn-secondary btn-sm">🖨️</button>
+                            <button onClick={() => printChallan(inv)} className="btn btn-secondary btn-sm" title="Print Challan">🖨️</button>
+                            <button onClick={() => startEditInvoice(inv)} className="btn btn-secondary btn-sm" title="Edit Record">✏️</button>
+                            <button onClick={() => deleteInvoice(inv.id)} className="btn btn-danger btn-sm" title="Delete Record">🗑️</button>
                           </div>
                         </td>
                       </tr>
@@ -212,6 +315,65 @@ export default function FeePage() {
             )}
           </div>
         </>
+      )}
+
+      {/* Edit Invoice Modal */}
+      {editingInvoice && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+          justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.2s ease'
+        }}>
+          <div className="card animate-scale" style={{ width: '450px', margin: '1rem', position: 'relative', background: 'var(--bg-surface)' }}>
+            <button 
+              onClick={() => setEditingInvoice(null)} 
+              style={{ position: 'absolute', top: '1rem', right: '1rem', border: 'none', background: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}
+            >✕</button>
+            <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>✏️ Edit Student Fee Record</h3>
+            <div style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+              Student: <strong style={{ color: 'var(--text-primary)' }}>{editingInvoice.student_name}</strong><br/>
+              Month/Year: <strong>{editingInvoice.month}/{editingInvoice.year}</strong>
+            </div>
+            <form onSubmit={saveInvoiceEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Amount (₨) *</label>
+                <input 
+                  className="form-input" 
+                  type="number" 
+                  value={editInvoiceForm.amount} 
+                  onChange={e => setEditInvoiceForm(f => ({ ...f, amount: e.target.value }))} 
+                  required 
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Status</label>
+                <select 
+                  className="form-select" 
+                  value={editInvoiceForm.status} 
+                  onChange={e => setEditInvoiceForm(f => ({ ...f, status: e.target.value }))}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="paid">Paid</option>
+                </select>
+              </div>
+              {editInvoiceForm.status === 'paid' && (
+                <div className="form-group">
+                  <label className="form-label">Paid Date</label>
+                  <input 
+                    className="form-input" 
+                    type="date" 
+                    value={editInvoiceForm.paid_date} 
+                    onChange={e => setEditInvoiceForm(f => ({ ...f, paid_date: e.target.value }))} 
+                  />
+                </div>
+              )}
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingInvoice(null)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">💾 Save Changes</button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   )
