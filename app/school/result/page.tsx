@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from 'react'
 interface ExamType { id: string; name: string }
 interface ClassItem { id: string; name: string }
 interface Student { id: string; name: string }
-interface Grade { id: string; grade: string; min_marks: number; max_marks: number; gpa: string; remarks: string }
 
 type Step = 1 | 2 | 3
 
@@ -14,7 +13,6 @@ export default function ResultPage() {
   const [examTypes, setExamTypes] = useState<ExamType[]>([])
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [students, setStudents] = useState<Student[]>([])
-  const [grades, setGrades] = useState<Grade[]>([])
   const [newExamType, setNewExamType] = useState('')
   const [selExam, setSelExam] = useState('')
   const [selClass, setSelClass] = useState('')
@@ -27,7 +25,6 @@ export default function ResultPage() {
   useEffect(() => {
     fetch('/api/school/classes').then(r => r.json()).then(d => setClasses(d.classes || []))
     fetch('/api/school/results').then(r => r.json()).then(d => setExamTypes(d.examTypes || []))
-    fetch('/api/school/grading').then(r => r.json()).then(d => setGrades(d.grades || []))
   }, [])
 
   const loadStudents = useCallback(async () => {
@@ -71,17 +68,13 @@ export default function ResultPage() {
   }, [loadResults])
 
   function getGradeForPct(pct: number) {
-    if (grades.length === 0) {
-      if (pct >= 90) return 'A+'
-      if (pct >= 80) return 'A'
-      if (pct >= 70) return 'B+'
-      if (pct >= 60) return 'B'
-      if (pct >= 50) return 'C'
-      if (pct >= 40) return 'D'
-      return 'F'
-    }
-    const matched = grades.find(g => pct >= Number(g.min_marks) && pct <= Number(g.max_marks))
-    return matched ? matched.grade : '—'
+    if (pct >= 90) return 'A+'
+    if (pct >= 80) return 'A'
+    if (pct >= 70) return 'B+'
+    if (pct >= 60) return 'B'
+    if (pct >= 50) return 'C'
+    if (pct >= 40) return 'D'
+    return 'F'
   }
 
   function handleDefaultTotalChange(val: string) {
