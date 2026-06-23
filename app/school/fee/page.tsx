@@ -47,14 +47,10 @@ export default function FeePage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
-    if (!assignClass) {
-      setAssignStudentsList([])
-      setAssignStudent('')
-      setStudentSearch('')
-      return
-    }
-    setStudentSearch('')
-    fetch(`/api/school/students?class_id=${assignClass}`)
+    const url = assignClass 
+      ? `/api/school/students?class_id=${assignClass}`
+      : `/api/school/students`
+    fetch(url)
       .then(r => r.json())
       .then(d => setAssignStudentsList(d.students || []))
   }, [assignClass])
@@ -156,8 +152,8 @@ export default function FeePage() {
 
   async function handleAssignFee(e: React.FormEvent) {
     e.preventDefault()
-    if (!assignClass || !assignTemplate) {
-      setMsg({ type: 'danger', text: 'Class and Fee Template are required.' })
+    if (!assignTemplate || (!assignClass && !assignStudent)) {
+      setMsg({ type: 'danger', text: 'Fee template and either Class or a specific Student are required.' })
       return
     }
     setLoading(true)
@@ -292,29 +288,27 @@ export default function FeePage() {
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Assign fee templates or fines to classes or specific students.</p>
           <form onSubmit={handleAssignFee} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group">
-              <label className="form-label">Class *</label>
-              <select className="form-select" value={assignClass} onChange={e => setAssignClass(e.target.value)} required>
+              <label className="form-label">Class {assignStudent ? '(Optional)' : '*'}</label>
+              <select className="form-select" value={assignClass} onChange={e => setAssignClass(e.target.value)} required={!assignStudent}>
                 <option value="">Select Class</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            {assignClass && (
-              <div className="form-group">
-                <label className="form-label">Student (Optional — select to apply fine/fee only to them)</label>
-                <input
-                  className="form-input"
-                  type="text"
-                  placeholder="🔍 Type student name to search/filter..."
-                  value={studentSearch}
-                  onChange={e => setStudentSearch(e.target.value)}
-                  style={{ marginBottom: '0.5rem' }}
-                />
-                <select className="form-select" value={assignStudent} onChange={e => setAssignStudent(e.target.value)}>
-                  <option value="">All Students (Assign to Class)</option>
-                  {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </div>
-            )}
+            <div className="form-group">
+              <label className="form-label">Student (Optional — select to apply fine/fee only to them)</label>
+              <input
+                className="form-input"
+                type="text"
+                placeholder="🔍 Type student name to search/filter..."
+                value={studentSearch}
+                onChange={e => setStudentSearch(e.target.value)}
+                style={{ marginBottom: '0.5rem' }}
+              />
+              <select className="form-select" value={assignStudent} onChange={e => setAssignStudent(e.target.value)}>
+                <option value="">All Students (Assign to Class)</option>
+                {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+            </div>
             <div className="form-group">
               <label className="form-label">Fee Template / Fine *</label>
               <select className="form-select" value={assignTemplate} onChange={e => setAssignTemplate(e.target.value)} required>
