@@ -5,6 +5,8 @@ interface Student {
   id: string; name: string; father_name: string; class_name: string; section_name: string;
   roll_no: string; gender: string; contact: string; status: string; reg_date: string; dob?: string;
   address?: string;
+  class_id?: string;
+  section_id?: string;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_info?: Record<string, any>;
   photo_url?: string;
@@ -357,8 +359,8 @@ export default function StudentsPage() {
                               setEditForm({
                                 name: s.name || '',
                                 father_name: s.father_name || '',
-                                class_id: classes.find(c => c.name === s.class_name)?.id || '',
-                                section_id: sections.find(sec => sec.name === s.section_name)?.id || '',
+                                class_id: s.class_id || '',
+                                section_id: s.section_id || '',
                                 roll_no: s.roll_no || '',
                                 gender: s.gender || 'Male',
                                 dob: s.dob || '',
