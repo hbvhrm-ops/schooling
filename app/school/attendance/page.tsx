@@ -219,7 +219,11 @@ export default function AttendancePage() {
 
   async function saveAttendance() {
     setSaving(true); setMsg(null)
-    const records = Object.entries(attendance).map(([student_id, status]) => ({ student_id, status, date }))
+    const records = students.map(s => ({
+      student_id: s.id,
+      status: attendance[s.id] || 'present',
+      date
+    }))
     const r = await fetch('/api/school/attendance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ records }) })
     if (r.ok) {
       setMsg({ type: 'success', text: `Attendance saved for ${records.length} students on ${date}!` })

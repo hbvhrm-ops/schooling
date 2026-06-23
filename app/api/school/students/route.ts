@@ -2,15 +2,30 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ students: [] })
+  
+  const { searchParams } = new URL(req.url)
+  const classId = searchParams.get('class_id')
+  const sectionId = searchParams.get('section_id')
+  
   const supabase = createServerClient()
-  const { data } = await supabase
+  let query = supabase
     .from('students')
     .select('*, classes(name), sections(name)')
     .eq('school_id', session.schoolId)
-    .order('name')
+    
+  if (classId) {
+    query = query.eq('class_id', classId)
+  }
+  if (sectionId) {
+    query = query.eq('section_id', sectionId)
+  }
+  
+  const { data, error } = await query.order('name')
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  
   const students = (data || []).map((s: any) => ({
     ...s,
     class_name: s.classes?.name || '',
