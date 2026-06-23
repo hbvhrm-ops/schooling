@@ -344,7 +344,7 @@ export default function CertificatesPage() {
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 6vh 8vw;
+              padding: 4vh 6vw;
               position: relative;
               height: 100%;
               display: flex;
@@ -375,52 +375,52 @@ export default function CertificatesPage() {
             }
             .header {
               text-align: center;
-              margin-bottom: 15px;
+              margin-bottom: 8px;
               flex-shrink: 0;
             }
             .logo {
-              max-height: 65px;
-              margin-bottom: 6px;
+              max-height: 50px;
+              margin-bottom: 4px;
               object-fit: contain;
             }
             .logo-placeholder {
-              font-size: 35px;
-              margin-bottom: 6px;
+              font-size: 28px;
+              margin-bottom: 3px;
               color: #4a3e28;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 18px;
+              font-size: 15px;
               font-weight: 800;
               color: #4a3e28;
               letter-spacing: 1.5px;
-              margin-bottom: 3px;
+              margin-bottom: 1px;
               text-transform: uppercase;
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 22px;
+              font-size: 18px;
               font-weight: 800;
               letter-spacing: 3px;
-              margin: 8px 0 3px;
+              margin: 4px 0 2px;
               color: #6e5a3c;
               text-transform: uppercase;
               border-bottom: 2px double #6e5a3c;
               display: inline-block;
-              padding-bottom: 4px;
+              padding-bottom: 2px;
             }
             .cert-subtitle {
-              font-size: 9px;
+              font-size: 8px;
               color: #777;
               letter-spacing: 2px;
               text-transform: uppercase;
-              margin-bottom: 10px;
+              margin-bottom: 6px;
             }
             .cert-body {
               font-size: 16.5px;
               line-height: 1.8;
               text-align: justify;
-              margin: 15px 0;
+              margin: 8px 0;
               white-space: pre-line;
               text-indent: 30px;
               flex: 1 1 auto;
@@ -1144,7 +1144,7 @@ export default function CertificatesPage() {
                   {selectedStudent ? (
                     <div style={{ 
                       border: '4px double #6e5a3c', 
-                      padding: '2.25rem 2.5rem', 
+                      padding: '1.5rem 2rem', 
                       background: '#fff', 
                       color: '#2c2c2c', 
                       fontFamily: 'Georgia, serif', 
@@ -1158,19 +1158,19 @@ export default function CertificatesPage() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       overflow: 'hidden'
                     }}>
-                      <div style={{ textAlign: 'center', marginBottom: '1rem', flexShrink: 0 }}>
+                      <div style={{ textAlign: 'center', marginBottom: '0.4rem', flexShrink: 0 }}>
                         {template.logo_url ? (
-                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '55px', marginBottom: '6px', objectFit: 'contain' }} />
+                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '40px', marginBottom: '3px', objectFit: 'contain' }} />
                         ) : (
-                          <div style={{ fontSize: '2.2rem', marginBottom: '4px' }}>🎓</div>
+                          <div style={{ fontSize: '1.8rem', marginBottom: '2px' }}>🎓</div>
                         )}
-                        <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {schoolName}
                         </div>
-                        <div style={{ fontSize: '1.25rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '6px 0 2px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
+                        <div style={{ fontSize: '1rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '3px 0 1px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
                           {template.title || 'CERTIFICATE'}
                         </div>
-                        <div style={{ fontSize: '0.6rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '0.52rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
                           Official Institution Release Document
                         </div>
                       </div>
