@@ -47,7 +47,7 @@ interface SessionalStudentStats {
   pct: number
 }
 
-type Tab = 'mark' | 'daily' | 'monthly' | 'sessional' | 'history'
+type Tab = 'mark' | 'daily' | 'monthly' | 'sessional'
 
 export default function AttendancePage() {
   const [tab, setTab] = useState<Tab>('mark')
@@ -91,8 +91,12 @@ export default function AttendancePage() {
     if (!selClass) return
     setLoading(true)
     try {
-      const params = new URLSearchParams({ class_id: selClass, ...(selSection ? { section_id: selSection } : {}) })
-      const r = await fetch(`/api/school/students?${params}`)
+      const params = new URLSearchParams({
+        class_id: selClass,
+        ...(selSection ? { section_id: selSection } : {}),
+        _t: Date.now().toString()
+      })
+      const r = await fetch(`/api/school/students?${params}`, { cache: 'no-store' })
       const d = await r.json()
       const list = (d.students || []).filter((s: Student & { status?: string }) => s.status !== 'discharged' || !s.status)
       setStudents(list)
@@ -102,9 +106,10 @@ export default function AttendancePage() {
         type: 'daily',
         class_id: selClass,
         ...(selSection ? { section_id: selSection } : {}),
-        date
+        date,
+        _t: Date.now().toString()
       })
-      const dailyRes = await fetch(`/api/school/attendance?${dailyParams}`)
+      const dailyRes = await fetch(`/api/school/attendance?${dailyParams}`, { cache: 'no-store' })
       const dailyData = await dailyRes.json()
       const dailyList = dailyData.report || []
 
@@ -135,10 +140,11 @@ export default function AttendancePage() {
       type: 'monthly',
       class_id: selClass,
       ...(selSection ? { section_id: selSection } : {}),
-      month: date.slice(0, 7)
+      month: date.slice(0, 7),
+      _t: Date.now().toString()
     })
     try {
-      const r = await fetch(`/api/school/attendance?${params}`)
+      const r = await fetch(`/api/school/attendance?${params}`, { cache: 'no-store' })
       const d = await r.json()
       setReport(d.report || [])
       setMonthlyStudentStats(d.studentsReport || [])
@@ -163,10 +169,11 @@ export default function AttendancePage() {
       type: 'daily',
       class_id: selClass,
       ...(selSection ? { section_id: selSection } : {}),
-      date
+      date,
+      _t: Date.now().toString()
     })
     try {
-      const r = await fetch(`/api/school/attendance?${params}`)
+      const r = await fetch(`/api/school/attendance?${params}`, { cache: 'no-store' })
       const d = await r.json()
       setDailyRecords(d.report || [])
     } catch (err) {
@@ -189,10 +196,11 @@ export default function AttendancePage() {
     const params = new URLSearchParams({
       type: 'sessional',
       class_id: selClass,
-      ...(selSection ? { section_id: selSection } : {})
+      ...(selSection ? { section_id: selSection } : {}),
+      _t: Date.now().toString()
     })
     try {
-      const r = await fetch(`/api/school/attendance?${params}`)
+      const r = await fetch(`/api/school/attendance?${params}`, { cache: 'no-store' })
       const d = await r.json()
       setSessionalStudentStats(d.report || [])
     } catch (err) {
@@ -251,7 +259,7 @@ export default function AttendancePage() {
       </div>
 
       <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
-        {([['mark','📝 Mark Attendance'],['daily','📋 Daily Report'],['monthly','📅 Monthly Report'],['sessional','📊 Sessional'],['history','💬 SMS History']] as [Tab, string][]).map(([t, l]) => (
+        {([['mark','📝 Mark Attendance'],['daily','📋 Daily Report'],['monthly','📅 Monthly Report'],['sessional','📊 Sessional']] as [Tab, string][]).map(([t, l]) => (
           <button key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>{l}</button>
         ))}
       </div>
@@ -452,7 +460,7 @@ export default function AttendancePage() {
               <h3 style={{ fontWeight: 700, marginBottom: '0.25rem' }}>📅 Monthly Attendance Report</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>View student summary and daily trends for {date.slice(0, 7)}.</p>
             </div>
-            {report.length > 0 && (
+            {monthlyStudentStats.length > 0 && (
               <div style={{ display: 'flex', background: 'var(--border-color)', padding: '0.2rem', borderRadius: '8px', gap: '0.2rem' }}>
                 <button
                   onClick={() => setActiveMonthlyTab('students')}
@@ -488,8 +496,8 @@ export default function AttendancePage() {
             )}
           </div>
 
-          {report.length === 0 ? (
-            <div className="empty-state"><div className="empty-icon">📊</div><p>Select a class and click Load Report</p></div>
+          {monthlyStudentStats.length === 0 ? (
+            <div className="empty-state"><div className="empty-icon">📊</div><p>No student records found. Select a class and click Load Report.</p></div>
           ) : activeMonthlyTab === 'students' ? (
             <>
               {/* Search Bar */}
@@ -548,6 +556,8 @@ export default function AttendancePage() {
                 </table>
               </div>
             </>
+          ) : report.length === 0 ? (
+            <div className="empty-state" style={{ padding: '2rem' }}><div className="empty-icon">📈</div><p>No daily trends available for this month.</p></div>
           ) : (
             <div className="table-wrap">
               <table>
@@ -664,12 +674,7 @@ export default function AttendancePage() {
         </div>
       )}
 
-      {tab === 'history' && (
-        <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>💬 Attendance SMS History</h3>
-          <div className="empty-state"><div className="empty-icon">📱</div><p>No SMS sent yet. Configure SMS settings to enable attendance notifications.</p></div>
-        </div>
-      )}
+
     </div>
   )
 }

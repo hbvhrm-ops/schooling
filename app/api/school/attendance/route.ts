@@ -128,13 +128,20 @@ export async function GET(req: NextRequest) {
     let attendanceData: AttendanceRecord[] = []
     
     if (studentIds.length > 0) {
+      const [yearStr, monthStr] = month.split('-')
+      const year = parseInt(yearStr, 10)
+      const monthNum = parseInt(monthStr, 10)
+      const nextMonth = monthNum === 12 ? 1 : monthNum + 1
+      const nextYear = monthNum === 12 ? year + 1 : year
+      
       const start = `${month}-01`
-      const end = `${month}-31`
+      const endLimit = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`
+      
       const { data, error: attError } = await supabase
         .from('attendance')
         .select('student_id, status, date')
         .in('student_id', studentIds)
-        .gte('date', start).lte('date', end)
+        .gte('date', start).lt('date', endLimit)
       if (attError) return NextResponse.json({ error: attError.message }, { status: 400 })
       attendanceData = (data as unknown as AttendanceRecord[]) || []
     }
