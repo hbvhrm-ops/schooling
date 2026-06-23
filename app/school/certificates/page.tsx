@@ -375,52 +375,52 @@ export default function CertificatesPage() {
             }
             .header {
               text-align: center;
-              margin-bottom: 8px;
+              margin-bottom: 4px;
               flex-shrink: 0;
             }
             .logo {
-              max-height: 50px;
-              margin-bottom: 4px;
+              max-height: 38px;
+              margin-bottom: 2px;
               object-fit: contain;
             }
             .logo-placeholder {
-              font-size: 28px;
-              margin-bottom: 3px;
+              font-size: 22px;
+              margin-bottom: 2px;
               color: #4a3e28;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 15px;
+              font-size: 13px;
               font-weight: 800;
               color: #4a3e28;
               letter-spacing: 1.5px;
-              margin-bottom: 1px;
+              margin-bottom: 0px;
               text-transform: uppercase;
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 18px;
+              font-size: 15px;
               font-weight: 800;
               letter-spacing: 3px;
-              margin: 4px 0 2px;
+              margin: 2px 0 1px;
               color: #6e5a3c;
               text-transform: uppercase;
               border-bottom: 2px double #6e5a3c;
               display: inline-block;
-              padding-bottom: 2px;
+              padding-bottom: 1px;
             }
             .cert-subtitle {
-              font-size: 8px;
+              font-size: 7.5px;
               color: #777;
               letter-spacing: 2px;
               text-transform: uppercase;
-              margin-bottom: 6px;
+              margin-bottom: 4px;
             }
             .cert-body {
               font-size: 16.5px;
               line-height: 1.8;
               text-align: justify;
-              margin: 8px 0;
+              margin: 4px 0 16px 0;
               white-space: pre-line;
               text-indent: 30px;
               flex: 1 1 auto;
@@ -1158,25 +1158,25 @@ export default function CertificatesPage() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       overflow: 'hidden'
                     }}>
-                      <div style={{ textAlign: 'center', marginBottom: '0.4rem', flexShrink: 0 }}>
+                      <div style={{ textAlign: 'center', marginBottom: '0.2rem', flexShrink: 0 }}>
                         {template.logo_url ? (
-                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '40px', marginBottom: '3px', objectFit: 'contain' }} />
+                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '30px', marginBottom: '2px', objectFit: 'contain' }} />
                         ) : (
-                          <div style={{ fontSize: '1.8rem', marginBottom: '2px' }}>🎓</div>
+                          <div style={{ fontSize: '1.4rem', marginBottom: '2px' }}>🎓</div>
                         )}
-                        <div style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                           {schoolName}
                         </div>
-                        <div style={{ fontSize: '1rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '3px 0 1px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
+                        <div style={{ fontSize: '0.88rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '2px 0 1px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
                           {template.title || 'CERTIFICATE'}
                         </div>
-                        <div style={{ fontSize: '0.52rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                        <div style={{ fontSize: '0.48rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
                           Official Institution Release Document
                         </div>
                       </div>
 
                       <div style={{ 
-                        margin: '1rem 0', 
+                        margin: '0.5rem 0 1.25rem 0', 
                         textAlign: 'justify', 
                         whiteSpace: 'pre-line', 
                         flex: '1 1 auto', 
