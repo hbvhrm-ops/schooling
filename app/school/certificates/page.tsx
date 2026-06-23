@@ -761,9 +761,9 @@ export default function CertificatesPage() {
       return `
         <tr>
           <td>${idx + 1}</td>
-          <td><strong>${s.roll_no || '—'}</strong></td>
+          <td class="roll-no">${s.roll_no || '—'}</td>
           <td class="student-name">${s.name}</td>
-          <td>${obtained !== '' ? obtained : ' &nbsp; '}</td>
+          <td class="marks-obtained">${obtained !== '' ? obtained : '&nbsp;'}</td>
         </tr>
       `
     }).join('')
@@ -773,109 +773,162 @@ export default function CertificatesPage() {
         <head>
           <title>Award List - Class ${className} - ${examName}</title>
           <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+            
             body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              color: #111;
-              margin: 30px;
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #1e293b;
+              margin: 40px;
               padding: 0;
+              line-height: 1.5;
             }
             .header {
               text-align: center;
               margin-bottom: 25px;
-              border-bottom: 3px double #222;
-              padding-bottom: 12px;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 20px;
             }
             .school-name {
-              font-size: 20px;
-              font-weight: bold;
+              font-family: 'Playfair Display', Georgia, serif;
+              font-size: 28px;
+              font-weight: 800;
               text-transform: uppercase;
               letter-spacing: 0.5px;
+              color: #0f172a;
+              margin-bottom: 8px;
+            }
+            .subject-info {
+              font-size: 15px;
+              font-weight: 600;
+              color: #475569;
+              margin-top: 5px;
+              letter-spacing: 0.5px;
+            }
+            .subject-info span {
+              color: #0f172a;
+              font-weight: 700;
             }
             .sheet-title {
-              font-size: 15px;
-              font-weight: bold;
-              margin-top: 5px;
-              letter-spacing: 1px;
-              color: #444;
+              font-size: 16px;
+              font-weight: 800;
+              margin-top: 15px;
+              letter-spacing: 2px;
+              color: #1e293b;
+              text-transform: uppercase;
             }
             .meta-table {
               width: 100%;
-              margin-bottom: 20px;
-              font-size: 13px;
+              margin-bottom: 25px;
+              font-size: 12px;
+              border-collapse: collapse;
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
             }
             .meta-table td {
-              padding: 4px 0;
+              padding: 10px 14px;
+              border: 1px solid #e2e8f0;
             }
-            .meta-table td.bold {
-              font-weight: bold;
+            .meta-label {
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
+              font-size: 10px;
+              letter-spacing: 0.5px;
+              width: 15%;
+            }
+            .meta-value {
+              font-weight: 700;
+              color: #0f172a;
+              font-size: 13px;
+              width: 35%;
             }
             .award-table {
               width: 100%;
               border-collapse: collapse;
               font-size: 13px;
-              margin-bottom: 30px;
+              margin-bottom: 40px;
+              border: 1px solid #cbd5e1;
             }
             .award-table th, .award-table td {
-              border: 1px solid #333;
-              padding: 8px;
+              border: 1px solid #cbd5e1;
+              padding: 10px 12px;
               text-align: center;
             }
             .award-table th {
-              background-color: #f2f2f2;
-              font-weight: bold;
+              background-color: #f1f5f9;
+              color: #334155;
+              font-weight: 700;
               text-transform: uppercase;
-              font-size: 11.5px;
+              font-size: 11px;
+              letter-spacing: 0.5px;
+            }
+            .award-table tr:nth-child(even) {
+              background-color: #f8fafc;
             }
             .award-table td.student-name {
               text-align: left;
-              font-weight: bold;
+              font-weight: 700;
+              color: #0f172a;
+              padding-left: 20px;
+            }
+            .award-table td.roll-no {
+              font-weight: 700;
+              color: #475569;
+            }
+            .award-table td.marks-obtained {
+              font-weight: 800;
+              font-size: 14px;
+              color: #0f172a;
             }
             .footer {
-              margin-top: 50px;
+              margin-top: 60px;
               display: flex;
               justify-content: space-between;
+              page-break-inside: avoid;
             }
             .sig-block {
               text-align: center;
-              width: 250px;
+              width: 240px;
             }
             .sig-line {
-              border-top: 1.5px solid #222;
+              border-top: 1.5px dashed #64748b;
               margin-top: 50px;
-              padding-top: 5px;
-              font-size: 12px;
-              font-weight: bold;
+              padding-top: 8px;
+              font-size: 11px;
+              font-weight: 700;
+              color: #334155;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
             }
             @media print {
-              body { margin: 15px; }
-              .award-table th { background-color: #f2f2f2 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              body { margin: 20px; }
+              .meta-table { background-color: #f8fafc !important; }
+              .award-table th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .award-table tr:nth-child(even) { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
           </style>
         </head>
         <body>
           <div class="header">
             <div class="school-name">${schoolName}</div>
+            <div class="subject-info">
+              SUBJECT: <span>${subjectName || 'All Subjects'}</span> &nbsp;&bull;&nbsp; TOTAL MARKS: <span>${totalMarks}</span>
+            </div>
             <div class="sheet-title">EXAMINATION AWARD LIST</div>
           </div>
 
           <table class="meta-table">
             <tr>
-              <td style="width: 12%">Class:</td>
-              <td class="bold" style="width: 28%">${className}</td>
-              <td style="width: 12%">Exam:</td>
-              <td class="bold" style="width: 48%">${examName}</td>
+              <td class="meta-label">Class:</td>
+              <td class="meta-value">${className}</td>
+              <td class="meta-label">Section:</td>
+              <td class="meta-value">${sectionName}</td>
             </tr>
             <tr>
-              <td>Section:</td>
-              <td class="bold">${sectionName}</td>
-              <td>Subject:</td>
-              <td class="bold">${subjectName || 'All Subjects'}</td>
-            </tr>
-            <tr>
-              <td>Date:</td>
-              <td class="bold">${new Date().toLocaleDateString()}</td>
-              <td>Total Marks:</td>
-              <td class="bold">${totalMarks}</td>
+              <td class="meta-label">Exam:</td>
+              <td class="meta-value">${examName}</td>
+              <td class="meta-label">Date:</td>
+              <td class="meta-value">${new Date().toLocaleDateString()}</td>
             </tr>
           </table>
 
@@ -884,8 +937,8 @@ export default function CertificatesPage() {
               <tr>
                 <th style="width: 10%">S.No</th>
                 <th style="width: 20%">Roll No</th>
-                <th style="width: 40%">Student Name</th>
-                <th style="width: 30%">Obtained Marks</th>
+                <th style="width: 45%">Student Name</th>
+                <th style="width: 25%">Obtained Marks</th>
               </tr>
             </thead>
             <tbody>
@@ -895,10 +948,10 @@ export default function CertificatesPage() {
 
           <div class="footer">
             <div class="sig-block">
-              <div class="sig-line">Subject Teacher Signature</div>
+              <div class="sig-line">Teacher Sign</div>
             </div>
             <div class="sig-block">
-              <div class="sig-line">Examiner / Controller Signature</div>
+              <div class="sig-line">Examiner Sign</div>
             </div>
           </div>
 
