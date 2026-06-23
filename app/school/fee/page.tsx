@@ -5,7 +5,7 @@ interface FeeTemplate { id: string; name: string; amount: number; frequency: str
 interface ClassItem { id: string; name: string }
 interface Invoice { id: string; student_name: string; amount: number; month: number; year: number; status: string; paid_date?: string }
 
-type Tab = 'templates' | 'criteria' | 'invoices' | 'easy-fee' | 'history' | 'discount' | 'fine' | 'challan' | 'advance' | 'average'
+type Tab = 'templates' | 'assign-fee' | 'fee-history'
 
 export default function FeePage() {
   const [tab, setTab] = useState<Tab>('templates')
@@ -85,7 +85,7 @@ export default function FeePage() {
       </div>
 
       <div className="tab-bar" style={{ marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-        {([['templates','📄 Templates (Step 1)'],['criteria','🎯 Criteria (Step 2)'],['invoices','📋 Invoices (Step 3)'],['easy-fee','⚡ Easy Fee'],['discount','🎁 Discount/Scholarship'],['advance','💰 Advance Fee'],['fine','⚠️ Fine Policy'],['average','📊 Average Fee'],['challan','🖨️ Challan Settings'],['history','💬 SMS History']] as [Tab, string][]).map(([t, l]) => (
+        {([['templates','📄 Templates'],['assign-fee','🎯 Assign Fee'],['fee-history','📋 Fee History']] as [Tab, string][]).map(([t, l]) => (
           <button key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>{l}</button>
         ))}
       </div>
@@ -128,9 +128,9 @@ export default function FeePage() {
         </div>
       )}
 
-      {tab === 'criteria' && (
+      {tab === 'assign-fee' && (
         <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🎯 Step 2: Fee Criteria (Assign to Classes)</h3>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🎯 Assign Fee (Criteria)</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Assign fee templates to specific classes</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group"><label className="form-label">Class</label>
@@ -144,7 +144,7 @@ export default function FeePage() {
         </div>
       )}
 
-      {tab === 'invoices' && (
+      {tab === 'fee-history' && (
         <>
           {/* Summary Cards */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -212,77 +212,6 @@ export default function FeePage() {
             )}
           </div>
         </>
-      )}
-
-      {tab === 'easy-fee' && (
-        <div className="card" style={{ maxWidth: '500px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚡ Easy Fee Collection</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Quickly collect fee for a student by searching their name.</p>
-          <div className="search-bar" style={{ marginBottom: '1rem' }}>
-            <span className="search-icon">🔍</span>
-            <input className="form-input" placeholder="Search student..." />
-          </div>
-          <div className="alert alert-info"><span>ℹ️</span> Search for a student and click Collect Fee to process payment quickly.</div>
-        </div>
-      )}
-
-      {tab === 'discount' && (
-        <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🎁 Discount & Scholarship</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">Student</label><input className="form-input" placeholder="Search student..." /></div>
-            <div className="form-group"><label className="form-label">Discount Type</label>
-              <select className="form-select"><option>Percentage (%)</option><option>Fixed Amount (₨)</option></select>
-            </div>
-            <div className="form-group"><label className="form-label">Value</label><input className="form-input" type="number" placeholder="0" /></div>
-            <div className="form-group"><label className="form-label">Reason</label><textarea className="form-textarea" placeholder="Scholarship reason..." style={{ minHeight: '80px' }} /></div>
-            <button className="btn btn-primary">✅ Apply Discount</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'fine' && (
-        <div className="card" style={{ maxWidth: '500px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>⚠️ Fine Policy</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">Late Payment Grace Period (days)</label><input className="form-input" type="number" defaultValue="10" /></div>
-            <div className="form-group"><label className="form-label">Fine Type</label><select className="form-select"><option>Fixed Amount</option><option>Percentage per day</option></select></div>
-            <div className="form-group"><label className="form-label">Fine Amount (₨)</label><input className="form-input" type="number" defaultValue="50" /></div>
-            <button className="btn btn-primary">💾 Save Fine Policy</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'average' && (
-        <div className="card"><h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📊 Average Fee per Class</h3><p style={{ color: 'var(--text-secondary)' }}>Average fee analysis per class will be shown here once invoice data is available.</p></div>
-      )}
-
-      {tab === 'challan' && (
-        <div className="card" style={{ maxWidth: '500px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🖨️ Challan Form Settings</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">Bank Name</label><input className="form-input" placeholder="e.g. HBL, UBL, MCB..." /></div>
-            <div className="form-group"><label className="form-label">Account Number</label><input className="form-input" placeholder="School bank account number" /></div>
-            <div className="form-group"><label className="form-label">Challan Footer Note</label><textarea className="form-textarea" placeholder="Payment instructions..." style={{ minHeight: '80px' }} /></div>
-            <button className="btn btn-primary">💾 Save Settings</button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'history' && (
-        <div className="card"><h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>💬 Fee SMS History</h3><div className="empty-state"><div className="empty-icon">📱</div><p>No fee SMS sent yet.</p></div></div>
-      )}
-
-      {tab === 'advance' && (
-        <div className="card" style={{ maxWidth: '500px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>💰 Advance Fee Collection</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">Student</label><input className="form-input" placeholder="Search student..." /></div>
-            <div className="form-group"><label className="form-label">Advance Amount (₨)</label><input className="form-input" type="number" /></div>
-            <div className="form-group"><label className="form-label">For Month</label><input className="form-input" type="month" /></div>
-            <button className="btn btn-primary">✅ Collect Advance Fee</button>
-          </div>
-        </div>
       )}
     </div>
   )
