@@ -48,35 +48,56 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ template: data }, { status: 201 })
   }
 
-  if (body.type === 'generate_invoices') {
-    // Get all active students, get all fee templates for the school
-    const studentsQuery = supabase.from('students').select('id, class_id').eq('school_id', session.schoolId).eq('status', 'active')
-    if (body.class_id) studentsQuery.eq('class_id', body.class_id)
-    const { data: students } = await studentsQuery
-
-    const { data: templates } = await supabase.from('fee_templates').select('*').eq('school_id', session.schoolId)
-    const { data: criteria } = await supabase.from('fee_criteria').select('*').eq('school_id', session.schoolId)
+  if (body.type === 'assign_fee') {
+    const { data: template, error: tErr } = await supabase
+      .from('fee_templates')
+      .select('*')
+      .eq('id', body.fee_template_id)
+      .eq('school_id', session.schoolId)
+      .single()
+    if (tErr || !template) return NextResponse.json({ error: 'Template not found' }, { status: 400 })
 
     const invoices = []
-    for (const student of (students || [])) {
-      const applicableTemplates = (templates || []).filter((t: any) => {
-        const c = (criteria || []).find((cr: { fee_template_id: string; class_id: string }) => cr.fee_template_id === t.id)
-        return !c || c.class_id === student.class_id
+    if (body.student_id) {
+      invoices.push({
+        school_id: session.schoolId,
+        student_id: body.student_id,
+        fee_template_id: body.fee_template_id,
+        month: body.month,
+        year: body.year,
+        amount: template.amount,
+        status: 'pending'
       })
-      for (const template of applicableTemplates) {
+    } else {
+      const { data: students } = await supabase
+        .from('students')
+        .select('id')
+        .eq('school_id', session.schoolId)
+        .eq('class_id', body.class_id)
+        .eq('status', 'active')
+      
+      for (const student of (students || [])) {
         invoices.push({
           school_id: session.schoolId,
           student_id: student.id,
-          fee_template_id: template.id,
+          fee_template_id: body.fee_template_id,
           month: body.month,
           year: body.year,
           amount: template.amount,
-          status: 'pending',
+          status: 'pending'
         })
       }
+      
+      await supabase.from('fee_criteria').insert({
+        school_id: session.schoolId,
+        fee_template_id: body.fee_template_id,
+        class_id: body.class_id
+      })
     }
+
     if (invoices.length > 0) {
-      await supabase.from('fee_invoices').insert(invoices)
+      const { error: invErr } = await supabase.from('fee_invoices').insert(invoices)
+      if (invErr) return NextResponse.json({ error: invErr.message }, { status: 400 })
     }
     return NextResponse.json({ success: true, count: invoices.length })
   }

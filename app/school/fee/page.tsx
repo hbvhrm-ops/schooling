@@ -23,6 +23,13 @@ export default function FeePage() {
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
   const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', status: '', paid_date: '' })
 
+  const [assignClass, setAssignClass] = useState('')
+  const [assignStudent, setAssignStudent] = useState('')
+  const [assignTemplate, setAssignTemplate] = useState('')
+  const [assignMonth, setAssignMonth] = useState(new Date().getMonth() + 1)
+  const [assignYear, setAssignYear] = useState(new Date().getFullYear())
+  const [assignStudentsList, setAssignStudentsList] = useState<{ id: string; name: string }[]>([])
+
   const load = useCallback(async () => {
     setLoading(true)
     const [tr, cr, ir] = await Promise.all([
@@ -37,6 +44,17 @@ export default function FeePage() {
   }, [selMonth, selYear, selClass])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    if (!assignClass) {
+      setAssignStudentsList([])
+      setAssignStudent('')
+      return
+    }
+    fetch(`/api/school/students?class_id=${assignClass}`)
+      .then(r => r.json())
+      .then(d => setAssignStudentsList(d.students || []))
+  }, [assignClass])
 
   async function saveTemplate(e: React.FormEvent) {
     e.preventDefault()
@@ -133,10 +151,42 @@ export default function FeePage() {
     }
   }
 
-  async function generateInvoices() {
-    const r = await fetch('/api/school/fee', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'generate_invoices', month: selMonth, year: selYear, class_id: selClass }) })
-    if (r.ok) { setMsg({ type: 'success', text: 'Fee invoices generated!' }); load() }
-    else setMsg({ type: 'danger', text: 'Failed to generate invoices' })
+  async function handleAssignFee(e: React.FormEvent) {
+    e.preventDefault()
+    if (!assignClass || !assignTemplate) {
+      setMsg({ type: 'danger', text: 'Class and Fee Template are required.' })
+      return
+    }
+    setLoading(true)
+    try {
+      const r = await fetch('/api/school/fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'assign_fee',
+          class_id: assignClass,
+          student_id: assignStudent || null,
+          fee_template_id: assignTemplate,
+          month: assignMonth,
+          year: assignYear
+        })
+      })
+      if (r.ok) {
+        const d = await r.json()
+        setMsg({ type: 'success', text: `Fee assigned successfully! Generated ${d.count} invoice(s).` })
+        setAssignClass('')
+        setAssignStudent('')
+        setAssignTemplate('')
+        load()
+      } else {
+        const d = await r.json()
+        setMsg({ type: 'danger', text: d.error || 'Failed to assign fee.' })
+      }
+    } catch (err) {
+      setMsg({ type: 'danger', text: 'Error assigning fee.' })
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function markPaid(id: string) {
@@ -231,17 +281,48 @@ export default function FeePage() {
 
       {tab === 'assign-fee' && (
         <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🎯 Assign Fee (Criteria)</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Assign fee templates to specific classes</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">Class</label>
-              <select className="form-select"><option value="">Select Class</option>{classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🎯 Assign Fee & Fines</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Assign fee templates or fines to classes or specific students.</p>
+          <form onSubmit={handleAssignFee} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="form-group">
+              <label className="form-label">Class *</label>
+              <select className="form-select" value={assignClass} onChange={e => setAssignClass(e.target.value)} required>
+                <option value="">Select Class</option>
+                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
             </div>
-            <div className="form-group"><label className="form-label">Fee Template</label>
-              <select className="form-select"><option value="">Select Template</option>{templates.map(t => <option key={t.id} value={t.id}>{t.name} — ₨{Number(t.amount).toLocaleString()}</option>)}</select>
+            {assignClass && (
+              <div className="form-group">
+                <label className="form-label">Student (Optional — select to apply fine/fee only to them)</label>
+                <select className="form-select" value={assignStudent} onChange={e => setAssignStudent(e.target.value)}>
+                  <option value="">All Students (Assign to Class)</option>
+                  {assignStudentsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                </select>
+              </div>
+            )}
+            <div className="form-group">
+              <label className="form-label">Fee Template / Fine *</label>
+              <select className="form-select" value={assignTemplate} onChange={e => setAssignTemplate(e.target.value)} required>
+                <option value="">Select Template</option>
+                {templates.map(t => <option key={t.id} value={t.id}>{t.name} — ₨{Number(t.amount).toLocaleString()}</option>)}
+              </select>
             </div>
-            <button className="btn btn-primary">✅ Assign Template to Class</button>
-          </div>
+            <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Month *</label>
+                <select className="form-select" value={assignMonth} onChange={e => setAssignMonth(Number(e.target.value))}>
+                  {Array.from({ length: 12 }, (_, i) => (<option key={i + 1} value={i + 1}>{new Date(2024, i).toLocaleString('default', { month: 'long' })}</option>))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Year *</label>
+                <select className="form-select" value={assignYear} onChange={e => setAssignYear(Number(e.target.value))}>
+                  {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+            </div>
+            <button type="submit" className="btn btn-primary" style={{ marginTop: '0.5rem' }}>✅ Assign Fee / Fine</button>
+          </form>
         </div>
       )}
 
@@ -278,14 +359,13 @@ export default function FeePage() {
                   {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
               </div>
-              <button onClick={generateInvoices} className="btn btn-primary">⚡ Generate Invoices</button>
               <button onClick={load} className="btn btn-secondary">🔄 Refresh</button>
             </div>
           </div>
 
           <div className="card" style={{ padding: 0 }}>
             {invoices.length === 0 ? (
-              <div className="empty-state" style={{ padding: '3rem' }}><div className="empty-icon">💳</div><p>No invoices. Generate invoices for the selected month.</p></div>
+              <div className="empty-state" style={{ padding: '3rem' }}><div className="empty-icon">💳</div><p>No fee history records found for the selected filters.</p></div>
             ) : (
               <div className="table-wrap" style={{ borderRadius: 0, border: 'none' }}>
                 <table>
