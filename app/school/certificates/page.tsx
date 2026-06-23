@@ -762,6 +762,7 @@ export default function CertificatesPage() {
         <tr>
           <td>${idx + 1}</td>
           <td><strong>${s.roll_no || '—'}</strong></td>
+          <td class="student-name">${s.name}</td>
           <td>${obtained !== '' ? obtained : ' &nbsp; '}</td>
         </tr>
       `
@@ -881,13 +882,14 @@ export default function CertificatesPage() {
           <table class="award-table">
             <thead>
               <tr>
-                <th style="width: 15%">S.No</th>
-                <th style="width: 45%">Roll No</th>
-                <th style="width: 40%">Obtained Marks</th>
+                <th style="width: 10%">S.No</th>
+                <th style="width: 20%">Roll No</th>
+                <th style="width: 40%">Student Name</th>
+                <th style="width: 30%">Obtained Marks</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHTML || '<tr><td colspan="3" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>'}
+              ${rowsHTML || '<tr><td colspan="4" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>'}
             </tbody>
           </table>
 
@@ -1507,14 +1509,15 @@ export default function CertificatesPage() {
                           <thead>
                             <tr>
                               <th style={{ width: '80px' }}>S.No</th>
-                              <th>Roll No</th>
+                              <th style={{ width: '120px' }}>Roll No</th>
+                              <th>Student Name</th>
                               <th>Obtained Marks</th>
                             </tr>
                           </thead>
                           <tbody>
                             {students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection)).length === 0 ? (
                               <tr>
-                                <td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                                <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                                   No registered student rows found for this filter selection.
                                 </td>
                               </tr>
@@ -1527,6 +1530,7 @@ export default function CertificatesPage() {
                                     <tr key={s.id}>
                                       <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
                                       <td style={{ fontWeight: 'bold' }}>{s.roll_no || '—'}</td>
+                                      <td style={{ fontWeight: 600 }}>{s.name}</td>
                                       <td>
                                         <div style={{ padding: '0.4rem', border: '1px solid var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)', width: '120px', margin: '0 auto' }}>
                                           {res ? res.marks_obtained : '—'}
