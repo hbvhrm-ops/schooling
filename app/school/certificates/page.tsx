@@ -746,19 +746,16 @@ export default function CertificatesPage() {
       return a.name.localeCompare(b.name)
     })
 
+    const totalMarks = awardResults.length > 0 ? (awardResults[0].total_marks || '100') : '100'
+
     const rowsHTML = filteredStudents.map((s, idx) => {
       const resultObj = awardResults.find(r => r.student_id === s.id)
       const obtained = resultObj ? resultObj.marks_obtained : ''
-      const total = resultObj ? resultObj.total_marks : ''
       return `
         <tr>
           <td>${idx + 1}</td>
-          <td>${s.roll_no || '—'}</td>
-          <td class="student-name">${s.name}</td>
+          <td><strong>${s.roll_no || '—'}</strong></td>
           <td>${obtained !== '' ? obtained : ' &nbsp; '}</td>
-          <td>${total !== '' ? total : ' &nbsp; '}</td>
-          <td> &nbsp; </td>
-          <td> &nbsp; </td>
         </tr>
       `
     }).join('')
@@ -869,25 +866,21 @@ export default function CertificatesPage() {
             <tr>
               <td>Date:</td>
               <td class="bold">${new Date().toLocaleDateString()}</td>
-              <td>Total Registered:</td>
-              <td class="bold">${filteredStudents.length} Students</td>
+              <td>Total Marks:</td>
+              <td class="bold">${totalMarks}</td>
             </tr>
           </table>
 
           <table class="award-table">
             <thead>
               <tr>
-                <th style="width: 6%">S.No</th>
-                <th style="width: 10%">Roll No</th>
-                <th style="width: 32%">Student Name</th>
-                <th style="width: 13%">Marks Obt.</th>
-                <th style="width: 13%">Max Marks</th>
-                <th style="width: 13%">Marks in Words</th>
-                <th style="width: 13%">Remarks</th>
+                <th style="width: 15%">S.No</th>
+                <th style="width: 45%">Roll No</th>
+                <th style="width: 40%">Obtained Marks</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHTML || '<tr><td colspan="7" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>'}
+              ${rowsHTML || '<tr><td colspan="3" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>'}
             </tbody>
           </table>
 
@@ -1476,7 +1469,7 @@ export default function CertificatesPage() {
                       <div>
                         <h3 style={{ fontWeight: 700 }}>Sheet Preview</h3>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          Showing students in {classes.find(c => c.id === awardClass)?.name} &nbsp;•&nbsp; Exam: {examTypes.find(e => e.id === awardExam)?.name}
+                          Showing students in {classes.find(c => c.id === awardClass)?.name} &nbsp;•&nbsp; Exam: {examTypes.find(e => e.id === awardExam)?.name} &nbsp;•&nbsp; Total Marks: {awardResults.length > 0 ? (awardResults[0].total_marks || '100') : '100'}
                         </p>
                       </div>
                       <button className="btn btn-primary" onClick={handlePrintAwardList}>
@@ -1494,17 +1487,14 @@ export default function CertificatesPage() {
                           <thead>
                             <tr>
                               <th style={{ width: '80px' }}>S.No</th>
-                              <th style={{ width: '120px' }}>Roll No</th>
-                              <th>Student Name</th>
-                              <th style={{ width: '150px' }}>Marks Obt.</th>
-                              <th style={{ width: '150px' }}>Max Marks</th>
-                              <th>Examiner Marks Sign</th>
+                              <th>Roll No</th>
+                              <th>Obtained Marks</th>
                             </tr>
                           </thead>
                           <tbody>
                             {students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection)).length === 0 ? (
                               <tr>
-                                <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                                <td colSpan={3} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                                   No registered student rows found for this filter selection.
                                 </td>
                               </tr>
@@ -1517,19 +1507,10 @@ export default function CertificatesPage() {
                                     <tr key={s.id}>
                                       <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
                                       <td style={{ fontWeight: 'bold' }}>{s.roll_no || '—'}</td>
-                                      <td style={{ fontWeight: 600 }}>{s.name}</td>
                                       <td>
-                                        <div style={{ padding: '0.4rem', border: '1px solid var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                        <div style={{ padding: '0.4rem', border: '1px solid var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)', width: '120px', margin: '0 auto' }}>
                                           {res ? res.marks_obtained : '—'}
                                         </div>
-                                      </td>
-                                      <td>
-                                        <div style={{ padding: '0.4rem', border: '1px dashed var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                                          {res ? res.total_marks : '—'}
-                                        </div>
-                                      </td>
-                                      <td style={{ color: 'var(--text-muted)', fontSize: '0.75rem', fontStyle: 'italic' }}>
-                                        Pending signature
                                       </td>
                                     </tr>
                                   )
