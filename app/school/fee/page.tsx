@@ -29,6 +29,7 @@ export default function FeePage() {
   const [assignMonth, setAssignMonth] = useState(new Date().getMonth() + 1)
   const [assignYear, setAssignYear] = useState(new Date().getFullYear())
   const [assignStudentsList, setAssignStudentsList] = useState<{ id: string; name: string }[]>([])
+  const [studentSearch, setStudentSearch] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -49,8 +50,10 @@ export default function FeePage() {
     if (!assignClass) {
       setAssignStudentsList([])
       setAssignStudent('')
+      setStudentSearch('')
       return
     }
+    setStudentSearch('')
     fetch(`/api/school/students?class_id=${assignClass}`)
       .then(r => r.json())
       .then(d => setAssignStudentsList(d.students || []))
@@ -219,6 +222,10 @@ export default function FeePage() {
   const pendingCount = invoices.filter(i => i.status === 'pending').length
   const collected = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0)
 
+  const filteredStudents = assignStudentsList.filter(s =>
+    s.name.toLowerCase().includes(studentSearch.toLowerCase())
+  )
+
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       <div style={{ marginBottom: '2rem' }}>
@@ -294,9 +301,17 @@ export default function FeePage() {
             {assignClass && (
               <div className="form-group">
                 <label className="form-label">Student (Optional — select to apply fine/fee only to them)</label>
+                <input
+                  className="form-input"
+                  type="text"
+                  placeholder="🔍 Type student name to search/filter..."
+                  value={studentSearch}
+                  onChange={e => setStudentSearch(e.target.value)}
+                  style={{ marginBottom: '0.5rem' }}
+                />
                 <select className="form-select" value={assignStudent} onChange={e => setAssignStudent(e.target.value)}>
                   <option value="">All Students (Assign to Class)</option>
-                  {assignStudentsList.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  {filteredStudents.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                 </select>
               </div>
             )}
