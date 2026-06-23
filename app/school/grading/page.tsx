@@ -77,8 +77,8 @@ export default function GradingPage() {
           <form onSubmit={saveGrade} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="form-group"><label className="form-label">Grade *</label><input className="form-input" placeholder="e.g. A+, B, C..." value={form.grade} onChange={e => setForm(f => ({ ...f, grade: e.target.value }))} required /></div>
             <div className="grid-2">
-              <div className="form-group"><label className="form-label">Min Marks *</label><input className="form-input" type="number" min="0" max="100" value={form.min_marks} onChange={e => setForm(f => ({ ...f, min_marks: e.target.value }))} required /></div>
-              <div className="form-group"><label className="form-label">Max Marks *</label><input className="form-input" type="number" min="0" max="100" value={form.max_marks} onChange={e => setForm(f => ({ ...f, max_marks: e.target.value }))} required /></div>
+              <div className="form-group"><label className="form-label">Min Percentage (%) *</label><input className="form-input" type="number" min="0" max="100" value={form.min_marks} onChange={e => setForm(f => ({ ...f, min_marks: e.target.value }))} required /></div>
+              <div className="form-group"><label className="form-label">Max Percentage (%) *</label><input className="form-input" type="number" min="0" max="100" value={form.max_marks} onChange={e => setForm(f => ({ ...f, max_marks: e.target.value }))} required /></div>
             </div>
             <div className="form-group"><label className="form-label">GPA</label><input className="form-input" placeholder="e.g. 4.0" value={form.gpa} onChange={e => setForm(f => ({ ...f, gpa: e.target.value }))} /></div>
             <div className="form-group"><label className="form-label">Remarks</label><input className="form-input" placeholder="e.g. Excellent, Pass, Fail..." value={form.remarks} onChange={e => setForm(f => ({ ...f, remarks: e.target.value }))} /></div>
@@ -104,7 +104,7 @@ export default function GradingPage() {
           ) : (
             <div className="table-wrap" style={{ borderRadius: 0, border: 'none' }}>
               <table>
-                <thead><tr><th>Grade</th><th>Min Marks</th><th>Max Marks</th><th>GPA</th><th>Remarks</th><th>Actions</th></tr></thead>
+                <thead><tr><th>Grade</th><th>Min Percentage</th><th>Max Percentage</th><th>GPA</th><th>Remarks</th><th>Actions</th></tr></thead>
                 <tbody>
                   {grades.sort((a, b) => b.min_marks - a.min_marks).map(g => (
                     <tr key={g.id}>

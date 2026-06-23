@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 interface ExamType { id: string; name: string }
 interface ClassItem { id: string; name: string }
 interface Student { id: string; name: string }
+interface Grade { id: string; grade: string; min_marks: number; max_marks: number; gpa: string; remarks: string }
 
 type Step = 1 | 2 | 3
 
@@ -13,6 +14,7 @@ export default function ResultPage() {
   const [examTypes, setExamTypes] = useState<ExamType[]>([])
   const [classes, setClasses] = useState<ClassItem[]>([])
   const [students, setStudents] = useState<Student[]>([])
+  const [grades, setGrades] = useState<Grade[]>([])
   const [newExamType, setNewExamType] = useState('')
   const [selExam, setSelExam] = useState('')
   const [selClass, setSelClass] = useState('')
@@ -24,6 +26,7 @@ export default function ResultPage() {
   useEffect(() => {
     fetch('/api/school/classes').then(r => r.json()).then(d => setClasses(d.classes || []))
     fetch('/api/school/results').then(r => r.json()).then(d => setExamTypes(d.examTypes || []))
+    fetch('/api/school/grading').then(r => r.json()).then(d => setGrades(d.grades || []))
   }, [])
 
   const loadStudents = useCallback(async () => {
@@ -35,6 +38,50 @@ export default function ResultPage() {
     setLoading(false)
   }, [selClass])
   useEffect(() => { loadStudents() }, [loadStudents])
+
+  const loadResults = useCallback(async () => {
+    if (!selClass || !selExam) return
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/school/results?class_id=${selClass}&exam_type_id=${selExam}`)
+      const data = await res.json()
+      if (res.ok && data.results) {
+        const newMarks: Record<string, { obtained: string; total: string }> = {}
+        data.results.forEach((r: any) => {
+          newMarks[r.student_id] = {
+            obtained: String(r.marks_obtained !== null && r.marks_obtained !== undefined ? r.marks_obtained : ''),
+            total: String(r.total_marks || '100')
+          }
+        })
+        setMarks(newMarks)
+      } else {
+        setMarks({})
+      }
+    } catch (err) {
+      console.error(err)
+      setMarks({})
+    } finally {
+      setLoading(false)
+    }
+  }, [selClass, selExam])
+
+  useEffect(() => {
+    loadResults()
+  }, [loadResults])
+
+  function getGradeForPct(pct: number) {
+    if (grades.length === 0) {
+      if (pct >= 90) return 'A+'
+      if (pct >= 80) return 'A'
+      if (pct >= 70) return 'B+'
+      if (pct >= 60) return 'B'
+      if (pct >= 50) return 'C'
+      if (pct >= 40) return 'D'
+      return 'F'
+    }
+    const matched = grades.find(g => pct >= Number(g.min_marks) && pct <= Number(g.max_marks))
+    return matched ? matched.grade : '—'
+  }
 
   async function addExamType() {
     if (!newExamType.trim()) return
@@ -161,7 +208,7 @@ export default function ResultPage() {
             <>
               <div className="table-wrap" style={{ marginBottom: '1rem' }}>
                 <table>
-                  <thead><tr><th>#</th><th>Student Name</th><th>Marks Obtained</th><th>Total Marks</th><th>%</th></tr></thead>
+                  <thead><tr><th>#</th><th>Student Name</th><th>Marks Obtained</th><th>Total Marks</th><th>%</th><th>Grade</th></tr></thead>
                   <tbody>
                     {students.map((s, i) => {
                       const m = marks[s.id] || { obtained: '', total: '100' }
@@ -175,6 +222,11 @@ export default function ResultPage() {
                           <td>
                             {m.obtained ? (
                               <span className={`badge ${pct >= 50 ? 'badge-success' : 'badge-danger'}`}>{pct}%</span>
+                            ) : '—'}
+                          </td>
+                          <td style={{ fontWeight: 'bold' }}>
+                            {m.obtained ? (
+                              <span className="badge badge-primary">{getGradeForPct(pct)}</span>
                             ) : '—'}
                           </td>
                         </tr>
@@ -201,7 +253,83 @@ export default function ResultPage() {
       )}
 
       {tab === 'consolidated' && (
-        <div className="card"><h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📊 Consolidated Result Sheet</h3><p style={{ color: 'var(--text-secondary)' }}>Select an exam type and class to view the full consolidated result sheet.</p></div>
+        <div className="card">
+          <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>📊 Consolidated Result Sheet</h3>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+            <select className="form-select" style={{ width: '200px' }} value={selExam} onChange={e => setSelExam(e.target.value)}>
+              <option value="">Select Exam</option>
+              {examTypes.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+            </select>
+            <select className="form-select" style={{ width: '180px' }} value={selClass} onChange={e => setSelClass(e.target.value)}>
+              <option value="">Select Class</option>
+              {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          {!selClass || !selExam ? (
+            <div className="empty-state">
+              <div className="empty-icon">📊</div>
+              <p>Select exam and class to view the consolidated results</p>
+            </div>
+          ) : loading ? (
+            <div className="empty-state"><p>Loading consolidated results...</p></div>
+          ) : (
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Student Name</th>
+                    <th>Marks Obtained</th>
+                    <th>Total Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {students.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                        No registered students found for this class.
+                      </td>
+                    </tr>
+                  ) : (
+                    students.map((s, idx) => {
+                      const m = marks[s.id] || { obtained: '', total: '100' }
+                      const pct = m.obtained && m.total ? Math.round((Number(m.obtained) / Number(m.total)) * 100) : 0
+                      return (
+                        <tr key={s.id}>
+                          <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
+                          <td style={{ fontWeight: 600 }}>{s.name}</td>
+                          <td>
+                            <div style={{ padding: '0.4rem', border: '1px solid var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', width: '100px' }}>
+                              {m.obtained !== '' ? m.obtained : '—'}
+                            </div>
+                          </td>
+                          <td>
+                            <div style={{ padding: '0.4rem', border: '1px dashed var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', color: 'var(--text-secondary)', width: '100px' }}>
+                              {m.obtained !== '' ? m.total : '—'}
+                            </div>
+                          </td>
+                          <td>
+                            {m.obtained !== '' ? (
+                              <span className={`badge ${pct >= 50 ? 'badge-success' : 'badge-danger'}`}>{pct}%</span>
+                            ) : '—'}
+                          </td>
+                          <td>
+                            {m.obtained !== '' ? (
+                              <span className="badge badge-primary">{getGradeForPct(pct)}</span>
+                            ) : '—'}
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       )}
       {tab === 'settings' && (
         <div className="card"><h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Result Settings</h3><p style={{ color: 'var(--text-secondary)' }}>Configure result calculation method, pass marks and report format.</p></div>
