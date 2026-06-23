@@ -322,30 +322,36 @@ export default function CertificatesPage() {
               justify-content: center;
             }
             .certificate-container {
-              width: 100vw;
-              height: 100vh;
-              padding: 5vh 6vw;
+              width: 297mm;
+              height: 210mm;
+              padding: 12mm 15mm;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               background: #fdfbf7;
+              overflow: hidden;
+              position: relative;
             }
             .border-outer {
               border: 12px double #4a3e28;
               padding: 6px;
               height: 100%;
               box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              min-height: 0;
             }
             .border-inner {
               border: 2px solid #6e5a3c;
-              padding: 4vh 5vw;
+              padding: 6vh 8vw;
               position: relative;
               height: 100%;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               box-sizing: border-box;
+              min-height: 0;
             }
             .badge-watermark {
               position: absolute;
@@ -365,10 +371,12 @@ export default function CertificatesPage() {
               flex-direction: column;
               justify-content: space-between;
               height: 100%;
+              min-height: 0;
             }
             .header {
               text-align: center;
               margin-bottom: 15px;
+              flex-shrink: 0;
             }
             .logo {
               max-height: 65px;
@@ -415,13 +423,29 @@ export default function CertificatesPage() {
               margin: 15px 0;
               white-space: pre-line;
               text-indent: 30px;
-              flex: 1;
+              flex: 1 1 auto;
+              min-height: 0;
+              overflow: hidden;
+              display: -webkit-box;
+              -webkit-line-clamp: 6;
+              -webkit-box-orient: vertical;
+              text-overflow: ellipsis;
+            }
+            /* Robust handles for name or academic inline-block scaling */
+            .cert-body span.highlight, .cert-body strong.highlight {
+              display: inline-block;
+              max-width: 100%;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+              vertical-align: bottom;
             }
             .footer {
               display: flex;
               justify-content: space-between;
               align-items: flex-end;
               margin-top: auto;
+              flex-shrink: 0;
             }
             .sig-block {
               text-align: center;
@@ -445,10 +469,10 @@ export default function CertificatesPage() {
               }
               .certificate-container {
                 margin: 0;
-                width: 100vw;
-                height: 100vh;
-                max-width: 100%;
-                max-height: 100%;
+                width: 297mm;
+                height: 210mm;
+                max-width: 100vw;
+                max-height: 100vh;
               }
             }
           </style>
@@ -1131,9 +1155,10 @@ export default function CertificatesPage() {
                       flexDirection: 'column',
                       justifyContent: 'space-between',
                       boxSizing: 'border-box',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                      overflow: 'hidden'
                     }}>
-                      <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                      <div style={{ textAlign: 'center', marginBottom: '1rem', flexShrink: 0 }}>
                         {template.logo_url ? (
                           <img src={template.logo_url} alt="Logo" style={{ maxHeight: '55px', marginBottom: '6px', objectFit: 'contain' }} />
                         ) : (
@@ -1150,11 +1175,22 @@ export default function CertificatesPage() {
                         </div>
                       </div>
 
-                      <div style={{ margin: '1rem 0', textAlign: 'justify', whiteSpace: 'pre-line', flex: 1 }}>
+                      <div style={{ 
+                        margin: '1rem 0', 
+                        textAlign: 'justify', 
+                        whiteSpace: 'pre-line', 
+                        flex: '1 1 auto', 
+                        minHeight: 0, 
+                        overflow: 'hidden',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 5,
+                        WebkitBoxOrient: 'vertical',
+                        textOverflow: 'ellipsis'
+                      }}>
                         {compiledPreviewBody}
                       </div>
 
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
                         <div style={{ fontSize: '0.78rem', color: '#555' }}>
                           <strong>Date:</strong> {new Date().toLocaleDateString()}
                         </div>
