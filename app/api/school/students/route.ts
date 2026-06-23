@@ -26,12 +26,21 @@ export async function GET(req: NextRequest) {
   const { data, error } = await query.order('name')
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   
+  const { data: pendingInvoices } = await supabase
+    .from('fee_invoices')
+    .select('student_id')
+    .eq('school_id', session.schoolId)
+    .eq('status', 'pending')
+
+  const unpaidStudentIds = new Set((pendingInvoices || []).map((inv: any) => inv.student_id))
+
   const students = (data || []).map((s: any) => ({
     ...s,
     class_name: s.classes?.name || '',
     section_name: s.sections?.name || '',
     reg_date: s.created_at,
     additional_info: s.additional_info || {},
+    has_unpaid_dues: unpaidStudentIds.has(s.id),
   }))
   return NextResponse.json({ students })
 }

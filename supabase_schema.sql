@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS fee_invoices (
   month            INTEGER NOT NULL,
   year             INTEGER NOT NULL,
   amount           NUMERIC(10,2) NOT NULL,
+  amount_paid      NUMERIC(10,2) DEFAULT 0,
   status           TEXT DEFAULT 'pending' CHECK (status IN ('pending','paid','partial')),
   paid_date        DATE,
   created_at       TIMESTAMPTZ DEFAULT NOW()

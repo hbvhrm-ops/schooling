@@ -10,6 +10,7 @@ interface Student {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additional_info?: Record<string, any>;
   photo_url?: string;
+  has_unpaid_dues?: boolean;
 }
 interface ClassItem { id: string; name: string }
 interface SectionItem { id: string; name: string; class_id: string }
@@ -32,6 +33,7 @@ export default function StudentsPage() {
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('active')
   const [classFilter, setClassFilter] = useState('')
+  const [feeStatusFilter, setFeeStatusFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [viewStudent, setViewStudent] = useState<Student | null>(null)
   const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
@@ -116,7 +118,8 @@ export default function StudentsPage() {
     const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.roll_no?.includes(search) || s.father_name?.toLowerCase().includes(search.toLowerCase())
     const matchStatus = !statusFilter || s.status === statusFilter
     const matchClass = !classFilter || s.class_name === classFilter
-    return matchSearch && matchStatus && matchClass
+    const matchFeeStatus = !feeStatusFilter || (feeStatusFilter === 'unpaid' && s.has_unpaid_dues)
+    return matchSearch && matchStatus && matchClass && matchFeeStatus
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -316,6 +319,10 @@ export default function StudentsPage() {
                 <option value="">All Classes</option>
                 {classes.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
               </select>
+              <select className="form-select" style={{ width: '160px' }} value={feeStatusFilter} onChange={e => setFeeStatusFilter(e.target.value)}>
+                <option value="">All Fee Status</option>
+                <option value="unpaid">Unpaid Dues</option>
+              </select>
             </div>
           </div>
 
@@ -350,7 +357,12 @@ export default function StudentsPage() {
                         <td>{s.roll_no || '—'}</td>
                         <td>{s.gender || '—'}</td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.contact || '—'}</td>
-                        <td><span className={`badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{s.status}</span></td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
+                            <span className={`badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{s.status}</span>
+                            {s.has_unpaid_dues && <span className="badge badge-warning">⚠️ Unpaid</span>}
+                          </div>
+                        </td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                             <button onClick={() => setViewStudent(s)} className="btn btn-secondary btn-sm" title="View Profile">👁️</button>
@@ -612,7 +624,10 @@ export default function StudentsPage() {
                   )}
                 </div>
                 <h3 style={{ fontWeight: 800 }}>{viewStudent.name}</h3>
-                <span className={`badge ${viewStudent.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{viewStudent.status}</span>
+                <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', alignItems: 'center' }}>
+                  <span className={`badge ${viewStudent.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{viewStudent.status}</span>
+                  {viewStudent.has_unpaid_dues && <span className="badge badge-warning">⚠️ Unpaid Dues</span>}
+                </div>
               </div>
               <div className="grid-2" style={{ gap: '0.75rem' }}>
                 {[['Father Name', viewStudent.father_name], ['Class', `${viewStudent.class_name} ${viewStudent.section_name ? `(${viewStudent.section_name})` : ''}`], ['Roll No', viewStudent.roll_no], ['Gender', viewStudent.gender], ['Contact', viewStudent.contact], ['Reg Date', viewStudent.reg_date ? new Date(viewStudent.reg_date).toLocaleDateString() : '—']].map(([k, v]) => (

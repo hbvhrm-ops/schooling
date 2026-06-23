@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
     if (year) query = query.eq('year', year)
     const { data } = await query.order('created_at', { ascending: false })
     const invoices = (data || []).filter((inv: { students: { class_id: string } | null }) => !classId || inv.students?.class_id === classId)
-      .map((inv: { id: string; students: { name: string } | null; amount: number; month: number; year: number; status: string; paid_date: string }) => ({
+      .map((inv: { id: string; students: { name: string } | null; amount: number; month: number; year: number; status: string; paid_date: string; amount_paid?: number }) => ({
         ...inv,
         student_name: inv.students?.name || 'Unknown',
       }))
