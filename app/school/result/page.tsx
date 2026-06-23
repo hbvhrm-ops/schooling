@@ -19,6 +19,7 @@ export default function ResultPage() {
   const [selExam, setSelExam] = useState('')
   const [selClass, setSelClass] = useState('')
   const [marks, setMarks] = useState<Record<string, { obtained: string; total: string }>>({})
+  const [defaultTotal, setDefaultTotal] = useState('100')
   const [loading, setLoading] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
   const [schedules, setSchedules] = useState<{ subject: string; date: string; time: string }[]>([{ subject: '', date: '', time: '' }])
@@ -81,6 +82,122 @@ export default function ResultPage() {
     }
     const matched = grades.find(g => pct >= Number(g.min_marks) && pct <= Number(g.max_marks))
     return matched ? matched.grade : '—'
+  }
+
+  function handleDefaultTotalChange(val: string) {
+    setDefaultTotal(val)
+    setMarks(prev => {
+      const updated = { ...prev }
+      students.forEach(s => {
+        updated[s.id] = {
+          obtained: prev[s.id]?.obtained || '',
+          total: val
+        }
+      })
+      return updated
+    })
+  }
+
+  function printSchedule() {
+    const examName = examTypes.find(e => e.id === selExam)?.name || 'Examination'
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const rowsHTML = schedules
+      .filter(s => s.subject.trim())
+      .map((s, idx) => `
+        <tr>
+          <td>${idx + 1}</td>
+          <td><strong>${s.subject}</strong></td>
+          <td>${s.date ? new Date(s.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</td>
+          <td>${s.time || '—'}</td>
+        </tr>
+      `).join('')
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Exam Schedule - ${examName}</title>
+          <style>
+            body {
+              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+              color: #111;
+              margin: 40px;
+            }
+            .header {
+              text-align: center;
+              border-bottom: 3px double #222;
+              padding-bottom: 12px;
+              margin-bottom: 25px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              text-transform: uppercase;
+              margin: 0;
+            }
+            .subtitle {
+              font-size: 14px;
+              color: #555;
+              margin-top: 5px;
+              text-transform: uppercase;
+              letter-spacing: 1px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 14px;
+            }
+            th, td {
+              border: 1px solid #ddd;
+              padding: 12px;
+              text-align: left;
+            }
+            th {
+              background-color: #f5f5f5;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            tr:nth-child(even) {
+              background-color: #fafafa;
+            }
+            @media print {
+              body { margin: 20px; }
+              th { background-color: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1 class="title">Date Sheet & Schedule</h1>
+            <div class="subtitle">${examName}</div>
+          </div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 10%">S.No</th>
+                <th style="width: 40%">Subject</th>
+                <th style="width: 30%">Date</th>
+                <th style="width: 20%">Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHTML || '<tr><td colspan="4" style="text-align:center;color:#666">No subjects scheduled yet.</td></tr>'}
+            </tbody>
+          </table>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
   }
 
   async function addExamType() {
@@ -182,6 +299,7 @@ export default function ResultPage() {
           ))}
           <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
             <button onClick={() => setSchedules(s => [...s, { subject: '', date: '', time: '' }])} className="btn btn-secondary">➕ Add Subject</button>
+            <button onClick={printSchedule} className="btn btn-secondary" disabled={!selExam}>🖨️ Print Schedule</button>
             <button onClick={() => setStep(3)} className="btn btn-primary">Next: Add Results →</button>
           </div>
         </div>
@@ -190,7 +308,7 @@ export default function ResultPage() {
       {tab === 'add-result' && (
         <div className="card">
           <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>✏️ Step 3: Add Results</h3>
-          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
             <select className="form-select" style={{ width: '200px' }} value={selExam} onChange={e => setSelExam(e.target.value)}>
               <option value="">Select Exam</option>
               {examTypes.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
@@ -199,6 +317,19 @@ export default function ResultPage() {
               <option value="">Select Class</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
+            {selClass && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Total Marks:</span>
+                <input 
+                  className="form-input" 
+                  style={{ width: '100px' }} 
+                  type="number" 
+                  placeholder="100" 
+                  value={defaultTotal} 
+                  onChange={e => handleDefaultTotalChange(e.target.value)} 
+                />
+              </div>
+            )}
           </div>
           {!selClass || !selExam ? (
             <div className="empty-state"><div className="empty-icon">📝</div><p>Select exam and class to enter marks</p></div>
