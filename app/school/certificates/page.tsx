@@ -96,6 +96,7 @@ export default function CertificatesPage() {
   const [awardSection, setAwardSection] = useState('')
   const [awardSubject, setAwardSubject] = useState('')
   const [awardExam, setAwardExam] = useState('')
+  const [awardTotalMarks, setAwardTotalMarks] = useState('100')
   const [awardLoading, setAwardLoading] = useState(false)
   const [awardResults, setAwardResults] = useState<any[]>([])
 
@@ -168,7 +169,13 @@ export default function CertificatesPage() {
       const res = await fetch(url)
       const data = await res.json()
       if (res.ok) {
-        setAwardResults(data.results || [])
+        const results = data.results || []
+        setAwardResults(results)
+        if (results.length > 0) {
+          setAwardTotalMarks(String(results[0].total_marks || '100'))
+        } else {
+          setAwardTotalMarks('100')
+        }
       }
     } catch {
       console.error('Error loading award list results')
@@ -746,7 +753,7 @@ export default function CertificatesPage() {
       return a.name.localeCompare(b.name)
     })
 
-    const totalMarks = awardResults.length > 0 ? (awardResults[0].total_marks || '100') : '100'
+    const totalMarks = awardTotalMarks || '100'
 
     const rowsHTML = filteredStudents.map((s, idx) => {
       const resultObj = awardResults.find(r => r.student_id === s.id)
@@ -1421,9 +1428,9 @@ export default function CertificatesPage() {
                 {/* Filters card */}
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>Award List Selection</h3>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem', alignItems: 'end' }}>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'end', flexWrap: 'wrap' }}>
                     
-                    <div className="form-group">
+                    <div className="form-group" style={{ flex: '1 1 180px' }}>
                       <label className="form-label">Class *</label>
                       <select className="form-select" value={awardClass} onChange={e => { setAwardClass(e.target.value); setAwardSection(''); setAwardSubject('') }}>
                         <option value="">Select Class</option>
@@ -1431,7 +1438,7 @@ export default function CertificatesPage() {
                       </select>
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ flex: '1 1 150px' }}>
                       <label className="form-label">Section (Optional)</label>
                       <select className="form-select" value={awardSection} onChange={e => setAwardSection(e.target.value)} disabled={!awardClass}>
                         <option value="">All Sections</option>
@@ -1441,7 +1448,7 @@ export default function CertificatesPage() {
                       </select>
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ flex: '1 1 150px' }}>
                       <label className="form-label">Subject (Optional)</label>
                       <select className="form-select" value={awardSubject} onChange={e => setAwardSubject(e.target.value)} disabled={!awardClass}>
                         <option value="">All Subjects</option>
@@ -1451,13 +1458,26 @@ export default function CertificatesPage() {
                       </select>
                     </div>
 
-                    <div className="form-group">
+                    <div className="form-group" style={{ flex: '1 1 180px' }}>
                       <label className="form-label">Exam Type *</label>
                       <select className="form-select" value={awardExam} onChange={e => setAwardExam(e.target.value)}>
                         <option value="">Select Exam</option>
                         {examTypes.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
                       </select>
                     </div>
+
+                    {awardClass && awardExam && (
+                      <div className="form-group animate-fade" style={{ flex: '1 1 120px' }}>
+                        <label className="form-label">Total Marks</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          placeholder="100" 
+                          value={awardTotalMarks} 
+                          onChange={e => setAwardTotalMarks(e.target.value)} 
+                        />
+                      </div>
+                    )}
 
                   </div>
                 </div>
@@ -1469,7 +1489,7 @@ export default function CertificatesPage() {
                       <div>
                         <h3 style={{ fontWeight: 700 }}>Sheet Preview</h3>
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
-                          Showing students in {classes.find(c => c.id === awardClass)?.name} &nbsp;•&nbsp; Exam: {examTypes.find(e => e.id === awardExam)?.name} &nbsp;•&nbsp; Total Marks: {awardResults.length > 0 ? (awardResults[0].total_marks || '100') : '100'}
+                          Showing students in {classes.find(c => c.id === awardClass)?.name} &nbsp;•&nbsp; Exam: {examTypes.find(e => e.id === awardExam)?.name} &nbsp;•&nbsp; Total Marks: {awardTotalMarks}
                         </p>
                       </div>
                       <button className="btn btn-primary" onClick={handlePrintAwardList}>
