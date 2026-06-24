@@ -13,6 +13,11 @@ export default function StaffPage() {
   const [search, setSearch] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
+  // Salary Modal States
+  const [showSalaryModal, setShowSalaryModal] = useState(false)
+  const [payDate, setPayDate] = useState(new Date().toISOString().split('T')[0])
+  const [payingSalaries, setPayingSalaries] = useState(false)
+
   const load = useCallback(async () => {
     setLoading(true)
     const r = await fetch('/api/school/staff').then(res => res.json()).catch(() => ({}))
@@ -23,6 +28,36 @@ export default function StaffPage() {
 
   function openAdd() { setEditItem(null); setForm({ name: '', role: 'Teacher', salary: '', contact: '', join_date: new Date().toISOString().split('T')[0], status: 'active' }); setShowModal(true) }
   function openEdit(s: Staff) { setEditItem(s); setForm({ name: s.name, role: s.role, salary: String(s.salary), contact: s.contact || '', join_date: s.join_date || '', status: s.status }); setShowModal(true) }
+  
+  function openSalaryModal() {
+    setPayDate(new Date().toISOString().split('T')[0])
+    setShowSalaryModal(true)
+  }
+
+  async function handlePaySalaries(e: React.FormEvent) {
+    e.preventDefault()
+    setPayingSalaries(true)
+    setMsg(null)
+    try {
+      const r = await fetch('/api/school/staff', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'pay_salaries', date: payDate })
+      })
+      if (r.ok) {
+        const res = await r.json()
+        setMsg({ type: 'success', text: `Salaries successfully added to expenses! Paid ${res.count} staff members.` })
+        setShowSalaryModal(false)
+      } else {
+        const err = await r.json()
+        setMsg({ type: 'danger', text: err.error || 'Failed to disburse salaries' })
+      }
+    } catch (err) {
+      setMsg({ type: 'danger', text: 'Error contacting server' })
+    } finally {
+      setPayingSalaries(false)
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault(); setSubmitting(true); setMsg(null)
@@ -53,7 +88,10 @@ export default function StaffPage() {
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>👥 Staff</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage school staff and salaries</p>
         </div>
-        <button onClick={openAdd} className="btn btn-primary">➕ Add Staff Member</button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={openSalaryModal} className="btn btn-secondary" style={{ background: '#f59e0b', color: '#ffffff', border: 'none' }}>💸 Give Salary</button>
+          <button onClick={openAdd} className="btn btn-primary">➕ Add Staff Member</button>
+        </div>
       </div>
 
       {msg && <div className={`alert alert-${msg.type} animate-fade`} style={{ marginBottom: '1.5rem' }}>{msg.text}</div>}
@@ -153,6 +191,42 @@ export default function StaffPage() {
               <div className="modal-footer">
                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">Cancel</button>
                 <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? '⏳ Saving...' : '✅ Save'}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Salary Modal */}
+      {showSalaryModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowSalaryModal(false)}>
+          <div className="modal animate-slide" style={{ maxWidth: '400px' }}>
+            <div className="modal-header">
+              <h3 style={{ fontWeight: 700 }}>💸 Give Staff Salaries</h3>
+              <button onClick={() => setShowSalaryModal(false)} className="btn btn-secondary btn-icon">✕</button>
+            </div>
+            <form onSubmit={handlePaySalaries}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div style={{ background: 'var(--bg-base)', borderRadius: '8px', padding: '1rem', border: '1px solid var(--border)' }}>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Staff Members to Pay</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '0.5rem' }}>
+                    {staff.filter(s => s.status === 'active').length} Active Staff
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Total Amount to Expense</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#f59e0b' }}>
+                    ₨ {totalSalary.toLocaleString()}
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Payment Date</label>
+                  <input className="form-input" type="date" value={payDate} onChange={e => setPayDate(e.target.value)} required />
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" onClick={() => setShowSalaryModal(false)} className="btn btn-secondary">Cancel</button>
+                <button type="submit" className="btn btn-primary" style={{ background: '#f59e0b', border: 'none' }} disabled={payingSalaries}>
+                  {payingSalaries ? '⏳ Disbursing...' : '💸 Confirm Disbursement'}
+                </button>
               </div>
             </form>
           </div>

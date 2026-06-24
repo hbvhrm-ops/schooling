@@ -15,6 +15,37 @@ export async function POST(req: NextRequest) {
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
   const supabase = createServerClient()
+
+  if (body.action === 'pay_salaries') {
+    const { data: staffList, error: staffErr } = await supabase
+      .from('staff')
+      .select('name, salary')
+      .eq('school_id', session.schoolId)
+      .eq('status', 'active')
+    
+    if (staffErr) return NextResponse.json({ error: staffErr.message }, { status: 400 })
+    
+    const activeStaff = (staffList || []).filter((s: { name: string; salary: number | null }) => Number(s.salary) > 0)
+    if (activeStaff.length === 0) {
+      return NextResponse.json({ error: 'No active staff members with a valid salary found.' }, { status: 400 })
+    }
+    
+    const payDate = new Date(body.date || new Date().toISOString().split('T')[0])
+    const monthName = payDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    
+    const expensesData = activeStaff.map((s: { name: string; salary: number | null }) => ({
+      school_id: session.schoolId,
+      date: body.date || new Date().toISOString().split('T')[0],
+      amount: Number(s.salary),
+      description: `Salary - ${s.name} (${monthName})`,
+    }))
+    
+    const { error: expErr } = await supabase.from('expenses').insert(expensesData)
+    if (expErr) return NextResponse.json({ error: expErr.message }, { status: 400 })
+    
+    return NextResponse.json({ success: true, count: expensesData.length })
+  }
+
   const { data, error } = await supabase.from('staff').insert({
     school_id: session.schoolId,
     name: body.name,
