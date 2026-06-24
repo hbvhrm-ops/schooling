@@ -296,7 +296,7 @@ class MockQueryBuilder {
       }
       if (rowCopy.student_id) {
         const stud = db.students?.find((s: any) => String(s.id) === String(rowCopy.student_id))
-        if (stud) rowCopy.students = { name: stud.name, class_id: stud.class_id }
+        if (stud) rowCopy.students = { ...stud }
       }
       if (rowCopy.subject_id) {
         const sub = db.subjects?.find((s: any) => String(s.id) === String(rowCopy.subject_id))

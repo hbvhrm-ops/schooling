@@ -127,8 +127,12 @@ export default function ResultPage() {
   const [customLocation, setCustomLocation] = useState('Amankot Swat')
   const [customPhone, setCustomPhone] = useState('0948-723117 - 03339037411')
   const [customLogoText, setCustomLogoText] = useState('AES')
+  const [customLogoUrl, setCustomLogoUrl] = useState('')
   const [customExamYear, setCustomExamYear] = useState('2026')
   const [customAdmNo, setCustomAdmNo] = useState('')
+
+  // Print type
+  const [printType, setPrintType] = useState<'dmc' | 'schedule' | null>(null)
 
   // Load basics
   useEffect(() => {
@@ -136,7 +140,7 @@ export default function ResultPage() {
     fetch('/api/school/results').then(r => r.json()).then(d => setExamTypes(d.examTypes || []))
     fetch('/api/school/subjects').then(r => r.json()).then(d => setSubjects(d.subjects || []))
     
-    // Also try to pre-fill school details from dashboard/session
+    // Pre-fill school name from dashboard/session
     fetch('/api/school/dashboard')
       .then(r => r.json())
       .then(d => {
@@ -145,6 +149,31 @@ export default function ResultPage() {
         }
       })
       .catch(() => {})
+
+    // Automatically load logo from certificate templates
+    const loadSchoolLogo = async () => {
+      const types = ['slc', 'birth', 'character', 'sports', 'top_positions']
+      for (const type of types) {
+        try {
+          const r = await fetch(`/api/school/certificate-templates?type=${type}`)
+          if (r.ok) {
+            const d = await r.json()
+            if (d.template?.logo_url) {
+              setCustomLogoUrl(d.template.logo_url)
+              break // Use first logo found
+            }
+          }
+        } catch {}
+      }
+    }
+    loadSchoolLogo()
+  }, [])
+
+  // Listen to afterprint event to reset printing state
+  useEffect(() => {
+    const handleAfterPrint = () => setPrintType(null)
+    window.addEventListener('afterprint', handleAfterPrint)
+    return () => window.removeEventListener('afterprint', handleAfterPrint)
   }, [])
 
   // Load students when class changes
@@ -404,502 +433,62 @@ export default function ResultPage() {
   }
 
   function printSchedule() {
-    const examName = examTypes.find(e => e.id === selExam)?.name || 'Examination'
-    const className = classes.find(c => c.id === selClass)?.name || ''
-    const win = window.open('', '_blank')
-    if (!win) return
-
-    const rowsHTML = schedulesList
-      .filter(s => s.date || s.time)
-      .map((s, idx) => `
-        <tr>
-          <td>${idx + 1}</td>
-          <td><strong>${s.subject_name}</strong></td>
-          <td>${s.date ? new Date(s.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</td>
-          <td>${s.time || '—'}</td>
-        </tr>
-      `).join('')
-
-    win.document.write(`
-      <html>
-        <head>
-          <title>Exam Schedule - ${examName} - Class ${className}</title>
-          <style>
-            body {
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              color: #111;
-              margin: 40px;
-            }
-            .header {
-              text-align: center;
-              border-bottom: 3px double #222;
-              padding-bottom: 12px;
-              margin-bottom: 25px;
-            }
-            .title {
-              font-size: 24px;
-              font-weight: bold;
-              text-transform: uppercase;
-              margin: 0;
-            }
-            .class-name {
-              font-size: 18px;
-              font-weight: 600;
-              margin-top: 5px;
-              color: #1e3a8a;
-            }
-            .subtitle {
-              font-size: 14px;
-              color: #555;
-              margin-top: 5px;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            }
-            table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 20px;
-              font-size: 14px;
-            }
-            th, td {
-              border: 1px solid #ddd;
-              padding: 12px;
-              text-align: left;
-            }
-            th {
-              background-color: #f5f5f5;
-              font-weight: bold;
-              text-transform: uppercase;
-            }
-            tr:nth-child(even) {
-              background-color: #fafafa;
-            }
-            @media print {
-              body { margin: 20px; }
-              th { background-color: #f5f5f5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1 class="title">Date Sheet & Schedule</h1>
-            <div class="class-name">Class: ${className}</div>
-            <div class="subtitle">${examName}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th style="width: 10%">S.No</th>
-                <th style="width: 40%">Subject</th>
-                <th style="width: 30%">Date</th>
-                <th style="width: 20%">Time</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${rowsHTML || '<tr><td colspan="4" style="text-align:center;color:#666">No subjects scheduled yet.</td></tr>'}
-            </tbody>
-          </table>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() { window.close(); }, 500);
-              }, 300);
-            }
-          </script>
-        </body>
-      </html>
-    `)
-    win.document.close()
+    setPrintType('schedule')
+    setTimeout(() => {
+      window.print()
+    }, 150)
   }
 
-  // Print DMC logic
   function printDmc() {
-    const student = students.find(s => s.id === selStudent)
-    if (!student) return
-    const examName = examTypes.find(e => e.id === selExam)?.name || 'Final Term Exam'
-    const className = classes.find(c => c.id === selClass)?.name || ''
-    
-    const classSubs = subjects.filter(s => String(s.class_id) === String(selClass))
-    
-    let totalMax = 0
-    let totalObt = 0
-    let failedCount = 0
-
-    const rowsHTML = classSubs.map((sub) => {
-      const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
-      const max = Number(entry?.total_marks || 100)
-      const obtStr = entry?.marks_obtained !== undefined ? String(entry.marks_obtained) : ''
-      const obt = Number(obtStr || 0)
-      
-      if (obtStr !== '') {
-        totalMax += max
-        totalObt += obt
-        if ((obt / max) * 100 < 40) {
-          failedCount++
-        }
-      }
-
-      const obtWords = obtStr !== '' ? numberToWords(obt) : '—'
-
-      return `
-        <tr>
-          <td style="padding: 10px; border: 1px solid #c5d2e0; font-weight: 500; font-size: 13px;">${sub.name}</td>
-          <td style="padding: 10px; border: 1px solid #c5d2e0; text-align: center; font-size: 13px;">${max}</td>
-          <td style="padding: 10px; border: 1px solid #c5d2e0; text-align: center; font-size: 13px;">${obtStr !== '' ? obt : '—'}</td>
-          <td style="padding: 10px; border: 1px solid #c5d2e0; font-size: 13px; font-style: italic;">${obtWords}</td>
-        </tr>
-      `
-    }).join('')
-
-    const totalPct = totalMax > 0 ? Math.round((totalObt / totalMax) * 10000) / 100 : 0
-    const grade = totalMax > 0 ? getGradeForPct(totalPct) : '—'
-    const remarks = totalMax > 0 ? getRemarksForGrade(grade) : '—'
-    const passed = dmcResults.length > 0 ? (failedCount < 2) : null
-    
-    const totalObtWords = totalObt > 0 ? numberToWords(totalObt) : '—'
-    
-    // Rankings
-    const classRankInfo = classRankings[student.id]
-    const secRankInfo = sectionRankings[student.id]
-    
-    const classRankStr = classRankInfo ? `${getOrdinal(classRankInfo.rank)} Out of ${classRankInfo.total}` : '—'
-    const secRankStr = secRankInfo ? `${getOrdinal(secRankInfo.rank)} Out of ${secRankInfo.total}` : '—'
-    
-    // Charts logic
-    const barWidth = 100 / classSubs.length
-    const chartBarsHTML = classSubs.map(sub => {
-      const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
-      const max = Number(entry?.total_marks || 100)
-      const obt = Number(entry?.marks_obtained || 0)
-      const pct = entry?.marks_obtained !== undefined ? Math.round((obt / max) * 100) : 0
-      
-      const colorsMap: Record<string, string> = {
-        'english': '#3b82f6',
-        'urdu': '#60a5fa',
-        'islamiyat': '#10b981',
-        'physics': '#f97316',
-        'chemistry': '#8b5cf6',
-        'biology': '#14b8a6',
-        'pak study': '#ec4899',
-        'mutalia quran': '#0f766e',
-        'math': '#2563eb'
-      }
-      
-      const nameLower = sub.name.toLowerCase()
-      let barColor = '#4f46e5'
-      for (const [k, col] of Object.entries(colorsMap)) {
-        if (nameLower.includes(k)) {
-          barColor = col
-          break
-        }
-      }
-
-      return `
-        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 130px; position: relative;">
-          <span style="font-size: 9px; font-weight: bold; margin-bottom: 2px; color: #374151;">${entry?.marks_obtained !== undefined ? pct + '%' : '—'}</span>
-          <div style="width: 25px; height: ${pct}%; background: ${barColor}; border-radius: 3px 3px 0 0; transition: height 0.3s ease;"></div>
-          <span style="font-size: 8px; font-weight: 600; color: #4b5563; text-align: center; margin-top: 6px; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${sub.name}">${sub.name}</span>
-        </div>
-      `
-    }).join('')
-
-    const win = window.open('', '_blank')
-    if (!win) return
-
-    win.document.write(`
-      <html>
-        <head>
-          <title>DMC - ${student.name}</title>
-          <style>
-            @media print {
-              body {
-                margin: 0;
-                padding: 0;
-                background: white;
-              }
-              .dmc-card {
-                box-shadow: none !important;
-                border: none !important;
-                margin: 0 !important;
-                width: 100% !important;
-              }
-              .print-btn-bar {
-                display: none !important;
-              }
-            }
-            body {
-              font-family: 'Inter', system-ui, -apple-system, sans-serif;
-              background-color: #f1f5f9;
-              padding: 20px;
-              display: flex;
-              justify-content: center;
-            }
-            .dmc-card {
-              background: white;
-              border-radius: 12px;
-              box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-              border: 1px solid #e2e8f0;
-              width: 760px;
-              padding: 0;
-              display: flex;
-              flex-direction: column;
-            }
-            .header-banner {
-              background: #006ac3;
-              color: white;
-              border-top-left-radius: 11px;
-              border-top-right-radius: 11px;
-              padding: 16px 20px;
-              display: grid;
-              grid-template-columns: 80px 1fr 80px;
-              align-items: center;
-              text-align: center;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .logo-circle {
-              width: 60px;
-              height: 60px;
-              border-radius: 50%;
-              background: white;
-              border: 2px solid white;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #006ac3;
-              font-weight: 800;
-              font-size: 18px;
-              margin: 0 auto;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .photo-frame {
-              width: 60px;
-              height: 60px;
-              border-radius: 6px;
-              border: 2px solid white;
-              background: #e2e8f0;
-              overflow: hidden;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              color: #475569;
-              margin: 0 auto;
-            }
-            .student-info-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-top: 10px;
-            }
-            .student-info-table td {
-              padding: 6px 12px;
-              font-size: 12px;
-              color: #334155;
-            }
-            .underline-val {
-              border-bottom: 1.5px solid #1e293b;
-              font-weight: 700;
-              color: #0f172a;
-              display: inline-block;
-              width: 100%;
-              padding-bottom: 1px;
-            }
-            .blue-th {
-              background-color: #006ac3 !important;
-              color: white;
-              font-weight: bold;
-              text-transform: uppercase;
-              font-size: 12px;
-              padding: 8px;
-              border: 1px solid #006ac3;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .badge-pill-blue {
-              background-color: #006ac3 !important;
-              color: white !important;
-              padding: 4px 12px;
-              border-radius: 9999px;
-              font-weight: bold;
-              display: inline-block;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .status-badge {
-              padding: 8px 24px;
-              border-radius: 9999px;
-              font-weight: 800;
-              font-size: 16px;
-              display: inline-block;
-              margin: 15px auto;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .passed-badge {
-              background-color: #10b981 !important;
-              color: white;
-            }
-            .failed-badge {
-              background-color: #ef4444 !important;
-              color: white;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="dmc-card">
-            <!-- Header Banner -->
-            <div class="header-banner">
-              <div>
-                <div class="logo-circle">${customLogoText}</div>
-              </div>
-              <div>
-                <h2 style="margin: 0; font-size: 20px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">${customSchoolName}</h2>
-                <div style="font-size: 11px; opacity: 0.95; margin-top: 3px; font-weight: 500;">${customLocation}</div>
-                <div style="font-size: 11px; opacity: 0.9; margin-top: 2px;">Ph: ${customPhone}</div>
-                <div style="font-size: 13px; font-weight: 700; text-decoration: underline; margin-top: 8px; text-transform: uppercase;">Detailed Marks Certificate</div>
-                <div style="font-size: 12px; font-weight: 600; margin-top: 3px;">${examName} ${customExamYear}</div>
-              </div>
-              <div>
-                <div class="photo-frame">
-                  ${student.photo_url ? `<img src="${student.photo_url}" style="width: 100%; height: 100%; object-fit: cover;" />` : '👤'}
-                </div>
-              </div>
-            </div>
-
-            <!-- Student Info Box -->
-            <div style="padding: 15px; border-bottom: 1.5px solid #cbd5e1;">
-              <table class="student-info-table">
-                <tr>
-                  <td style="width: 15%">Student's Name:</td>
-                  <td style="width: 35%"><span class="underline-val">${student.name}</span></td>
-                  <td style="width: 18%">Student's Adm No:</td>
-                  <td style="width: 32%"><span class="underline-val">${customAdmNo || '—'}</span></td>
-                </tr>
-                <tr>
-                  <td>Father's Name:</td>
-                  <td><span class="underline-val">${student.father_name || '—'}</span></td>
-                  <td>Roll No:</td>
-                  <td><span class="underline-val">${student.roll_no || '—'}</span></td>
-                </tr>
-                <tr>
-                  <td>Class:</td>
-                  <td><span class="underline-val">${className}</span></td>
-                  <td>Section:</td>
-                  <td><span class="underline-val">${student.section_name || '—'}</span></td>
-                </tr>
-                <tr>
-                  <td>Date Of Birth:</td>
-                  <td colspan="3">
-                    <span class="underline-val">${student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong>In Words:</strong> ${student.dob ? dateToWords(student.dob) : '—'}</span>
-                  </td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Table Section -->
-            <div style="padding: 15px;">
-              <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                  <tr>
-                    <th class="blue-th" style="width: 35%; text-align: left;">Subjects</th>
-                    <th class="blue-th" style="width: 20%; text-align: center;">Maximum Marks</th>
-                    <th class="blue-th" style="width: 45%; text-align: center;" colspan="2">Obtained Marks</th>
-                  </tr>
-                  <tr>
-                    <th style="border: 1px solid #c5d2e0; background: #e2e8f0; font-size: 10px; font-weight: bold; padding: 4px; text-align: left; text-transform: uppercase;">Name</th>
-                    <th style="border: 1px solid #c5d2e0; background: #e2e8f0; font-size: 10px; font-weight: bold; padding: 4px; text-align: center; text-transform: uppercase;">Total</th>
-                    <th style="border: 1px solid #c5d2e0; background: #e2e8f0; font-size: 10px; font-weight: bold; padding: 4px; text-align: center; text-transform: uppercase; width: 15%;">Total</th>
-                    <th style="border: 1px solid #c5d2e0; background: #e2e8f0; font-size: 10px; font-weight: bold; padding: 4px; text-align: left; text-transform: uppercase; width: 30%;">In Words</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${rowsHTML || '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #64748b;">No results entered for this student.</td></tr>'}
-                  <tr style="background-color: #f8fafc; font-weight: bold;">
-                    <td style="padding: 10px; border: 1px solid #c5d2e0; text-align: right; text-transform: uppercase; font-size: 12px;">Total:</td>
-                    <td style="padding: 10px; border: 1px solid #c5d2e0; text-align: center;">
-                      <span class="badge-pill-blue">${totalMax}</span>
-                    </td>
-                    <td style="padding: 10px; border: 1px solid #c5d2e0; text-align: center;">
-                      <span class="badge-pill-blue">${totalObt}</span>
-                    </td>
-                    <td style="padding: 10px; border: 1px solid #c5d2e0; font-size: 12px; font-style: normal; color: #1e3a8a;">
-                      <span class="badge-pill-blue">${totalObtWords}</span>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Performance Grid -->
-            <div style="padding: 0 15px 15px;">
-              <table style="width: 100%; font-size: 11px; text-align: center; border-collapse: collapse;">
-                <tr>
-                  <td style="width: 22%; padding: 4px 6px;">Class Position:</td>
-                  <td style="width: 22%; padding: 4px 6px;">Section Position:</td>
-                  <td style="width: 16%; padding: 4px 6px;">%age:</td>
-                  <td style="width: 16%; padding: 4px 6px;">Grade:</td>
-                  <td style="width: 24%; padding: 4px 6px;">Remarks:</td>
-                </tr>
-                <tr>
-                  <td style="padding: 4px 6px;"><span class="underline-val" style="font-size:12px;">${classRankStr}</span></td>
-                  <td style="padding: 4px 6px;"><span class="underline-val" style="font-size:12px;">${secRankStr}</span></td>
-                  <td style="padding: 4px 6px;"><span class="underline-val" style="font-size:12px;">${totalPct}%</span></td>
-                  <td style="padding: 4px 6px;">
-                    <span style="background: #10b981; color: white; padding: 2px 10px; border-radius: 9999px; font-weight: bold; font-size: 12px; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${grade}</span>
-                  </td>
-                  <td style="padding: 4px 6px;"><span class="underline-val" style="font-size:12px;">${remarks}</span></td>
-                </tr>
-              </table>
-            </div>
-
-            <!-- Pass / Fail Badge -->
-            ${passed !== null ? `
-            <div style="text-align: center; margin-top: 5px;">
-              <div class="status-badge ${passed ? 'passed-badge' : 'failed-badge'}">
-                ${passed ? '✓ PASSED' : '✗ FAILED'}
-              </div>
-            </div>
-            ` : ''}
-
-            <!-- Bar Chart Section -->
-            ${classSubs.length > 0 && totalMax > 0 ? `
-            <div style="padding: 10px 30px; border-top: 1.5px solid #e2e8f0; border-bottom: 1.5px solid #e2e8f0; background: #fafafa; -webkit-print-color-adjust: exact; print-color-adjust: exact;">
-              <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 160px; max-width: 600px; margin: 0 auto; padding-bottom: 5px;">
-                ${chartBarsHTML}
-              </div>
-            </div>
-            ` : ''}
-
-            <!-- Rules & Footer Signatures -->
-            <div style="padding: 20px 25px; display: grid; grid-template-columns: 2fr 1fr; align-items: flex-end;">
-              <div style="font-size: 11px; line-height: 1.6; color: #475569;">
-                1. Passing %age in any subject is 40.<br/>
-                2. Failure in any two subjects will be considered as Failed
-                
-                <div style="margin-top: 50px; font-weight: 700; color: #1e293b; font-size: 12px;">
-                  <span style="border-top: 1.5px solid #475569; padding-top: 4px; display: inline-block; width: 180px;">Incharge Examination Cell</span>
-                </div>
-              </div>
-              <div style="text-align: center; display: flex; flex-direction: column; align-items: center;">
-                <div style="width: 120px; height: 75px; border: 1.5px solid #94a3b8; border-radius: 4px; margin-bottom: 4px; background: #fff;"></div>
-                <div style="font-size: 11px; font-weight: 700; color: #1e293b;">Class Teacher</div>
-              </div>
-            </div>
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() { window.close(); }, 500);
-              }, 300);
-            }
-          </script>
-        </body>
-      </html>
-    `)
-    win.document.close()
+    setPrintType('dmc')
+    setTimeout(() => {
+      window.print()
+    }, 150)
   }
+
+  // Construct active print values
+  const activeStudent = students.find(s => s.id === selStudent)
+  const activeExamName = examTypes.find(e => e.id === selExam)?.name || 'Final Term Exam'
+  const activeClassName = classes.find(c => c.id === selClass)?.name || ''
+  const classSubs = subjects.filter(s => String(s.class_id) === String(selClass))
+
+  let activeTotalMax = 0
+  let activeTotalObt = 0
+  let activeFailedCount = 0
+
+  const activeDmcRows = classSubs.map(sub => {
+    const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
+    const max = Number(entry?.total_marks || 100)
+    const obtStr = entry?.marks_obtained !== undefined ? String(entry.marks_obtained) : ''
+    const obt = Number(obtStr || 0)
+    
+    if (obtStr !== '') {
+      activeTotalMax += max
+      activeTotalObt += obt
+      if ((obt / max) * 100 < 40) {
+        activeFailedCount++
+      }
+    }
+    return {
+      id: sub.id,
+      name: sub.name,
+      max,
+      obtStr,
+      obt,
+      words: obtStr !== '' ? numberToWords(obt) : '—'
+    }
+  })
+
+  const activeTotalPct = activeTotalMax > 0 ? Math.round((activeTotalObt / activeTotalMax) * 10000) / 100 : 0
+  const activeGrade = activeTotalMax > 0 ? getGradeForPct(activeTotalPct) : '—'
+  const activeRemarks = activeTotalMax > 0 ? getRemarksForGrade(activeGrade) : '—'
+  const activePassed = dmcResults.length > 0 ? (activeFailedCount < 2) : null
+  const activeTotalObtWords = activeTotalObt > 0 ? numberToWords(activeTotalObt) : '—'
+
+  const activeClassRankInfo = activeStudent ? classRankings[activeStudent.id] : null
+  const activeSecRankInfo = activeStudent ? sectionRankings[activeStudent.id] : null
+  const activeClassRankStr = activeClassRankInfo ? `${getOrdinal(activeClassRankInfo.rank)} Out of ${activeClassRankInfo.total}` : '—'
+  const activeSecRankStr = activeSecRankInfo ? `${getOrdinal(activeSecRankInfo.rank)} Out of ${activeSecRankInfo.total}` : '—'
 
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
@@ -1192,52 +781,7 @@ export default function ResultPage() {
             ) : loading ? (
               <div className="card empty-state"><p>Loading certificate details...</p></div>
             ) : (() => {
-              const student = students.find(s => s.id === selStudent)
-              if (!student) return <div className="card empty-state"><p>Student not found</p></div>
-              
-              const classSubs = subjects.filter(s => String(s.class_id) === String(selClass))
-              
-              let totalMax = 0
-              let totalObt = 0
-              let failedCount = 0
-
-              const examName = examTypes.find(e => e.id === selExam)?.name || 'Final Term Exam'
-              
-              const rows = classSubs.map(sub => {
-                const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
-                const max = Number(entry?.total_marks || 100)
-                const obtStr = entry?.marks_obtained !== undefined ? String(entry.marks_obtained) : ''
-                const obt = Number(obtStr || 0)
-                
-                if (obtStr !== '') {
-                  totalMax += max
-                  totalObt += obt
-                  if ((obt / max) * 100 < 40) {
-                    failedCount++
-                  }
-                }
-
-                return {
-                  id: sub.id,
-                  name: sub.name,
-                  max,
-                  obtStr,
-                  obt,
-                  words: obtStr !== '' ? numberToWords(obt) : '—'
-                }
-              })
-
-              const totalPct = totalMax > 0 ? Math.round((totalObt / totalMax) * 10000) / 100 : 0
-              const grade = totalMax > 0 ? getGradeForPct(totalPct) : '—'
-              const remarks = totalMax > 0 ? getRemarksForGrade(grade) : '—'
-              const passed = dmcResults.length > 0 ? (failedCount < 2) : null
-              
-              // Rankings
-              const classRankInfo = classRankings[student.id]
-              const secRankInfo = sectionRankings[student.id]
-              
-              const classRankStr = classRankInfo ? `${getOrdinal(classRankInfo.rank)} Out of ${classRankInfo.total}` : '—'
-              const secRankStr = secRankInfo ? `${getOrdinal(secRankInfo.rank)} Out of ${secRankInfo.total}` : '—'
+              if (!activeStudent) return <div className="card empty-state"><p>Student not found</p></div>
 
               return (
                 <div style={{ background: '#f8fafc', padding: '1rem', border: '1px solid var(--border)', borderRadius: '16px', display: 'flex', justifyContent: 'center' }}>
@@ -1265,26 +809,30 @@ export default function ResultPage() {
                       textAlign: 'center'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
-                        <div style={{
-                          width: '56px',
-                          height: '56px',
-                          borderRadius: '50%',
-                          background: 'white',
-                          border: '2px solid white',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#006ac3',
-                          fontWeight: 800,
-                          fontSize: '1.1rem'
-                        }}>{customLogoText}</div>
+                        {customLogoUrl ? (
+                          <img src={customLogoUrl} alt="Logo" style={{ width: '56px', height: '56px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
+                        ) : (
+                          <div style={{
+                            width: '56px',
+                            height: '56px',
+                            borderRadius: '50%',
+                            background: 'white',
+                            border: '2px solid white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#006ac3',
+                            fontWeight: 800,
+                            fontSize: '1.1rem'
+                          }}>{customLogoText}</div>
+                        )}
                       </div>
                       <div>
                         <h2 style={{ margin: 0, fontSize: '1.3rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
                         <div style={{ fontSize: '0.75rem', opacity: 0.95, marginTop: '2px', fontWeight: 500 }}>{customLocation}</div>
                         <div style={{ fontSize: '0.7rem', opacity: 0.9, marginTop: '1px' }}>Ph: {customPhone}</div>
                         <div style={{ fontSize: '0.85rem', fontWeight: 700, textDecoration: 'underline', marginTop: '6px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 600, marginTop: '2px' }}>{examName} {customExamYear}</div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, marginTop: '2px' }}>{activeExamName} {customExamYear}</div>
                       </div>
                       <div style={{ display: 'flex', justifyContent: 'center' }}>
                         <div style={{
@@ -1299,8 +847,8 @@ export default function ResultPage() {
                           justifyContent: 'center',
                           color: '#475569'
                         }}>
-                          {student.photo_url ? (
-                            <img src={student.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          {activeStudent.photo_url ? (
+                            <img src={activeStudent.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           ) : (
                             '👤'
                           )}
@@ -1315,7 +863,7 @@ export default function ResultPage() {
                           <tr style={{ height: '32px' }}>
                             <td style={{ width: '15%', fontSize: '0.75rem', color: '#475569' }}>Student&apos;s Name:</td>
                             <td style={{ width: '35%', paddingRight: '1rem' }}>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{student.name}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
                             </td>
                             <td style={{ width: '18%', fontSize: '0.75rem', color: '#475569' }}>Student&apos;s Adm No:</td>
                             <td style={{ width: '32%' }}>
@@ -1325,28 +873,28 @@ export default function ResultPage() {
                           <tr style={{ height: '32px' }}>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Father&apos;s Name:</td>
                             <td style={{ paddingRight: '1rem' }}>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{student.father_name || '—'}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
                             </td>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Roll No:</td>
                             <td>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{student.roll_no || '—'}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
                             </td>
                           </tr>
                           <tr style={{ height: '32px' }}>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Class:</td>
                             <td style={{ paddingRight: '1rem' }}>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{classes.find(c => c.id === selClass)?.name}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                             </td>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Section:</td>
                             <td>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{student.section_name || '—'}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
                             </td>
                           </tr>
                           <tr style={{ height: '32px' }}>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Date Of Birth:</td>
                             <td colSpan={3}>
                               <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>
-                                {student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong style={{ color: '#64748b', fontWeight: 600 }}>In Words:</strong> {student.dob ? dateToWords(student.dob) : '—'}
+                                {activeStudent.dob ? new Date(activeStudent.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong style={{ color: '#64748b', fontWeight: 600 }}>In Words:</strong> {activeStudent.dob ? dateToWords(activeStudent.dob) : '—'}
                               </span>
                             </td>
                           </tr>
@@ -1371,7 +919,7 @@ export default function ResultPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {rows.map(r => (
+                          {activeDmcRows.map(r => (
                             <tr key={r.id}>
                               <td style={{ padding: '8px', border: '1px solid #c5d2e0', fontSize: '0.8rem', fontWeight: 500 }}>{r.name}</td>
                               <td style={{ padding: '8px', border: '1px solid #c5d2e0', fontSize: '0.8rem', textAlign: 'center' }}>{r.max}</td>
@@ -1379,19 +927,19 @@ export default function ResultPage() {
                               <td style={{ padding: '8px', border: '1px solid #c5d2e0', fontSize: '0.75rem', fontStyle: 'italic', color: '#64748b' }}>{r.words}</td>
                             </tr>
                           ))}
-                          {rows.length === 0 && (
+                          {activeDmcRows.length === 0 && (
                             <tr><td colSpan={4} style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No subjects added.</td></tr>
                           )}
                           <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
                             <td style={{ padding: '8px', border: '1px solid #c5d2e0', fontSize: '0.8rem', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
                             <td style={{ padding: '8px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{totalMax}</span>
+                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{activeTotalMax}</span>
                             </td>
                             <td style={{ padding: '8px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{totalObt}</span>
+                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{activeTotalObt}</span>
                             </td>
                             <td style={{ padding: '8px', border: '1px solid #c5d2e0', fontSize: '0.8rem', color: '#1e3a8a' }}>
-                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{totalObt > 0 ? numberToWords(totalObt) : '—'}</span>
+                              <span style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem' }}>{activeTotalObtWords}</span>
                             </td>
                           </tr>
                         </tbody>
@@ -1410,23 +958,23 @@ export default function ResultPage() {
                             <td style={{ padding: '2px 4px', color: '#64748b' }}>Remarks</td>
                           </tr>
                           <tr>
-                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{classRankStr}</span></td>
-                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{secRankStr}</span></td>
-                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{totalPct}%</span></td>
+                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{activeClassRankStr}</span></td>
+                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{activeSecRankStr}</span></td>
+                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{activeTotalPct}%</span></td>
                             <td style={{ padding: '2px 4px' }}>
-                              <span style={{ background: '#10b981', color: 'white', padding: '1px 8px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.8rem' }}>{grade}</span>
+                              <span style={{ background: '#10b981', color: 'white', padding: '1px 8px', borderRadius: '12px', fontWeight: 'bold', fontSize: '0.8rem' }}>{activeGrade}</span>
                             </td>
-                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{remarks}</span></td>
+                            <td style={{ padding: '2px 4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '0.8rem', display: 'inline-block', width: '90%' }}>{activeRemarks}</span></td>
                           </tr>
                         </tbody>
                       </table>
                     </div>
 
                     {/* Passed Badge */}
-                    {passed !== null && (
+                    {activePassed !== null && (
                       <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                         <div style={{
-                          background: passed ? '#10b981' : '#ef4444',
+                          background: activePassed ? '#10b981' : '#ef4444',
                           color: 'white',
                           padding: '6px 20px',
                           borderRadius: '20px',
@@ -1434,13 +982,13 @@ export default function ResultPage() {
                           fontSize: '0.9rem',
                           boxShadow: '0 2px 8px rgba(0,0,0,0.05)'
                         }}>
-                          {passed ? '✓ PASSED' : '✗ FAILED'}
+                          {activePassed ? '✓ PASSED' : '✗ FAILED'}
                         </div>
                       </div>
                     )}
 
                     {/* Bar Chart Visual */}
-                    {classSubs.length > 0 && totalMax > 0 && (
+                    {classSubs.length > 0 && activeTotalMax > 0 && (
                       <div style={{ padding: '0.75rem 2rem', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '140px', maxWidth: '580px', margin: '0 auto', paddingBottom: '4px' }}>
                           {classSubs.map(sub => {
@@ -1509,6 +1057,402 @@ export default function ResultPage() {
             })()}
           </div>
 
+        </div>
+      )}
+
+      {/* Style settings for Printing on same page */}
+      <style>{`
+        @media print {
+          body {
+            background: white !important;
+            color: black !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          /* Hide everything except the print wrapper */
+          body > *:not(#printable-area-wrapper) {
+            display: none !important;
+          }
+          #printable-area-wrapper {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .dmc-print-card {
+            border: none !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .header-banner-print {
+            background: #006ac3 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .logo-circle-print {
+            background: white !important;
+            color: #006ac3 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .blue-th-print {
+            background-color: #006ac3 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .badge-pill-blue-print {
+            background-color: #006ac3 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .status-badge-passed-print {
+            background-color: #10b981 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .status-badge-failed-print {
+            background-color: #ef4444 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .badge-green-print {
+            background-color: #10b981 !important;
+            color: white !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .chart-bg-print {
+            background: #fafafa !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .bar-color-print {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+        }
+        @media screen {
+          #printable-area-wrapper {
+            display: none !important;
+          }
+        }
+      `}</style>
+
+      {/* Hidden printable area */}
+      {selClass && selExam && printType && (
+        <div id="printable-area-wrapper">
+          {printType === 'dmc' && activeStudent && (
+            <div className="dmc-print-card" style={{
+              background: 'white',
+              width: '740px',
+              margin: '0 auto',
+              display: 'flex',
+              flexDirection: 'column',
+              fontFamily: 'system-ui, sans-serif',
+              color: '#1e293b'
+            }}>
+              {/* Header Banner */}
+              <div className="header-banner-print" style={{
+                background: '#006ac3',
+                color: 'white',
+                padding: '20px',
+                display: 'grid',
+                gridTemplateColumns: '80px 1fr 80px',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {customLogoUrl ? (
+                    <img src={customLogoUrl} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
+                  ) : (
+                    <div className="logo-circle-print" style={{
+                      width: '60px',
+                      height: '60px',
+                      borderRadius: '50%',
+                      background: 'white',
+                      border: '2px solid white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#006ac3',
+                      fontWeight: 800,
+                      fontSize: '18px'
+                    }}>{customLogoText}</div>
+                  )}
+                </div>
+                <div>
+                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
+                  <div style={{ fontSize: '11px', opacity: 0.95, marginTop: '3px', fontWeight: 500 }}>{customLocation}</div>
+                  <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>Ph: ${customPhone}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, textDecoration: 'underline', marginTop: '8px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, marginTop: '3px' }}>{activeExamName} {customExamYear}</div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  <div style={{
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '6px',
+                    border: '2px solid white',
+                    background: '#e2e8f0',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#475569'
+                  }}>
+                    {activeStudent.photo_url ? (
+                      <img src={activeStudent.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      '👤'
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Student Info Box */}
+              <div style={{ padding: '15px', borderBottom: '1.5px solid #cbd5e1' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr style={{ height: '32px' }}>
+                      <td style={{ width: '15%', fontSize: '12px', color: '#475569' }}>Student&apos;s Name:</td>
+                      <td style={{ width: '35%', paddingRight: '10px' }}>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
+                      </td>
+                      <td style={{ width: '18%', fontSize: '12px', color: '#475569' }}>Student&apos;s Adm No:</td>
+                      <td style={{ width: '32%' }}>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{customAdmNo || '—'}</span>
+                      </td>
+                    </tr>
+                    <tr style={{ height: '32px' }}>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Father&apos;s Name:</td>
+                      <td style={{ paddingRight: '10px' }}>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
+                      </td>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Roll No:</td>
+                      <td>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
+                      </td>
+                    </tr>
+                    <tr style={{ height: '32px' }}>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Class:</td>
+                      <td style={{ paddingRight: '10px' }}>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
+                      </td>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Section:</td>
+                      <td>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
+                      </td>
+                    </tr>
+                    <tr style={{ height: '32px' }}>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Date Of Birth:</td>
+                      <td colSpan={3}>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>
+                          {activeStudent.dob ? new Date(activeStudent.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong>In Words:</strong> {activeStudent.dob ? dateToWords(activeStudent.dob) : '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Table Section */}
+              <div style={{ padding: '15px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'left', width: '35%' }}>Subjects</th>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '20%' }}>Maximum Marks</th>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '45%' }} colSpan={2}>Obtained Marks</th>
+                    </tr>
+                    <tr style={{ backgroundColor: '#e2e8f0' }}>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold' }}>Name</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold' }}>Total</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold', width: '15%' }}>Total</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold', width: '30%' }}>In Words</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeDmcRows.map(r => (
+                      <tr key={r.id}>
+                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', fontWeight: 500 }}>{r.name}</td>
+                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center' }}>{r.max}</td>
+                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center', fontWeight: 600 }}>{r.obtStr !== '' ? r.obt : '—'}</td>
+                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', fontStyle: 'italic' }}>{r.words}</td>
+                      </tr>
+                    ))}
+                    <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
+                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
+                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalMax}</span>
+                      </td>
+                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalObt}</span>
+                      </td>
+                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', color: '#1e3a8a' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalObtWords}</span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Performance Grid */}
+              <div style={{ padding: '0 15px 15px' }}>
+                <table style={{ width: '100%', fontSize: '11px', textAlign: 'center', borderCollapse: 'collapse' }}>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '4px', color: '#64748b' }}>Class Position</td>
+                      <td style={{ padding: '4px', color: '#64748b' }}>Section Position</td>
+                      <td style={{ padding: '4px', color: '#64748b' }}>%age</td>
+                      <td style={{ padding: '4px', color: '#64748b' }}>Grade</td>
+                      <td style={{ padding: '4px', color: '#64748b' }}>Remarks</td>
+                    </tr>
+                    <tr>
+                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeClassRankStr}</span></td>
+                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeSecRankStr}</span></td>
+                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeTotalPct}%</span></td>
+                      <td style={{ padding: '4px' }}>
+                        <span className="badge-green-print" style={{ background: '#10b981', color: 'white', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px' }}>{activeGrade}</span>
+                      </td>
+                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeRemarks}</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Passed Badge */}
+              {activePassed !== null && (
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                  <div className={activePassed ? 'status-badge-passed-print' : 'status-badge-failed-print'} style={{
+                    background: activePassed ? '#10b981' : '#ef4444',
+                    color: 'white',
+                    padding: '8px 24px',
+                    borderRadius: '24px',
+                    fontWeight: 800,
+                    fontSize: '15px'
+                  }}>
+                    {activePassed ? '✓ PASSED' : '✗ FAILED'}
+                  </div>
+                </div>
+              )}
+
+              {/* Bar Chart Visual */}
+              {classSubs.length > 0 && activeTotalMax > 0 && (
+                <div className="chart-bg-print" style={{ padding: '15px 30px', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '140px', maxWidth: '580px', margin: '0 auto', paddingBottom: '4px' }}>
+                    {classSubs.map(sub => {
+                      const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
+                      const max = Number(entry?.total_marks || 100)
+                      const obt = Number(entry?.marks_obtained || 0)
+                      const pct = entry?.marks_obtained !== undefined ? Math.round((obt / max) * 100) : 0
+                      
+                      const colorsMap: Record<string, string> = {
+                        'english': '#3b82f6',
+                        'urdu': '#60a5fa',
+                        'islamiyat': '#10b981',
+                        'physics': '#f97316',
+                        'chemistry': '#8b5cf6',
+                        'biology': '#14b8a6',
+                        'pak study': '#ec4899',
+                        'mutalia quran': '#0f766e',
+                        'math': '#2563eb'
+                      }
+                      
+                      const nameLower = sub.name.toLowerCase()
+                      let barColor = '#4f46e5'
+                      for (const [k, col] of Object.entries(colorsMap)) {
+                        if (nameLower.includes(k)) {
+                          barColor = col
+                          break
+                        }
+                      }
+
+                      return (
+                        <div key={sub.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', padding: '0 4px', maxWidth: '50px' }}>
+                          <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#475569', marginBottom: '2px' }}>{entry?.marks_obtained !== undefined ? `${pct}%` : '—'}</span>
+                          <div className="bar-color-print" style={{
+                            width: '20px',
+                            height: `${pct}%`,
+                            background: barColor,
+                            borderRadius: '3px 3px 0 0'
+                          }} />
+                          <span style={{ fontSize: '9px', fontWeight: 600, color: '#64748b', marginTop: '4px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{sub.name}</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer Rules & Signatures */}
+              <div style={{ padding: '20px 25px', display: 'grid', gridTemplateColumns: '2fr 1fr', alignItems: 'flex-end', marginTop: '10px' }}>
+                <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                  1. Passing %age in any subject is 40.<br />
+                  2. Failure in any two subjects will be considered as Failed
+                  <div style={{ marginTop: '40px', fontWeight: 700, color: '#1e293b', fontSize: '12px' }}>
+                    <span style={{ borderTop: '1px solid #64748b', paddingTop: '3px', display: 'inline-block', width: '160px' }}>Incharge Examination Cell</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                  <div style={{ width: '100px', height: '60px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', background: '#f8fafc' }} />
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
+                </div>
+              </div>
+
+            </div>
+          )}
+
+          {printType === 'schedule' && (
+            <div style={{
+              background: 'white',
+              width: '740px',
+              margin: '0 auto',
+              padding: '20px',
+              fontFamily: 'system-ui, sans-serif'
+            }}>
+              <div style={{
+                textAlign: 'center',
+                borderBottom: '3px double #222',
+                paddingBottom: '12px',
+                marginBottom: '25px'
+              }}>
+                <h1 style={{ fontSize: '24px', fontWeight: 'bold', textTransform: 'uppercase', margin: 0 }}>Date Sheet & Schedule</h1>
+                <div style={{ fontSize: '18px', fontWeight: 600, marginTop: '5px', color: '#1e3a8a' }}>Class: {activeClassName}</div>
+                <div style={{ fontSize: '14px', color: '#555', marginTop: '5px', textTransform: 'uppercase', letterSpacing: '1px' }}>{activeExamName}</div>
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', fontSize: '14px' }}>
+                <thead>
+                  <tr style={{ backgroundColor: '#f5f5f5' }}>
+                    <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', width: '10%', fontWeight: 'bold', textTransform: 'uppercase' }}>S.No</th>
+                    <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', width: '40%', fontWeight: 'bold', textTransform: 'uppercase' }}>Subject</th>
+                    <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', width: '30%', fontWeight: 'bold', textTransform: 'uppercase' }}>Date</th>
+                    <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', width: '20%', fontWeight: 'bold', textTransform: 'uppercase' }}>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {schedulesList.filter(s => s.date || s.time).map((s, idx) => (
+                    <tr key={s.subject_id} style={idx % 2 === 1 ? { backgroundColor: '#fafafa' } : {}}>
+                      <td style={{ border: '1px solid #ddd', padding: '12px' }}>{idx + 1}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '12px' }}><strong>{s.subject_name}</strong></td>
+                      <td style={{ border: '1px solid #ddd', padding: '12px' }}>{s.date ? new Date(s.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '—'}</td>
+                      <td style={{ border: '1px solid #ddd', padding: '12px' }}>{s.time || '—'}</td>
+                    </tr>
+                  ))}
+                  {schedulesList.filter(s => s.date || s.time).length === 0 && (
+                    <tr><td colSpan={4} style={{ textAlign: 'center', color: '#666', padding: '12px' }}>No subjects scheduled yet.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
     </div>
