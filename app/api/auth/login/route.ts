@@ -1,19 +1,45 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createSession } from '@/lib/auth'
 import bcrypt from 'bcryptjs'
-
-// In-memory school store (replace with Supabase queries once DB is connected)
-const ADMIN_USER = {
-  username: process.env.ADMIN_USERNAME || 'admin',
-  password: process.env.ADMIN_PASSWORD || 'admin123',
-}
+import { createServerClient } from '@/lib/supabase'
 
 export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json()
+    const supabase = createServerClient()
 
-    // Check admin credentials
-    if (username === ADMIN_USER.username && password === ADMIN_USER.password) {
+    // Check admin credentials in database
+    let isAdminMatch = false
+    let isAdminQueryExecuted = false
+
+    try {
+      const { data: adminSettings } = await supabase
+        .from('admin_settings')
+        .select('username, password_hash')
+        .eq('username', username)
+        .maybeSingle()
+
+      if (adminSettings) {
+        isAdminQueryExecuted = true
+        const valid = await bcrypt.compare(password, adminSettings.password_hash)
+        if (valid) {
+          isAdminMatch = true
+        }
+      }
+    } catch (err) {
+      console.warn('admin_settings query failed, falling back to env configurations:', err)
+    }
+
+    // Fallback to environment variables if database entry doesn't exist
+    if (!isAdminMatch && !isAdminQueryExecuted) {
+      const envUsername = process.env.ADMIN_USERNAME || 'admin'
+      const envPassword = process.env.ADMIN_PASSWORD || 'admin123'
+      if (username === envUsername && password === envPassword) {
+        isAdminMatch = true
+      }
+    }
+
+    if (isAdminMatch) {
       const token = await createSession({ role: 'admin' })
       const response = NextResponse.json({ role: 'admin', success: true })
       response.cookies.set('session', token, {
@@ -27,9 +53,6 @@ export async function POST(req: NextRequest) {
     }
 
     // Check school credentials from Supabase
-    const { createServerClient } = await import('@/lib/supabase')
-    const supabase = createServerClient()
-
     const { data: school, error } = await supabase
       .from('schools')
       .select('id, name, username, password_hash, active')

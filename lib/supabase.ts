@@ -32,7 +32,8 @@ function readDb() {
         expenses: [],
         staff: [],
         sms_templates: [],
-        budget: []
+        budget: [],
+        admin_settings: []
       }
       fs.writeFileSync(DB_FILE, JSON.stringify(initial, null, 2))
       return initial

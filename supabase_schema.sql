@@ -310,3 +310,14 @@ CREATE INDEX IF NOT EXISTS idx_attendance_student ON attendance(student_id, date
 CREATE INDEX IF NOT EXISTS idx_fee_invoices_school ON fee_invoices(school_id, month, year);
 CREATE INDEX IF NOT EXISTS idx_expenses_school ON expenses(school_id, date);
 CREATE INDEX IF NOT EXISTS idx_results_student ON results(student_id, exam_type_id);
+
+-- ── Admin Settings ─────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS admin_settings (
+  id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  username        TEXT UNIQUE NOT NULL DEFAULT 'admin',
+  password_hash   TEXT NOT NULL
+);
+
+ALTER TABLE admin_settings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all via anon" ON admin_settings FOR ALL USING (true) WITH CHECK (true);
+
