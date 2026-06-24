@@ -65,34 +65,7 @@ export default function SchoolDashboard() {
         <span style={{ fontWeight: 600 }}>Dashboard</span>
       </div>
 
-      {/* Filters Box */}
-      <div style={{ background: '#ffffff', border: '1px solid #e0e0e0', borderRadius: '4px', padding: '1.5rem', marginBottom: '1.5rem' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.25rem' }}>
-          <div className="form-group">
-            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Session</label>
-            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#333333' }}>
-              <option>2026-2027</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Banks</label>
-            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#999999' }}>
-              <option>Select Bank</option>
-            </select>
-          </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
-          <div className="form-group" style={{ flex: 1, maxWidth: 'calc(50% - 1rem)' }}>
-            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Students Status</label>
-            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#999999' }}>
-              <option>Select Status</option>
-            </select>
-          </div>
-          <button className="btn" style={{ background: '#3b82f6', color: '#ffffff', borderRadius: '4px', height: '38px', padding: '0 1.5rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
-            Search
-          </button>
-        </div>
-      </div>
+
 
       {/* Stats */}
       <div className="grid-stats" style={{ marginBottom: '2rem' }}>
