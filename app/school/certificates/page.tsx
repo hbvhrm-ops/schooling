@@ -51,6 +51,7 @@ export default function CertificatesPage() {
   // School metadata
   const [schoolName, setSchoolName] = useState('EduManage School')
   const [schoolLogoUrl, setSchoolLogoUrl] = useState('')
+  const [defaultSchoolLogo, setDefaultSchoolLogo] = useState('')
 
   // Certificate template state (for currently active type)
   const [template, setTemplate] = useState<CertificateTemplate>({
@@ -126,8 +127,13 @@ export default function CertificatesPage() {
         setSelectedStudentId(fetchedStudents[0].id)
       }
 
+      if (templateRes.schoolLogo) {
+        setDefaultSchoolLogo(templateRes.schoolLogo)
+      }
       if (templateRes.template?.logo_url) {
         setSchoolLogoUrl(templateRes.template.logo_url)
+      } else if (templateRes.schoolLogo) {
+        setSchoolLogoUrl(templateRes.schoolLogo)
       }
       if (templateRes.schoolName) {
         setSchoolName(templateRes.schoolName)
@@ -154,8 +160,15 @@ export default function CertificatesPage() {
         if (data.schoolName) {
           setSchoolName(data.schoolName)
         }
+        if (data.schoolLogo) {
+          setDefaultSchoolLogo(data.schoolLogo)
+        }
         if (data.template.logo_url) {
           setSchoolLogoUrl(data.template.logo_url)
+        } else if (data.schoolLogo) {
+          setSchoolLogoUrl(data.schoolLogo)
+        } else {
+          setSchoolLogoUrl('')
         }
       }
     } catch {
@@ -455,6 +468,7 @@ export default function CertificatesPage() {
         setMsg({ type: 'success', text: 'Certificate template updated successfully!' })
         if (data.template) {
           setTemplate(data.template)
+          setSchoolLogoUrl(data.template.logo_url || data.schoolLogo || defaultSchoolLogo || '')
         }
       } else {
         setMsg({ type: 'danger', text: data.error || 'Failed to save template' })
@@ -662,7 +676,7 @@ export default function CertificatesPage() {
                 <div class="badge-watermark">🎓</div>
                 <div class="content-wrapper">
                   <div class="header">
-                    ${template.logo_url ? `<img class="logo" src="${template.logo_url}" alt="School Logo" />` : '<div class="logo-placeholder">🎓</div>'}
+                    ${(template.logo_url || defaultSchoolLogo) ? `<img class="logo" src="${template.logo_url || defaultSchoolLogo}" alt="School Logo" />` : '<div class="logo-placeholder">🎓</div>'}
                     <div class="school-title">${schoolName}</div>
                     <div class="cert-title">${template.title}</div>
                     <div class="cert-subtitle">Official Institution Release Document</div>
@@ -1418,8 +1432,8 @@ export default function CertificatesPage() {
                       overflow: 'hidden'
                     }}>
                       <div style={{ textAlign: 'center', marginBottom: '0.2rem', flexShrink: 0 }}>
-                        {template.logo_url ? (
-                          <img src={template.logo_url} alt="Logo" style={{ maxHeight: '30px', marginBottom: '2px', objectFit: 'contain' }} />
+                        {(template.logo_url || defaultSchoolLogo) ? (
+                          <img src={template.logo_url || defaultSchoolLogo} alt="Logo" style={{ maxHeight: '30px', marginBottom: '2px', objectFit: 'contain' }} />
                         ) : (
                           <div style={{ fontSize: '1.4rem', marginBottom: '2px' }}>🎓</div>
                         )}

@@ -66,16 +66,17 @@ export async function GET(req: NextRequest) {
   }
 
   const supabase = createServerClient()
-  const { data, error } = await supabase
-    .from('certificate_templates')
-    .select('*')
-    .eq('school_id', session.schoolId)
-    .eq('type', type)
-    .maybeSingle()
+  const [templateRes, schoolRes] = await Promise.all([
+    supabase.from('certificate_templates').select('*').eq('school_id', session.schoolId).eq('type', type).maybeSingle(),
+    supabase.from('schools').select('name, logo_url').eq('id', session.schoolId).maybeSingle()
+  ])
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 400 })
+  if (templateRes.error) {
+    return NextResponse.json({ error: templateRes.error.message }, { status: 400 })
   }
+
+  const school = schoolRes.data
+  const data = templateRes.data
 
   if (!data) {
     const defaultTemplate = DEFAULT_TEMPLATES[type] || {
@@ -84,7 +85,8 @@ export async function GET(req: NextRequest) {
       signature_title: 'Principal'
     }
     return NextResponse.json({
-      schoolName: session.schoolName,
+      schoolName: school?.name || session.schoolName,
+      schoolLogo: school?.logo_url || '',
       template: {
         logo_url: '',
         ...defaultTemplate
@@ -92,7 +94,11 @@ export async function GET(req: NextRequest) {
     })
   }
 
-  return NextResponse.json({ schoolName: session.schoolName, template: data })
+  return NextResponse.json({
+    schoolName: school?.name || session.schoolName,
+    schoolLogo: school?.logo_url || '',
+    template: data
+  })
 }
 
 export async function POST(req: NextRequest) {
@@ -124,5 +130,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 400 })
   }
 
-  return NextResponse.json({ schoolName: session.schoolName, template: data })
+  const { data: school } = await supabase
+    .from('schools')
+    .select('name, logo_url')
+    .eq('id', session.schoolId)
+    .maybeSingle()
+
+  return NextResponse.json({
+    schoolName: school?.name || session.schoolName,
+    schoolLogo: school?.logo_url || '',
+    template: data
+  })
 }

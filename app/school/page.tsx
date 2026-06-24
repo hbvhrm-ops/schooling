@@ -15,6 +15,7 @@ export default function SchoolDashboard() {
   const [recentFee, setRecentFee] = useState<{ student: string; amount: number; date: string; status: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [schoolName, setSchoolName] = useState('')
+  const [schoolLogo, setSchoolLogo] = useState('')
   const today = new Date().toLocaleDateString('en-PK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
   useEffect(() => {
@@ -22,6 +23,7 @@ export default function SchoolDashboard() {
       fetch('/api/school/dashboard').then(r => r.json()).catch(() => ({})),
     ]).then(([dash]) => {
       if (dash.schoolName) setSchoolName(dash.schoolName)
+      if (dash.schoolLogo) setSchoolLogo(dash.schoolLogo)
       if (dash.stats) setStats(dash.stats)
       if (dash.recentFee) setRecentFee(dash.recentFee)
     }).finally(() => setLoading(false))
@@ -63,6 +65,31 @@ export default function SchoolDashboard() {
       <div style={{ background: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#555555' }}>
         <span>#</span>
         <span style={{ fontWeight: 600 }}>Dashboard</span>
+      </div>
+
+      {/* School Brand Banner */}
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '1.25rem', 
+        marginBottom: '2rem',
+        padding: '1.25rem',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+      }}>
+        {schoolLogo ? (
+          <img src={schoolLogo} alt={`${schoolName} Logo`} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'contain', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '4px' }} />
+        ) : (
+          <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: 'linear-gradient(135deg, var(--primary), var(--accent))', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.75rem', color: '#ffffff' }}>
+            🏫
+          </div>
+        )}
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>{schoolName || 'Loading School...'}</h2>
+          <p style={{ fontSize: '0.875rem', color: '#64748b', margin: '0.25rem 0 0 0' }}>Welcome back to your administration dashboard.</p>
+        </div>
       </div>
 
 

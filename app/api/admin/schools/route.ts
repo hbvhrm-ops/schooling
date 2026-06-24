@@ -7,7 +7,7 @@ export async function GET() {
     const supabase = createServerClient()
     const { data, error } = await supabase
       .from('schools')
-      .select('id, name, username, contact, active, created_at, monthly_income')
+      .select('id, name, username, contact, active, created_at, monthly_income, logo_url')
       .order('created_at', { ascending: false })
     if (error) throw error
     return NextResponse.json({ schools: data || [] })
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, username, password, contact } = await req.json()
+    const { name, username, password, contact, logo_url } = await req.json()
     if (!name || !username || !password) {
       return NextResponse.json({ error: 'Name, username, and password are required' }, { status: 400 })
     }
@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     const password_hash = await bcrypt.hash(password, 10)
     const { data, error } = await supabase.from('schools').insert({
-      name, username, password_hash, contact: contact || null, active: true
+      name, username, password_hash, contact: contact || null, logo_url: logo_url || null, active: true
     }).select().single()
     if (error) throw error
     return NextResponse.json({ school: data, success: true }, { status: 201 })

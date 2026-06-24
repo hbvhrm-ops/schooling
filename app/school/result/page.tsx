@@ -138,18 +138,25 @@ export default function ResultPage() {
 
     // Automatically load logo from certificate templates
     const loadSchoolLogo = async () => {
+      let fallbackLogo = ''
       const types = ['slc', 'birth', 'character', 'sports', 'top_positions']
       for (const type of types) {
         try {
           const r = await fetch(`/api/school/certificate-templates?type=${type}`)
           if (r.ok) {
             const d = await r.json()
+            if (d.schoolLogo) {
+              fallbackLogo = d.schoolLogo
+            }
             if (d.template?.logo_url) {
               setCustomLogoUrl(d.template.logo_url)
-              break // Use first logo found
+              return // Use first logo found
             }
           }
         } catch {}
+      }
+      if (fallbackLogo) {
+        setCustomLogoUrl(fallbackLogo)
       }
     }
     loadSchoolLogo()

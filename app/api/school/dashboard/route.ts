@@ -14,11 +14,12 @@ export async function GET() {
     const year = now.getFullYear()
     const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
 
-    const [studentsRes, feeRes, expensesRes, recentFeeRes] = await Promise.all([
+    const [studentsRes, feeRes, expensesRes, recentFeeRes, schoolRes] = await Promise.all([
       supabase.from('students').select('id, status, created_at').eq('school_id', schoolId),
       supabase.from('fee_invoices').select('amount, status, paid_date').eq('school_id', schoolId).eq('status', 'paid').gte('paid_date', monthStart),
       supabase.from('expenses').select('amount').eq('school_id', schoolId).gte('date', monthStart),
       supabase.from('fee_invoices').select('amount, status, paid_date, students(name)').eq('school_id', schoolId).order('paid_date', { ascending: false }).limit(5),
+      supabase.from('schools').select('name, logo_url').eq('id', schoolId).maybeSingle(),
     ])
 
     const students = (studentsRes.data || []) as any[]
@@ -36,9 +37,16 @@ export async function GET() {
       status: f.status,
     }))
 
-    return NextResponse.json({ schoolName: session.schoolName, stats: { totalStudents, newAdmissions, dischargedStudents, feeCollected, totalExpenses, profit }, recentFee })
+    const schoolData = schoolRes.data
+
+    return NextResponse.json({
+      schoolName: schoolData?.name || session.schoolName,
+      schoolLogo: schoolData?.logo_url || '',
+      stats: { totalStudents, newAdmissions, dischargedStudents, feeCollected, totalExpenses, profit },
+      recentFee
+    })
   } catch (err) {
     console.error(err)
-    return NextResponse.json({ schoolName: '', stats: { totalStudents: 0, newAdmissions: 0, dischargedStudents: 0, feeCollected: 0, totalExpenses: 0, profit: 0 }, recentFee: [] })
+    return NextResponse.json({ schoolName: '', schoolLogo: '', stats: { totalStudents: 0, newAdmissions: 0, dischargedStudents: 0, feeCollected: 0, totalExpenses: 0, profit: 0 }, recentFee: [] })
   }
 }

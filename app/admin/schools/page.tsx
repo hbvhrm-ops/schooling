@@ -3,9 +3,9 @@ import { useState, useEffect, useCallback } from 'react'
 
 interface School {
   id: string; name: string; username: string; contact: string;
-  active: boolean; created_at: string; monthly_income?: number
+  active: boolean; created_at: string; monthly_income?: number; logo_url?: string
 }
-interface FormData { name: string; username: string; password: string; contact: string }
+interface FormData { name: string; username: string; password: string; contact: string; logo_url: string }
 
 function generateUsername(name: string) {
   return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '') + '_school'
@@ -22,7 +22,7 @@ export default function SchoolsPage() {
   const [editSchool, setEditSchool] = useState<School | null>(null)
   const [incomeModal, setIncomeModal] = useState<School | null>(null)
   const [incomeAmount, setIncomeAmount] = useState('')
-  const [form, setForm] = useState<FormData>({ name: '', username: '', password: '', contact: '' })
+  const [form, setForm] = useState<FormData>({ name: '', username: '', password: '', contact: '', logo_url: '' })
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState<{ type: 'success' | 'danger'; text: string } | null>(null)
   const [search, setSearch] = useState('')
@@ -40,12 +40,12 @@ export default function SchoolsPage() {
 
   function openCreate() {
     setEditSchool(null)
-    setForm({ name: '', username: '', password: generatePassword(), contact: '' })
+    setForm({ name: '', username: '', password: generatePassword(), contact: '', logo_url: '' })
     setShowModal(true)
   }
   function openEdit(s: School) {
     setEditSchool(s)
-    setForm({ name: s.name, username: s.username, password: '', contact: s.contact || '' })
+    setForm({ name: s.name, username: s.username, password: '', contact: s.contact || '', logo_url: s.logo_url || '' })
     setShowModal(true)
   }
   function handleNameChange(name: string) {
@@ -59,7 +59,7 @@ export default function SchoolsPage() {
     try {
       const method = editSchool ? 'PUT' : 'POST'
       const body = editSchool
-        ? { id: editSchool.id, name: form.name, contact: form.contact, ...(form.password ? { password: form.password } : {}) }
+        ? { id: editSchool.id, name: form.name, contact: form.contact, logo_url: form.logo_url, ...(form.password ? { password: form.password } : {}) }
         : form
       const r = await fetch('/api/admin/schools', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const d = await r.json()
@@ -152,7 +152,16 @@ export default function SchoolsPage() {
                 {filtered.map((school, i) => (
                   <tr key={school.id}>
                     <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
-                    <td style={{ fontWeight: 600 }}>{school.name}</td>
+                    <td style={{ fontWeight: 600 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        {school.logo_url ? (
+                          <img src={school.logo_url} alt="Logo" style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'contain', border: '1px solid var(--border)', background: '#f8fafc', padding: '2px' }} />
+                        ) : (
+                          <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>🏫</div>
+                        )}
+                        <span>{school.name}</span>
+                      </div>
+                    </td>
                     <td><code style={{ background: 'var(--bg-input)', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.8rem' }}>{school.username}</code></td>
                     <td style={{ color: 'var(--text-secondary)' }}>{school.contact || '—'}</td>
                     <td>
@@ -217,6 +226,37 @@ export default function SchoolsPage() {
                 <div className="form-group">
                   <label className="form-label">Contact Number</label>
                   <input className="form-input" value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} placeholder="03xx-xxxxxxx" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">School Logo</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <label className="btn btn-secondary" style={{ cursor: 'pointer', margin: 0 }}>
+                      📁 Choose Logo Image
+                      <input
+                        type="file"
+                        accept="image/*"
+                        style={{ display: 'none' }}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            const reader = new FileReader()
+                            reader.onloadend = () => {
+                              setForm(f => ({ ...f, logo_url: reader.result as string }))
+                            }
+                            reader.readAsDataURL(file)
+                          }
+                        }}
+                      />
+                    </label>
+                    {form.logo_url ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <img src={form.logo_url} alt="School Logo Preview" style={{ maxHeight: '40px', maxWidth: '40px', objectFit: 'contain', border: '1px solid var(--border)', padding: '2px', borderRadius: '4px' }} />
+                        <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }} onClick={() => setForm(f => ({ ...f, logo_url: '' }))}>✕ Remove</button>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>No logo uploaded</span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="modal-footer">

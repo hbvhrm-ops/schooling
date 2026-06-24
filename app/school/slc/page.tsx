@@ -37,6 +37,7 @@ export default function SlcPage() {
   const [savingTemplate, setSavingTemplate] = useState(false)
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
   const [schoolName, setSchoolName] = useState('')
+  const [schoolLogo, setSchoolLogo] = useState('')
 
   // Certificate variables state
   const [selectedStudentId, setSelectedStudentId] = useState('')
@@ -68,6 +69,9 @@ export default function SlcPage() {
 
       if (tr.schoolName) {
         setSchoolName(tr.schoolName)
+      }
+      if (tr.schoolLogo) {
+        setSchoolLogo(tr.schoolLogo)
       }
       if (tr.template) {
         setTemplate(tr.template)
@@ -133,6 +137,9 @@ export default function SlcPage() {
         setMsg({ type: 'success', text: 'Certificate template updated successfully!' })
         if (data.schoolName) {
           setSchoolName(data.schoolName)
+        }
+        if (data.schoolLogo) {
+          setSchoolLogo(data.schoolLogo)
         }
         if (data.template) {
           setTemplate(data.template)
@@ -326,7 +333,7 @@ export default function SlcPage() {
                 <div class="badge-watermark">🏫</div>
                 <div class="content-wrapper">
                   <div class="header">
-                    ${template.logo_url ? `<img class="logo" src="${template.logo_url}" alt="School Logo" />` : '<div class="logo-placeholder">🏫</div>'}
+                    ${(template.logo_url || schoolLogo) ? `<img class="logo" src="${template.logo_url || schoolLogo}" alt="School Logo" />` : '<div class="logo-placeholder">🏫</div>'}
                     <div class="school-title">${schoolName || 'EduManage School System'}</div>
                     <div class="cert-title">${template.title}</div>
                     <div class="cert-subtitle">Official Academic Release Certificate</div>
@@ -489,9 +496,9 @@ export default function SlcPage() {
                     }}
                   >
                     <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-                      {template.logo_url ? (
+                      {(template.logo_url || schoolLogo) ? (
                         <img
-                          src={template.logo_url}
+                          src={template.logo_url || schoolLogo}
                           alt="School Logo"
                           style={{ maxHeight: '60px', marginBottom: '8px', objectFit: 'contain' }}
                         />
