@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 
-type Tab = 'history' | 'connect' | 'branded' | 'templates'
+type Tab = 'history' | 'connect' | 'templates'
 
 const WA_TEMPLATES = [
   { name: 'Attendance Alert', message: 'Dear Parent, your child {{name}} was *absent* today {{date}}. Please ensure regular attendance. 🏫 School Management' },
@@ -27,7 +27,7 @@ export default function WhatsAppPage() {
       </div>
 
       <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
-        {([['connect','🔗 Connection'],['templates','📝 Templates'],['branded','🏷️ Branded SMS'],['history','📋 History']] as [Tab, string][]).map(([t, l]) => (
+        {([['connect','🔗 Connection'],['templates','📝 Templates'],['history','📋 History']] as [Tab, string][]).map(([t, l]) => (
           <button key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>{l}</button>
         ))}
       </div>
@@ -95,19 +95,6 @@ export default function WhatsAppPage() {
             <button onClick={() => sendViaWhatsApp(WA_TEMPLATES[selTemplate].message)} className="btn" style={{ background: '#25D366', color: '#fff', border: 'none', width: '100%', justifyContent: 'center', padding: '0.75rem' }}>
               💬 Send via WhatsApp
             </button>
-          </div>
-        </div>
-      )}
-
-      {tab === 'branded' && (
-        <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🏷️ Branded SMS</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>Customize messages with your school name and branding.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div className="form-group"><label className="form-label">School Name (used in messages)</label><input className="form-input" placeholder="e.g. Sunrise Public School" /></div>
-            <div className="form-group"><label className="form-label">School WhatsApp Number</label><input className="form-input" placeholder="+92 3xx xxxxxxx" /></div>
-            <div className="form-group"><label className="form-label">Message Signature</label><input className="form-input" placeholder="e.g. - Sunrise School Management" /></div>
-            <button className="btn btn-primary">💾 Save Branding</button>
           </div>
         </div>
       )}

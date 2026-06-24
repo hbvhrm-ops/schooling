@@ -44,7 +44,6 @@ const navGroups: NavGroup[] = [
   {
     label: 'Communication',
     items: [
-      { href: '/school/sms', label: 'SMS', icon: '📱' },
       { href: '/school/whatsapp', label: 'WhatsApp', icon: '💬' },
     ]
   },

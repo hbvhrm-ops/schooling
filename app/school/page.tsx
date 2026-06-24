@@ -42,7 +42,7 @@ export default function SchoolDashboard() {
     { label: 'Collect Fee', icon: '💳', href: '/school/fee', color: '#22d3ee' },
     { label: 'Add Expense', icon: '💸', href: '/school/expenses', color: '#f59e0b' },
     { label: 'Add Result', icon: '📝', href: '/school/result', color: '#8b5cf6' },
-    { label: 'Send SMS', icon: '📱', href: '/school/sms', color: '#ef4444' },
+    { label: 'WhatsApp', icon: '💬', href: '/school/whatsapp', color: '#25D366' },
   ]
 
   return (
