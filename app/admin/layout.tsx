@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="main-layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <div className="sidebar-logo">
+        <div className="sidebar-logo" style={{ borderBottom: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '12px',
@@ -30,14 +30,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               boxShadow: '0 4px 12px rgba(99,102,241,0.35)',
             }}>🏫</div>
             <div>
-              <div style={{ fontWeight: 800, fontSize: '1rem', lineHeight: 1 }}>EduManage</div>
+              <div style={{ fontWeight: 800, fontSize: '1rem', lineHeight: 1, color: '#ffffff' }}>EduManage</div>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Admin Portal</div>
             </div>
           </div>
         </div>
 
         <nav className="sidebar-nav">
-          <div className="nav-section-label">Main Menu</div>
+          <div className="nav-section-label" style={{ color: '#666666' }}>Main Menu</div>
           {navItems.map(item => (
             <Link
               key={item.href}
@@ -52,12 +52,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
           <div style={{
-            background: 'rgba(99,102,241,0.08)', borderRadius: '12px', padding: '0.85rem',
-            marginBottom: '0.75rem', border: '1px solid rgba(99,102,241,0.12)',
+            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '0.85rem',
+            marginBottom: '0.75rem', border: '1px solid rgba(255,255,255,0.06)',
           }}>
             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>Logged in as</div>
-            <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Super Admin</div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--primary-light)' }}>Full Access</div>
+            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#ffffff' }}>Super Admin</div>
+            <div style={{ fontSize: '0.75rem', color: '#10b981' }}>Full Access</div>
           </div>
           <button onClick={handleLogout} className="btn btn-secondary w-full" style={{ justifyContent: 'center' }}>
             🚪 Logout

@@ -48,34 +48,81 @@ export default function SchoolDashboard() {
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-            {schoolName || 'School'} <span className="gradient-text">Dashboard</span>
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>{today}</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flexWrap: 'wrap' }}>
+          <h1 style={{ fontSize: '2.25rem', fontWeight: 300, color: '#333333', margin: 0 }}>Dashboard</h1>
+          <span style={{ fontSize: '0.875rem', color: '#777777', fontWeight: 400 }}>statistics and more. You can see summary of your institute.</span>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
-          <Link href="/school/attendance" className="btn btn-primary">📋 Mark Attendance</Link>
-          <Link href="/school/fee" className="btn btn-success">💳 Collect Fee</Link>
+          <Link href="/school/attendance" className="btn btn-primary" style={{ borderRadius: '4px' }}>📋 Mark Attendance</Link>
+          <Link href="/school/fee" className="btn btn-success" style={{ borderRadius: '4px' }}>💳 Collect Fee</Link>
+        </div>
+      </div>
+
+      {/* Breadcrumb */}
+      <div style={{ background: '#f5f5f5', border: '1px solid #e0e0e0', borderRadius: '4px', padding: '0.6rem 1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#555555' }}>
+        <span>#</span>
+        <span style={{ fontWeight: 600 }}>Dashboard</span>
+      </div>
+
+      {/* Filters Box */}
+      <div style={{ background: '#ffffff', border: '1px solid #e0e0e0', borderRadius: '4px', padding: '1.5rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem', marginBottom: '1.25rem' }}>
+          <div className="form-group">
+            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Session</label>
+            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#333333' }}>
+              <option>2026-2027</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Banks</label>
+            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#999999' }}>
+              <option>Select Bank</option>
+            </select>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
+          <div className="form-group" style={{ flex: 1, maxWidth: 'calc(50% - 1rem)' }}>
+            <label className="form-label" style={{ color: '#333333', fontSize: '0.85rem', fontWeight: 600, marginBottom: '0.35rem', textTransform: 'none', letterSpacing: 'normal' }}>Students Status</label>
+            <select className="form-select" style={{ background: '#ffffff', border: '1px solid #dcdcdc', borderRadius: '4px', padding: '0.5rem 0.75rem', height: '38px', color: '#999999' }}>
+              <option>Select Status</option>
+            </select>
+          </div>
+          <button className="btn" style={{ background: '#3b82f6', color: '#ffffff', borderRadius: '4px', height: '38px', padding: '0 1.5rem', fontWeight: 600, fontSize: '0.875rem', border: 'none', cursor: 'pointer' }}>
+            Search
+          </button>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid-stats" style={{ marginBottom: '2rem' }}>
-        {statCards.map(card => (
-          <Link key={card.label} href={card.href} style={{ textDecoration: 'none' }}>
-            <div className="stat-card" style={{ '--card-glow': card.glow, cursor: 'pointer' } as React.CSSProperties}>
-              <div className="stat-icon" style={{ background: `${card.color}1a`, color: card.color }}>
-                {card.icon}
+        {statCards.map((card, idx) => {
+          const backgroundColors = [
+            '#0093cb', // Blue
+            '#10b981', // Green
+            '#ef4444', // Red
+            '#06b6d4', // Cyan
+            '#f59e0b', // Amber
+            '#8b5cf6', // Purple
+          ];
+          const bg = backgroundColors[idx % backgroundColors.length];
+
+          return (
+            <Link key={card.label} href={card.href} style={{ textDecoration: 'none' }}>
+              <div className="stat-card-solid" style={{ background: bg }}>
+                <div className="stat-icon-solid">
+                  {card.icon}
+                </div>
+                <div className="stat-value-solid">
+                  {loading ? '—' : card.isAmount ? `${card.suffix} ${Number(card.value).toLocaleString()}` : card.value}
+                </div>
+                <div className="stat-footer-solid">
+                  <span>{card.label}</span>
+                </div>
               </div>
-              <div className="stat-value" style={{ color: card.color, fontSize: card.isAmount ? '1.5rem' : '2rem' }}>
-                {loading ? '—' : card.isAmount ? `${card.suffix} ${Number(card.value).toLocaleString()}` : card.value}
-              </div>
-              <div className="stat-label">{card.label}</div>
-            </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>

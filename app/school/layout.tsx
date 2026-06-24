@@ -78,7 +78,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
     <div className="main-layout">
       {/* Sidebar */}
       <aside className="sidebar" style={{ width: collapsed ? '70px' : '260px', height: '100vh', transition: 'width 0.25s ease', overflowY: collapsed ? 'visible' : 'auto' }}>
-        <div className="sidebar-logo" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: collapsed ? 'center' : 'space-between' }}>
+        <div className="sidebar-logo" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: collapsed ? 'center' : 'space-between', borderBottom: '1px solid var(--border)' }}>
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <div style={{
@@ -87,7 +87,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
               }}>🏫</div>
               <div>
-                <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1 }}>EduManage</div>
+                <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1, color: '#ffffff' }}>EduManage</div>
                 <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>School Portal</div>
               </div>
             </div>
@@ -101,7 +101,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
         <nav className="sidebar-nav" style={{ flex: 1 }}>
           {navGroups.map(group => (
             <div key={group.label}>
-              {!collapsed && <div className="nav-section-label">{group.label}</div>}
+              {!collapsed && <div className="nav-section-label" style={{ color: '#666666' }}>{group.label}</div>}
               {group.items.map(item => (
                 <Link
                   key={item.href}
@@ -122,12 +122,12 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
         <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
           {!collapsed && (
             <div style={{
-              background: 'rgba(99,102,241,0.08)', borderRadius: '10px',
+              background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
               padding: '0.75rem', marginBottom: '0.75rem',
-              border: '1px solid rgba(99,102,241,0.12)',
+              border: '1px solid rgba(255,255,255,0.06)',
             }}>
               <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem' }}>School</div>
-              <div style={{ fontWeight: 700, fontSize: '0.85rem' }}>School Panel</div>
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>School Panel</div>
             </div>
           )}
           <button

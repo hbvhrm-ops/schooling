@@ -748,30 +748,37 @@ export default function CertificatesPage() {
         margin: 0 auto;
         padding: 0px;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
       ">
-        <!-- Header section -->
-        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
-          <div class="logo-container" style="width: 80px; display: flex; justify-content: center; align-items: center;">
-            ${schoolLogoUrl ? `<img class="logo-img" src="${schoolLogoUrl}" alt="Logo" style="max-height: 65px; max-width: 65px; object-fit: contain;" />` : `<div class="logo-placeholder" style="font-size: 40px; color: #1e3a8a;">🏫</div>`}
-          </div>
-          <div class="title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
-            <h1 class="school-title" style="font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
-            <p class="school-subtitle" style="font-size: 10px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
-            <p class="school-contacts" style="font-size: 9.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
-          </div>
-          <div class="header-right" style="width: 100px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: 80px;">
-            <div class="photo-box" style="width: 75px; height: 85px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
-              ${studentInfo && studentInfo.photo_url ? `<img src="${studentInfo.photo_url}" style="width:100%; height:100%; object-fit:cover; border-radius:3px;" />` : 'Photo'}
+        <!-- Flex Item 1: Header Group -->
+        <div class="header-group" style="display: flex; flex-direction: column; gap: 4px;">
+          <!-- Header section -->
+          <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
+            <div class="logo-container" style="width: 80px; display: flex; justify-content: center; align-items: center;">
+              ${schoolLogoUrl ? `<img class="logo-img" src="${schoolLogoUrl}" alt="Logo" style="max-height: 65px; max-width: 65px; object-fit: contain;" />` : `<div class="logo-placeholder" style="font-size: 40px; color: #1e3a8a;">🏫</div>`}
             </div>
-            <div class="serial-no" style="font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 4px; white-space: nowrap;">S. No. <u>&nbsp;${admissionNo || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;</u></div>
+            <div class="title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
+              <h1 class="school-title" style="font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
+              <p class="school-subtitle" style="font-size: 10px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
+              <p class="school-contacts" style="font-size: 9.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
+            </div>
+            <div class="header-right" style="width: 100px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+              <div class="photo-box" style="width: 75px; height: 85px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
+                ${studentInfo && studentInfo.photo_url ? `<img src="${studentInfo.photo_url}" style="width:100%; height:100%; object-fit:cover; border-radius:3px;" />` : 'Photo'}
+              </div>
+              <div class="serial-no" style="font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 4px; white-space: nowrap;">S. No. <u>&nbsp;${admissionNo || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;</u></div>
+            </div>
           </div>
+
+          <!-- Title Banner -->
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 5px 35px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">Admission Form</div>
         </div>
 
-        <!-- Title Banner -->
-        <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 5px 35px; margin: 10px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">Admission Form</div>
-
-        <!-- Student Data Fields -->
-        <div class="form-grid" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+        <!-- Flex Item 2: Student Data Fields -->
+        <div class="form-grid" style="display: flex; flex-direction: column; gap: 8px;">
           <div class="form-row" style="display: flex; align-items: center;">
             <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Name of Student (In Block letters)</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${nameGrid}</span>
@@ -818,18 +825,20 @@ export default function CertificatesPage() {
           </div>
         </div>
 
-        <!-- Undertaking -->
-        <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: 8px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">UNDERTAKING</div>
-        <p class="undertaking-text" style="font-size: 10px; line-height: 1.4; text-align: justify; color: #1e3a8a; margin: 8px 0; font-weight: 500;">
-          I solemnly declare that the informations given above are correct to the best of my knowledge. I shall abide by the rules/regulations laid down by the school administration.
-        </p>
-        <div style="display: flex; justify-content: space-between; margin-top: 15px; font-weight: bold; color: #1e3a8a; font-size: 11px;">
-          <div>Date: <u>&nbsp;&nbsp;${admissionDate || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;&nbsp;</u></div>
-          <div>Parent's Sign ___________________________</div>
+        <!-- Flex Item 3: Undertaking Group -->
+        <div class="undertaking-group" style="display: flex; flex-direction: column; gap: 4px;">
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">UNDERTAKING</div>
+          <p class="undertaking-text" style="font-size: 10px; line-height: 1.4; text-align: justify; color: #1e3a8a; margin: 4px 0; font-weight: 500;">
+            I solemnly declare that the informations given above are correct to the best of my knowledge. I shall abide by the rules/regulations laid down by the school administration.
+          </p>
+          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 11px;">
+            <div>Date: <u>&nbsp;&nbsp;${admissionDate || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;&nbsp;</u></div>
+            <div>Parent's Sign ___________________________</div>
+          </div>
         </div>
 
-        <!-- Office Use Only -->
-        <div class="office-use-container" style="border: 1.5px solid #1e3a8a; border-radius: 8px; padding: 10px 14px 14px 14px; background-color: #fdfeff; margin-top: 10px; position: relative; box-sizing: border-box;">
+        <!-- Flex Item 4: Office Use Group -->
+        <div class="office-use-container" style="border: 1.5px solid #1e3a8a; border-radius: 8px; padding: 10px 14px 14px 14px; background-color: #fdfeff; position: relative; box-sizing: border-box; margin-top: 5px;">
           <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: -22px auto 10px auto; width: fit-content; letter-spacing: 1px; position: relative; z-index: 5; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">FOR OFFICE USE ONLY</div>
           
           <div class="office-grid" style="display: flex; flex-direction: column; gap: 8px;">
@@ -883,6 +892,12 @@ export default function CertificatesPage() {
         <head>
           <title>Admission Form - ${studentInfo ? studentInfo.name : 'Blank'}</title>
           <style>
+            html, body {
+              height: 100%;
+              margin: 0;
+              padding: 0;
+              overflow: hidden;
+            }
             @media print {
               @page {
                 size: portrait;
@@ -899,6 +914,10 @@ export default function CertificatesPage() {
               background-color: #fff;
               -webkit-print-color-adjust: exact;
               print-color-adjust: exact;
+            }
+            .admission-container {
+              height: calc(297mm - 16mm); /* exact height of A4 minus vertical margins of 8mm top & bottom */
+              box-sizing: border-box;
             }
           </style>
         </head>
@@ -1613,13 +1632,23 @@ export default function CertificatesPage() {
                 </div>
 
                 {/* Admission Form Preview */}
-                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflowX: 'auto' }}>
-                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem' }}>
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ border: '1px solid #777', padding: '1.5rem', background: '#fff', boxSizing: 'border-box', minWidth: '700px' }}>
-                    <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} />
+                  <div style={{ 
+                    border: '1px solid #777', 
+                    padding: '8mm 12mm', 
+                    background: '#fff', 
+                    boxSizing: 'border-box', 
+                    width: '210mm', 
+                    height: '297mm',
+                    minWidth: '210mm',
+                    minHeight: '297mm',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
                   </div>
                 </div>
               </div>
