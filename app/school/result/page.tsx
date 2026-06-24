@@ -126,10 +126,8 @@ export default function ResultPage() {
   const [customSchoolName, setCustomSchoolName] = useState('Alfalah English School')
   const [customLocation, setCustomLocation] = useState('Amankot Swat')
   const [customPhone, setCustomPhone] = useState('0948-723117 - 03339037411')
-  const [customLogoText, setCustomLogoText] = useState('AES')
   const [customLogoUrl, setCustomLogoUrl] = useState('')
   const [customExamYear, setCustomExamYear] = useState('2026')
-  const [customAdmNo, setCustomAdmNo] = useState('')
 
   // Print type
   const [printType, setPrintType] = useState<'dmc' | 'schedule' | null>(null)
@@ -322,15 +320,7 @@ export default function ResultPage() {
     loadClassRankings()
   }, [loadClassRankings])
 
-  // Pre-fill admission number input when student changes
-  useEffect(() => {
-    if (selStudent) {
-      const idx = students.findIndex(s => s.id === selStudent)
-      if (idx !== -1) {
-        setCustomAdmNo(String(idx + 1))
-      }
-    }
-  }, [selStudent, students])
+  // Prefill hook removed
 
   function getGradeForPct(pct: number) {
     if (pct >= 90) return 'A+'
@@ -750,18 +740,8 @@ export default function ResultPage() {
             </div>
 
             <div className="form-group">
-              <label className="form-label">Logo Abbreviation</label>
-              <input className="form-input" value={customLogoText} onChange={e => setCustomLogoText(e.target.value)} />
-            </div>
-
-            <div className="form-group">
               <label className="form-label">Exam Year</label>
               <input className="form-input" value={customExamYear} onChange={e => setCustomExamYear(e.target.value)} />
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">Admission No.</label>
-              <input className="form-input" value={customAdmNo} onChange={e => setCustomAdmNo(e.target.value)} placeholder="Auto-generated if empty" />
             </div>
 
             <button 
@@ -812,19 +792,7 @@ export default function ResultPage() {
                         {customLogoUrl ? (
                           <img src={customLogoUrl} alt="Logo" style={{ width: '56px', height: '56px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
                         ) : (
-                          <div style={{
-                            width: '56px',
-                            height: '56px',
-                            borderRadius: '50%',
-                            background: 'white',
-                            border: '2px solid white',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#006ac3',
-                            fontWeight: 800,
-                            fontSize: '1.1rem'
-                          }}>{customLogoText}</div>
+                          <div style={{ width: '56px', height: '56px' }} />
                         )}
                       </div>
                       <div>
@@ -865,9 +833,9 @@ export default function ResultPage() {
                             <td style={{ width: '35%', paddingRight: '1rem' }}>
                               <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
                             </td>
-                            <td style={{ width: '18%', fontSize: '0.75rem', color: '#475569' }}>Student&apos;s Adm No:</td>
+                            <td style={{ width: '18%', fontSize: '0.75rem', color: '#475569' }}>Roll No:</td>
                             <td style={{ width: '32%' }}>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{customAdmNo || '—'}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
                             </td>
                           </tr>
                           <tr style={{ height: '32px' }}>
@@ -875,9 +843,9 @@ export default function ResultPage() {
                             <td style={{ paddingRight: '1rem' }}>
                               <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
                             </td>
-                            <td style={{ fontSize: '0.75rem', color: '#475569' }}>Roll No:</td>
+                            <td style={{ fontSize: '0.75rem', color: '#475569' }}>Section:</td>
                             <td>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
                             </td>
                           </tr>
                           <tr style={{ height: '32px' }}>
@@ -885,10 +853,8 @@ export default function ResultPage() {
                             <td style={{ paddingRight: '1rem' }}>
                               <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                             </td>
-                            <td style={{ fontSize: '0.75rem', color: '#475569' }}>Section:</td>
-                            <td>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
-                            </td>
+                            <td style={{ fontSize: '0.75rem', color: '#475569' }}></td>
+                            <td></td>
                           </tr>
                           <tr style={{ height: '32px' }}>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Date Of Birth:</td>
@@ -1173,19 +1139,7 @@ export default function ResultPage() {
                   {customLogoUrl ? (
                     <img src={customLogoUrl} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
                   ) : (
-                    <div className="logo-circle-print" style={{
-                      width: '60px',
-                      height: '60px',
-                      borderRadius: '50%',
-                      background: 'white',
-                      border: '2px solid white',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#006ac3',
-                      fontWeight: 800,
-                      fontSize: '18px'
-                    }}>{customLogoText}</div>
+                    <div style={{ width: '60px', height: '60px' }} />
                   )}
                 </div>
                 <div>
@@ -1226,9 +1180,9 @@ export default function ResultPage() {
                       <td style={{ width: '35%', paddingRight: '10px' }}>
                         <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
                       </td>
-                      <td style={{ width: '18%', fontSize: '12px', color: '#475569' }}>Student&apos;s Adm No:</td>
+                      <td style={{ width: '18%', fontSize: '12px', color: '#475569' }}>Roll No:</td>
                       <td style={{ width: '32%' }}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{customAdmNo || '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
                       </td>
                     </tr>
                     <tr style={{ height: '32px' }}>
@@ -1236,9 +1190,9 @@ export default function ResultPage() {
                       <td style={{ paddingRight: '10px' }}>
                         <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
                       </td>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Roll No:</td>
+                      <td style={{ fontSize: '12px', color: '#475569' }}>Section:</td>
                       <td>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
                       </td>
                     </tr>
                     <tr style={{ height: '32px' }}>
@@ -1246,10 +1200,8 @@ export default function ResultPage() {
                       <td style={{ paddingRight: '10px' }}>
                         <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                       </td>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Section:</td>
-                      <td>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
-                      </td>
+                      <td style={{ fontSize: '12px', color: '#475569' }}></td>
+                      <td></td>
                     </tr>
                     <tr style={{ height: '32px' }}>
                       <td style={{ fontSize: '12px', color: '#475569' }}>Date Of Birth:</td>
