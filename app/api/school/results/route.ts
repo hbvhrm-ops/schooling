@@ -11,11 +11,26 @@ export async function GET(req: NextRequest) {
   const classId = searchParams.get('class_id')
   const examTypeId = searchParams.get('exam_type_id')
   const subjectId = searchParams.get('subject_id')
+  const studentId = searchParams.get('student_id')
+
+  if (studentId && examTypeId) {
+    const { data, error } = await supabase
+      .from('results')
+      .select('*, students(*), subjects(*)')
+      .eq('exam_type_id', examTypeId)
+      .eq('student_id', studentId)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({ results: data || [] })
+  }
 
   if (classId && examTypeId) {
     const { data, error } = await supabase
       .from('results')
-      .select('*, students(*)')
+      .select('*, students(*), subjects(*)')
       .eq('exam_type_id', examTypeId)
 
     if (error) {
@@ -46,7 +61,25 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ examType: data }, { status: 201 })
   }
   if (body.type === 'results') {
-    const { error } = await supabase.from('results').insert(body.entries)
+    const { exam_type_id, class_id, subject_id, entries } = body
+    if (class_id && exam_type_id && subject_id) {
+      const { data: studentsData } = await supabase
+        .from('students')
+        .select('id')
+        .eq('class_id', class_id)
+        .eq('school_id', session.schoolId)
+
+      const studentIds = (studentsData || []).map((s: any) => s.id)
+      if (studentIds.length > 0) {
+        await supabase
+          .from('results')
+          .delete()
+          .eq('exam_type_id', exam_type_id)
+          .eq('subject_id', subject_id)
+          .in('student_id', studentIds)
+      }
+    }
+    const { error } = await supabase.from('results').insert(entries)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
     return NextResponse.json({ success: true })
   }

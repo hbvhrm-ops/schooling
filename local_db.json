@@ -5,7 +5,7 @@
       "created_at": "2026-06-16T20:21:28.432Z",
       "name": "Beaconhouse School",
       "username": "beaconhouse_school",
-      "password_hash": "$2b$10$k4CE2aYo.LrV5cv1y3cuueKaSIv3ia/JjDlEqppKcKRtK7KmHWYda",
+      "password_hash": "$2b$10$nAhft/DjiVwT8HQ8pUq34Ooo/qioXihh1ZS4mLkShqSoS7Z8f2C3.",
       "contact": "03001234567",
       "active": true
     }
@@ -81,7 +81,19 @@
   "grading_policy": [],
   "fee_templates": [],
   "fee_criteria": [],
-  "fee_invoices": [],
+  "fee_invoices": [
+    {
+      "id": "mock-invoice-1",
+      "created_at": "2026-06-16T20:34:05.131Z",
+      "school_id": "749bcadc-9310-4032-a241-bad7aa1d23d7",
+      "student_id": "30eed0f7-8872-4c1a-a8d3-84c29bac451d",
+      "fee_template_id": "some-template-id",
+      "month": 6,
+      "year": 2026,
+      "amount": 1500,
+      "status": "pending"
+    }
+  ],
   "expense_heads": [],
   "payment_sources": [],
   "expenses": [],
