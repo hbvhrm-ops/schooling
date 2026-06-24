@@ -4,11 +4,11 @@ import { useState, useEffect } from 'react'
 interface FinanceData {
   feeCollected: number; totalExpenses: number; profit: number;
   monthlyData: { month: string; income: number; expenses: number }[]
-  expenseByHead: { name: string; amount: number }[]
+  recentExpenses: { date: string; amount: number; description: string }[]
 }
 
 export default function FinancePage() {
-  const [data, setData] = useState<FinanceData>({ feeCollected: 0, totalExpenses: 0, profit: 0, monthlyData: [], expenseByHead: [] })
+  const [data, setData] = useState<FinanceData>({ feeCollected: 0, totalExpenses: 0, profit: 0, monthlyData: [], recentExpenses: [] })
   const [loading, setLoading] = useState(true)
   const [year, setYear] = useState(new Date().getFullYear())
 
@@ -106,26 +106,20 @@ export default function FinancePage() {
           </div>
 
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🏷️ Expenses by Category</h3>
-            {data.expenseByHead.length === 0 ? (
-              <div className="empty-state"><p>No expense data</p></div>
+            <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>💸 Recent Expenses</h3>
+            {!data.recentExpenses || data.recentExpenses.length === 0 ? (
+              <div className="empty-state"><p>No expense records found</p></div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {data.expenseByHead.map((h, i) => {
-                  const pct = data.totalExpenses > 0 ? Math.round((h.amount / data.totalExpenses) * 100) : 0
-                  const colors = ['#6366f1','#10b981','#f59e0b','#ef4444','#22d3ee','#8b5cf6']
-                  return (
-                    <div key={i}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px', fontSize: '0.85rem' }}>
-                        <span style={{ fontWeight: 600 }}>{h.name}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>₨{Number(h.amount).toLocaleString()} ({pct}%)</span>
-                      </div>
-                      <div className="progress-bar" style={{ height: '6px' }}>
-                        <div className="progress-fill" style={{ width: `${pct}%`, background: colors[i % colors.length] }} />
-                      </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+                {data.recentExpenses.map((exp, i) => (
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.65rem 0.85rem', background: 'var(--bg-base)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.875rem' }}>{exp.description || 'No description'}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{exp.date}</div>
                     </div>
-                  )
-                })}
+                    <span style={{ fontWeight: 800, color: '#ef4444', fontSize: '0.9rem' }}>₨ {Number(exp.amount).toLocaleString()}</span>
+                  </div>
+                ))}
               </div>
             )}
           </div>

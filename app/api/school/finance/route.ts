@@ -4,7 +4,7 @@ import { getSession } from '@/lib/auth'
 
 export async function GET(req: NextRequest) {
   const session = await getSession()
-  if (!session?.schoolId) return NextResponse.json({ feeCollected: 0, totalExpenses: 0, profit: 0, monthlyData: [], expenseByHead: [] })
+  if (!session?.schoolId) return NextResponse.json({ feeCollected: 0, totalExpenses: 0, profit: 0, monthlyData: [], recentExpenses: [] })
   const { searchParams } = new URL(req.url)
   const year = searchParams.get('year') || new Date().getFullYear()
   const supabase = createServerClient()
@@ -12,10 +12,10 @@ export async function GET(req: NextRequest) {
   const yearStart = `${year}-01-01`
   const yearEnd = `${year}-12-31`
 
-  const [feeRes, expRes, headRes] = await Promise.all([
+  const [feeRes, expRes, recentRes] = await Promise.all([
     supabase.from('fee_invoices').select('amount, paid_date').eq('school_id', session.schoolId).eq('status', 'paid').gte('paid_date', yearStart).lte('paid_date', yearEnd),
     supabase.from('expenses').select('amount, date').eq('school_id', session.schoolId).gte('date', yearStart).lte('date', yearEnd),
-    supabase.from('expenses').select('amount, expense_heads(name)').eq('school_id', session.schoolId).gte('date', yearStart).lte('date', yearEnd),
+    supabase.from('expenses').select('amount, date, description').eq('school_id', session.schoolId).order('date', { ascending: false }).limit(5),
   ])
 
   const feeCollected = (feeRes.data || []).reduce((s: number, f: { amount: number }) => s + Number(f.amount), 0)
@@ -31,13 +31,11 @@ export async function GET(req: NextRequest) {
     return { month: prefix, income, expenses }
   })
 
-  // Expense by head
-  const headMap: Record<string, number> = {}
-  for (const e of (headRes.data || [])) {
-    const name = (e.expense_heads as { name: string } | null)?.name || 'Other'
-    headMap[name] = (headMap[name] || 0) + Number(e.amount)
-  }
-  const expenseByHead = Object.entries(headMap).map(([name, amount]) => ({ name, amount })).sort((a, b) => b.amount - a.amount)
-
-  return NextResponse.json({ feeCollected, totalExpenses, profit, monthlyData, expenseByHead })
+  return NextResponse.json({
+    feeCollected,
+    totalExpenses,
+    profit,
+    monthlyData,
+    recentExpenses: recentRes.data || []
+  })
 }
