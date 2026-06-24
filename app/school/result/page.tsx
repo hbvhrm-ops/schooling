@@ -61,28 +61,16 @@ function numberToWords(num: number): string {
   return word
 }
 
-// Helper: Convert date of birth (e.g. 2010-02-01) to words (e.g. "First February Two Thousand Ten")
-function dateToWords(dobStr: string): string {
-  if (!dobStr) return '—'
-  const date = new Date(dobStr)
+
+  
+function formatDateNumeric(dateStr: string): string {
+  if (!dateStr) return '—'
+  const date = new Date(dateStr)
   if (isNaN(date.getTime())) return '—'
-  
-  const days = [
-    '', 'First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth',
-    'Eleventh', 'Twelfth', 'Thirteenth', 'Fourteenth', 'Fifteenth', 'Sixteenth', 'Seventeenth', 'Eighteenth', 'Nineteenth', 'Twentieth',
-    'Twenty-First', 'Twenty-Second', 'Twenty-Third', 'Twenty-Fourth', 'Twenty-Fifth', 'Twenty-Sixth', 'Twenty-Seventh', 'Twenty-Eighth', 'Twenty-Ninth', 'Thirtieth', 'Thirty-First'
-  ]
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'
-  ]
-  
-  const day = date.getDate()
-  const month = months[date.getMonth()]
+  const day = String(date.getDate()).padStart(2, '0')
+  const month = String(date.getMonth() + 1).padStart(2, '0')
   const year = date.getFullYear()
-  
-  const yearWords = numberToWords(year)
-  
-  return `${days[day]} ${month} ${yearWords}`
+  return `${day}/${month}/${year}`
 }
 
 function getOrdinal(n: number): string {
@@ -853,15 +841,9 @@ export default function ResultPage() {
                             <td style={{ paddingRight: '1rem' }}>
                               <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                             </td>
-                            <td style={{ fontSize: '0.75rem', color: '#475569' }}></td>
-                            <td></td>
-                          </tr>
-                          <tr style={{ height: '32px' }}>
                             <td style={{ fontSize: '0.75rem', color: '#475569' }}>Date Of Birth:</td>
-                            <td colSpan={3}>
-                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>
-                                {activeStudent.dob ? new Date(activeStudent.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong style={{ color: '#64748b', fontWeight: 600 }}>In Words:</strong> {activeStudent.dob ? dateToWords(activeStudent.dob) : '—'}
-                              </span>
+                            <td>
+                              <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '0.85rem', display: 'block', paddingBottom: '1px' }}>{activeStudent.dob ? formatDateNumeric(activeStudent.dob) : '—'}</span>
                             </td>
                           </tr>
                         </tbody>
@@ -1200,15 +1182,9 @@ export default function ResultPage() {
                       <td style={{ paddingRight: '10px' }}>
                         <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                       </td>
-                      <td style={{ fontSize: '12px', color: '#475569' }}></td>
-                      <td></td>
-                    </tr>
-                    <tr style={{ height: '32px' }}>
                       <td style={{ fontSize: '12px', color: '#475569' }}>Date Of Birth:</td>
-                      <td colSpan={3}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>
-                          {activeStudent.dob ? new Date(activeStudent.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'} &nbsp;&nbsp;&nbsp;&nbsp; <strong>In Words:</strong> {activeStudent.dob ? dateToWords(activeStudent.dob) : '—'}
-                        </span>
+                      <td>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.dob ? formatDateNumeric(activeStudent.dob) : '—'}</span>
                       </td>
                     </tr>
                   </tbody>
