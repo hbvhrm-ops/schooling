@@ -16,6 +16,8 @@ interface Student {
   status: string
   reg_date: string
   address?: string
+  additional_info?: Record<string, any>
+  photo_url?: string
 }
 
 interface ClassItem { id: string; name: string }
@@ -48,6 +50,7 @@ export default function CertificatesPage() {
 
   // School metadata
   const [schoolName, setSchoolName] = useState('EduManage School')
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState('')
 
   // Certificate template state (for currently active type)
   const [template, setTemplate] = useState<CertificateTemplate>({
@@ -104,11 +107,12 @@ export default function CertificatesPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [studentsRes, classesRes, subjectsRes, examsRes] = await Promise.all([
+      const [studentsRes, classesRes, subjectsRes, examsRes, templateRes] = await Promise.all([
         fetch('/api/school/students').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/subjects').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/results').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/certificate-templates?type=slc').then(r => r.json()).catch(() => ({})),
       ])
 
       const fetchedStudents = studentsRes.students || []
@@ -120,6 +124,13 @@ export default function CertificatesPage() {
 
       if (fetchedStudents.length > 0) {
         setSelectedStudentId(fetchedStudents[0].id)
+      }
+
+      if (templateRes.template?.logo_url) {
+        setSchoolLogoUrl(templateRes.template.logo_url)
+      }
+      if (templateRes.schoolName) {
+        setSchoolName(templateRes.schoolName)
       }
     } catch {
       setMsg({ type: 'danger', text: 'Error loading workspace metadata' })
@@ -142,6 +153,9 @@ export default function CertificatesPage() {
         setSignatureTitleForm(data.template.signature_title || 'Principal')
         if (data.schoolName) {
           setSchoolName(data.schoolName)
+        }
+        if (data.template.logo_url) {
+          setSchoolLogoUrl(data.template.logo_url)
         }
       }
     } catch {
@@ -212,6 +226,163 @@ export default function CertificatesPage() {
     } catch {
       return dateStr
     }
+  }
+
+  // Helper for rendering name and text in block letters
+  function getBlockLettersHtml(text: string, count: number = 25) {
+    const chars = (text || '').toUpperCase().replace(/[^A-Z0-9 ]/g, '').split('')
+    let html = '<div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">'
+    for (let i = 0; i < count; i++) {
+      const char = chars[i] || ''
+      const isLast = i === count - 1
+      html += `
+        <div style="
+          width: 17px; 
+          height: 20px; 
+          border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
+          text-align: center; 
+          line-height: 20px; 
+          font-size: 11px; 
+          font-family: monospace; 
+          font-weight: bold; 
+          color: #000;
+        ">
+          ${char === ' ' ? '&nbsp;' : char}
+        </div>
+      `
+    }
+    html += '</div>'
+    return html
+  }
+
+  // Helper for CNIC formatted boxes
+  function getCnicHtml(nic: string) {
+    const digits = (nic || '').replace(/[^0-9]/g, '').split('')
+    let html = '<div style="display: inline-flex; align-items: center; gap: 3px;">'
+    
+    // Segment 1: 5 digits
+    html += '<div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">'
+    for (let i = 0; i < 5; i++) {
+      const digit = digits[i] || ''
+      const isLast = i === 4
+      html += `
+        <div style="
+          width: 17px; 
+          height: 20px; 
+          border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
+          text-align: center; 
+          line-height: 20px; 
+          font-size: 11px; 
+          font-family: monospace; 
+          font-weight: bold; 
+          color: #000;
+        ">${digit}</div>
+      `
+    }
+    html += '</div>'
+    
+    // Dash
+    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 14px;">-</span>'
+    
+    // Segment 2: 7 digits
+    html += '<div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">'
+    for (let i = 5; i < 12; i++) {
+      const digit = digits[i] || ''
+      const isLast = i === 11
+      html += `
+        <div style="
+          width: 17px; 
+          height: 20px; 
+          border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
+          text-align: center; 
+          line-height: 20px; 
+          font-size: 11px; 
+          font-family: monospace; 
+          font-weight: bold; 
+          color: #000;
+        ">${digit}</div>
+      `
+    }
+    html += '</div>'
+    
+    // Dash
+    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 14px;">-</span>'
+    
+    // Segment 3: 1 digit
+    html += `
+      <div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">
+        <div style="
+          width: 17px; 
+          height: 20px; 
+          text-align: center; 
+          line-height: 20px; 
+          font-size: 11px; 
+          font-family: monospace; 
+          font-weight: bold; 
+          color: #000;
+        ">${digits[12] || ''}</div>
+      </div>
+    `
+    
+    html += '</div>'
+    return html
+  }
+
+  // Helper for DOB Figure box
+  function getDobFigureHtml(dobStr?: string) {
+    let val = ''
+    if (dobStr) {
+      try {
+        const date = new Date(dobStr)
+        const day = String(date.getDate()).padStart(2, '0')
+        const month = String(date.getMonth() + 1).padStart(2, '0')
+        const year = date.getFullYear()
+        val = `${day} - ${month} - ${year}`
+      } catch {
+        val = dobStr
+      }
+    }
+    return `
+      <div style="
+        display: inline-block; 
+        border: 1px solid #1e3a8a; 
+        border-radius: 12px; 
+        padding: 0 15px; 
+        height: 22px; 
+        line-height: 22px; 
+        font-size: 11.5px; 
+        font-family: monospace; 
+        font-weight: bold; 
+        background: #fff;
+        color: #000;
+        text-align: center;
+        min-width: 130px;
+      ">
+        ${val || '&nbsp;'}
+      </div>
+    `
+  }
+
+  // Helper for rounded inputs
+  function getRoundedTextBoxHtml(text: string, minWidth: string = '100%') {
+    return `
+      <div style="
+        display: inline-block; 
+        border: 1px solid #1e3a8a; 
+        border-radius: 12px; 
+        padding: 0 12px; 
+        height: 22px; 
+        line-height: 22px; 
+        font-size: 12px; 
+        background: #fff;
+        color: #000;
+        min-width: ${minWidth};
+        box-sizing: border-box;
+        vertical-align: middle;
+      ">
+        ${text || '&nbsp;'}
+      </div>
+    `
   }
 
   // Template compiler logic
@@ -527,198 +698,212 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
+  // Render full HTML body for admission form (shared between preview and print window)
+  function getAdmissionFormHtml(studentInfo: Student | null) {
+    const sName = studentInfo ? studentInfo.name : '';
+    const fName = studentInfo ? studentInfo.father_name : '';
+    const fNic = studentInfo ? (studentInfo.additional_info?.father_nic || studentInfo.additional_info?.father_cnic || studentInfo.additional_info?.cnic || '') : '';
+    const dobFig = studentInfo ? studentInfo.dob || '' : '';
+    const dobWords = studentInfo && studentInfo.dob ? convertDateToWords(studentInfo.dob) : '';
+    const religion = studentInfo ? (studentInfo.additional_info?.religion || 'Islam') : '';
+    const nationality = studentInfo ? (studentInfo.additional_info?.nationality || 'Pakistan') : '';
+    const corrAddress = studentInfo ? studentInfo.address || '' : '';
+    const postAddress = studentInfo ? (studentInfo.additional_info?.postal_address || (studentInfo.address ? 'As above' : '')) : '';
+    const guardianNo = studentInfo ? studentInfo.contact || '' : '';
+    const classAdmitted = studentInfo ? studentInfo.class_name || '' : '';
+    const remarks = studentInfo ? (studentInfo.additional_info?.remarks || '') : '';
+    const admissionNo = studentInfo ? studentInfo.roll_no || '' : '';
+    const admissionDate = studentInfo ? (studentInfo.reg_date ? new Date(studentInfo.reg_date).toLocaleDateString('en-GB').replace(/\//g, '-') : '') : '';
+
+    // Generate grids & boxes using our local helpers
+    const nameGrid = getBlockLettersHtml(sName, 25);
+    const fatherGrid = getBlockLettersHtml(fName, 25);
+    const nicGrid = getCnicHtml(fNic);
+    const dobFigureBox = getDobFigureHtml(dobFig);
+    const dobWordsBox = getRoundedTextBoxHtml(dobWords);
+    const religionBox = getRoundedTextBoxHtml(religion, '120px');
+    const nationalityBox = getRoundedTextBoxHtml(nationality, '150px');
+    const corrAddressBox = getRoundedTextBoxHtml(corrAddress);
+    const postAddressBox = getRoundedTextBoxHtml(postAddress);
+    const guardianNoBox = getRoundedTextBoxHtml(guardianNo);
+
+    // Office use boxes
+    const classBox = getRoundedTextBoxHtml(classAdmitted);
+    const remarksBox = getRoundedTextBoxHtml(remarks);
+    const admNoBox = getRoundedTextBoxHtml(admissionNo);
+    const admDateBox = getRoundedTextBoxHtml(admissionDate);
+
+    // Seal and dynamic school name
+    const sealText = schoolName ? schoolName.toUpperCase() : 'ABU OBAIDA ISLAMIC MODEL SCHOOL';
+
+    return `
+      <div class="admission-container" style="
+        font-family: 'Arial', sans-serif;
+        color: #1e3a8a;
+        background-color: #fff;
+        font-size: 11px;
+        line-height: 1.35;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0px;
+        box-sizing: border-box;
+      ">
+        <!-- Header section -->
+        <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
+          <div class="logo-container" style="width: 80px; display: flex; justify-content: center; align-items: center;">
+            ${schoolLogoUrl ? `<img class="logo-img" src="${schoolLogoUrl}" alt="Logo" style="max-height: 65px; max-width: 65px; object-fit: contain;" />` : `<div class="logo-placeholder" style="font-size: 40px; color: #1e3a8a;">🏫</div>`}
+          </div>
+          <div class="title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
+            <h1 class="school-title" style="font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
+            <p class="school-subtitle" style="font-size: 10px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
+            <p class="school-contacts" style="font-size: 9.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
+          </div>
+          <div class="header-right" style="width: 100px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: 80px;">
+            <div class="photo-box" style="width: 75px; height: 85px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
+              ${studentInfo && studentInfo.photo_url ? `<img src="${studentInfo.photo_url}" style="width:100%; height:100%; object-fit:cover; border-radius:3px;" />` : 'Photo'}
+            </div>
+            <div class="serial-no" style="font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 4px; white-space: nowrap;">S. No. <u>&nbsp;${admissionNo || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;</u></div>
+          </div>
+        </div>
+
+        <!-- Title Banner -->
+        <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 5px 35px; margin: 10px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">Admission Form</div>
+
+        <!-- Student Data Fields -->
+        <div class="form-grid" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px;">
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Name of Student (In Block letters)</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${nameGrid}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father's Name</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${fatherGrid}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father NIC</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${nicGrid}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Date of Birth (in figure)</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${dobFigureBox}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Date of Birth (in words)</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${dobWordsBox}</span>
+          </div>
+          
+          <div class="form-row" style="display: flex; align-items: center;">
+            <div style="display: flex; flex: 1; align-items: center;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Religion</span>
+              <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${religionBox}</span>
+            </div>
+            <div style="display: flex; flex: 1; align-items: center; justify-content: flex-end; padding-left: 20px;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 100px; text-align: right; padding-right: 15px; flex-shrink: 0;">Nationality</span>
+              <span class="field-value" style="flex-grow: 0; display: flex; align-items: center;">${nationalityBox}</span>
+            </div>
+          </div>
+
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Address for correspondence</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${corrAddressBox}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Postal Address</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${postAddressBox}</span>
+          </div>
+          <div class="form-row" style="display: flex; align-items: center;">
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father or Guardian No</span>
+            <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${guardianNoBox}</span>
+          </div>
+        </div>
+
+        <!-- Undertaking -->
+        <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: 8px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">UNDERTAKING</div>
+        <p class="undertaking-text" style="font-size: 10px; line-height: 1.4; text-align: justify; color: #1e3a8a; margin: 8px 0; font-weight: 500;">
+          I solemnly declare that the informations given above are correct to the best of my knowledge. I shall abide by the rules/regulations laid down by the school administration.
+        </p>
+        <div style="display: flex; justify-content: space-between; margin-top: 15px; font-weight: bold; color: #1e3a8a; font-size: 11px;">
+          <div>Date: <u>&nbsp;&nbsp;${admissionDate || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;&nbsp;</u></div>
+          <div>Parent's Sign ___________________________</div>
+        </div>
+
+        <!-- Office Use Only -->
+        <div class="office-use-container" style="border: 1.5px solid #1e3a8a; border-radius: 8px; padding: 10px 14px 14px 14px; background-color: #fdfeff; margin-top: 10px; position: relative; box-sizing: border-box;">
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: -22px auto 10px auto; width: fit-content; letter-spacing: 1px; position: relative; z-index: 5; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">FOR OFFICE USE ONLY</div>
+          
+          <div class="office-grid" style="display: flex; flex-direction: column; gap: 8px;">
+            <div class="form-row" style="display: flex; align-items: center;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Class in which Admitted:</span>
+              <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${classBox}</span>
+            </div>
+            <div class="form-row" style="display: flex; align-items: center;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Remarks of the adm. Committee:</span>
+              <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${remarksBox}</span>
+            </div>
+            <div class="form-row" style="display: flex; align-items: center;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Admission No:</span>
+              <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${admNoBox}</span>
+            </div>
+            <div class="form-row" style="display: flex; align-items: center;">
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Date of Admission:</span>
+              <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${admDateBox}</span>
+            </div>
+          </div>
+
+          <!-- Office Signatures and Stamp Seal -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-weight: bold; color: #1e3a8a; font-size: 11px; position: relative;">
+            <div>Clerk's Signature ______________________</div>
+            <div>Principal ______________________</div>
+            
+            <!-- Circular Seal Stamp -->
+            <div class="school-seal" style="width: 65px; height: 65px; border: 1.5px dashed rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; right: 140px; bottom: 8px; transform: rotate(-10deg); font-family: Arial, sans-serif; color: rgba(30, 58, 138, 0.45); background-color: transparent; pointer-events: none; z-index: 10;">
+              <div class="seal-inner" style="width: 57px; height: 57px; border: 0.75px solid rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+                <div class="seal-text-curve" style="font-size: 4px; position: absolute; top: 5px; font-weight: bold; text-align: center; width: 100%; letter-spacing: 0.2px;">${sealText}</div>
+                <div class="seal-center" style="font-size: 7px; font-weight: 900; letter-spacing: 0.5px; border-top: 0.75px solid rgba(30, 58, 138, 0.45); border-bottom: 0.75px solid rgba(30, 58, 138, 0.45); padding: 1px 2px;">PRINCIPAL</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    `;
+  }
+
   // Print Admission Form
   function handlePrintAdmissionForm() {
     const win = window.open('', '_blank')
     if (!win) return
 
     const studentInfo = admissionFormMode === 'student' && selectedStudent ? selectedStudent : null;
+    const bodyContent = getAdmissionFormHtml(studentInfo);
 
     win.document.write(`
       <html>
         <head>
           <title>Admission Form - ${studentInfo ? studentInfo.name : 'Blank'}</title>
           <style>
-            body {
-              font-family: Arial, sans-serif;
-              color: #222;
-              margin: 30px;
-              padding: 0;
-              font-size: 13.5px;
-            }
-            .header-table {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 25px;
-            }
-            .logo-cell {
-              width: 80px;
-              text-align: center;
-            }
-            .title-cell {
-              text-align: center;
-              vertical-align: middle;
-            }
-            .photo-box {
-              width: 110px;
-              height: 130px;
-              border: 1px solid #777;
-              text-align: center;
-              font-size: 10px;
-              color: #666;
-              vertical-align: middle;
-              display: table-cell;
-            }
-            .photo-wrapper {
-              display: inline-block;
-              width: 110px;
-              height: 130px;
-              vertical-align: top;
-            }
-            .section-header {
-              background: #f0f0f0;
-              padding: 6px 10px;
-              font-weight: bold;
-              text-transform: uppercase;
-              font-size: 12px;
-              letter-spacing: 0.5px;
-              border-left: 5px solid #2c3e50;
-              margin: 20px 0 10px 0;
-            }
-            .form-grid {
-              width: 100%;
-              border-collapse: collapse;
-              margin-bottom: 15px;
-            }
-            .form-grid td {
-              padding: 8px 5px;
-              vertical-align: bottom;
-            }
-            .form-grid td.label {
-              width: 180px;
-              color: #444;
-              font-weight: 600;
-            }
-            .form-grid td.underline {
-              border-bottom: 1px solid #999;
-              font-weight: bold;
-              font-size: 14.5px;
-            }
-            .checkbox-group {
-              display: inline-block;
-              margin-right: 15px;
-            }
-            .footer-signatures {
-              margin-top: 50px;
-              width: 100%;
-              border-collapse: collapse;
-            }
-            .footer-signatures td {
-              text-align: center;
-              width: 33%;
-              vertical-align: bottom;
-              padding-top: 60px;
-            }
-            .sig-line {
-              border-top: 1px solid #888;
-              width: 80%;
-              margin: 0 auto;
-              padding-top: 5px;
-              font-weight: bold;
-              font-size: 11px;
-              color: #555;
-            }
             @media print {
-              body { margin: 20px; }
+              @page {
+                size: portrait;
+                margin: 8mm 12mm 8mm 12mm;
+              }
+              body {
+                margin: 0;
+                padding: 0;
+              }
+            }
+            body {
+              font-family: 'Arial', sans-serif;
+              color: #1e3a8a;
+              background-color: #fff;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
             }
           </style>
         </head>
         <body>
-          <table class="header-table">
-            <tr>
-              <td class="logo-cell">
-                <span style="font-size: 40px;">🏫</span>
-              </td>
-              <td class="title-cell">
-                <div style="font-size: 20px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">${schoolName}</div>
-                <div style="font-size: 15px; font-weight: bold; color: #555; margin-top: 4px; letter-spacing: 2px;">STUDENT ADMISSION FORM</div>
-                <div style="font-size: 11px; color: #777; margin-top: 2px;">Official Registration Record</div>
-              </td>
-              <td style="width: 120px; text-align: right;">
-                <div class="photo-wrapper">
-                  <div class="photo-box">
-                    ${studentInfo ? '<br/><br/><br/>PHOTO ATTACHED' : '<br/><br/>PASTE<br/>PASSPORT SIZE<br/>PHOTO HERE'}
-                  </div>
-                </div>
-              </td>
-            </tr>
-          </table>
-
-          <div class="section-header">Academic Details</div>
-          <table class="form-grid">
-            <tr>
-              <td class="label">Admission Number:</td>
-              <td class="underline">${studentInfo ? studentInfo.roll_no || '—' : '___________________________'}</td>
-              <td class="label" style="padding-left: 20px;">Class Applied for:</td>
-              <td class="underline">${studentInfo ? studentInfo.class_name || '—' : '___________________________'}</td>
-            </tr>
-            <tr>
-              <td class="label">Section / Group:</td>
-              <td class="underline">${studentInfo ? studentInfo.section_name || '—' : '___________________________'}</td>
-              <td class="label" style="padding-left: 20px;">Admission Date:</td>
-              <td class="underline">${studentInfo ? new Date(studentInfo.reg_date).toLocaleDateString() : '___________________________'}</td>
-            </tr>
-          </table>
-
-          <div class="section-header">Personal Information (Student)</div>
-          <table class="form-grid">
-            <tr>
-              <td class="label">Full Name of Student:</td>
-              <td class="underline" colspan="3">${studentInfo ? studentInfo.name : '__________________________________________________________________________'}</td>
-            </tr>
-            <tr>
-              <td class="label">Father's Name:</td>
-              <td class="underline" colspan="3">${studentInfo ? studentInfo.father_name : '__________________________________________________________________________'}</td>
-            </tr>
-            <tr>
-              <td class="label">Date of Birth (DOB):</td>
-              <td class="underline">${studentInfo ? (studentInfo.dob ? new Date(studentInfo.dob).toLocaleDateString() : '—') : '___________________________'}</td>
-              <td class="label" style="padding-left: 20px;">Gender:</td>
-              <td class="underline">
-                ${studentInfo ? studentInfo.gender : '⬜ Male &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⬜ Female &nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ⬜ Other'}
-              </td>
-            </tr>
-            <tr>
-              <td class="label">Contact / Phone Number:</td>
-              <td class="underline">${studentInfo ? studentInfo.contact || '—' : '___________________________'}</td>
-              <td class="label" style="padding-left: 20px;">Emergency Contact:</td>
-              <td class="underline">___________________________</td>
-            </tr>
-            <tr>
-              <td class="label">Residential Address:</td>
-              <td class="underline" colspan="3">${studentInfo ? studentInfo.address || '—' : '__________________________________________________________________________'}</td>
-            </tr>
-          </table>
-
-          <div class="section-header">Parent / Guardian Undertaking</div>
-          <p style="font-size: 11.5px; line-height: 1.5; color: #555; text-align: justify; margin: 10px 5px 20px 5px;">
-            I hereby certify that all information submitted in this registration process is correct and complete. I agree to abide by the rules, code of conduct, and fee regulations set by the administration of ${schoolName}. I verify that the date of birth and spelling of name entered above are correct and will not be requested for change later.
-          </p>
-
-          <table class="footer-signatures">
-            <tr>
-              <td>
-                <div class="sig-line">Date of Submission</div>
-              </td>
-              <td>
-                <div class="sig-line">Signature of Parent / Guardian</div>
-              </td>
-              <td>
-                <div class="sig-line">Principal Signature / Seal</div>
-              </td>
-            </tr>
-          </table>
-
+          ${bodyContent}
           <script>
             window.onload = function() {
               setTimeout(function() {
@@ -1428,49 +1613,13 @@ export default function CertificatesPage() {
                 </div>
 
                 {/* Admission Form Preview */}
-                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111' }}>
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflowX: 'auto' }}>
                   <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem' }}>
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ border: '1px solid #777', padding: '1.5rem', background: '#fff', fontSize: '0.75rem', fontFamily: 'Arial, sans-serif' }}>
-                    
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                      <div>
-                        <div style={{ fontSize: '1.1rem', fontWeight: 'bold', textTransform: 'uppercase' }}>{schoolName}</div>
-                        <div style={{ fontSize: '0.9rem', fontWeight: 'bold', color: '#555', marginTop: '2px' }}>STUDENT ADMISSION FORM</div>
-                      </div>
-                      <div style={{ width: '70px', height: '85px', border: '1px solid #888', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', fontSize: '7px', color: '#666' }}>
-                        {admissionFormMode === 'student' && selectedStudent ? 'PHOTO ATTACHED' : 'PASSPORT PHOTO'}
-                      </div>
-                    </div>
-
-                    {/* Grid info */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}><strong>Student Name:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.name : '________________________'}</div>
-                        <div style={{ flex: 1 }}><strong>Class Applied:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.class_name || '—' : '________________________'}</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}><strong>Father\'s Name:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.father_name : '________________________'}</div>
-                        <div style={{ flex: 1 }}><strong>Section:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.section_name || '—' : '________________________'}</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}><strong>Date of Birth:</strong> {admissionFormMode === 'student' && selectedStudent && selectedStudent.dob ? new Date(selectedStudent.dob).toLocaleDateString() : '____/____/________'}</div>
-                        <div style={{ flex: 1 }}><strong>Gender:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.gender : '⬜ M  &nbsp; ⬜ F'}</div>
-                      </div>
-                      <div style={{ display: 'flex', gap: '1rem' }}>
-                        <div style={{ flex: 1 }}><strong>Contact Number:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.contact || '—' : '________________________'}</div>
-                        <div style={{ flex: 1 }}><strong>Admission Date:</strong> {admissionFormMode === 'student' && selectedStudent ? new Date(selectedStudent.reg_date).toLocaleDateString() : '____/____/________'}</div>
-                      </div>
-                      <div><strong>Address:</strong> {admissionFormMode === 'student' && selectedStudent ? selectedStudent.address || '—' : '____________________________________________________________________'}</div>
-                    </div>
-
-                    <div style={{ borderTop: '1px solid #ddd', marginTop: '2.5rem', paddingTop: '1.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '7px', color: '#555', fontWeight: 'bold' }}>
-                      <div style={{ borderTop: '1px solid #777', width: '100px', textAlign: 'center', paddingTop: '3px' }}>PARENT SIGNATURE</div>
-                      <div style={{ borderTop: '1px solid #777', width: '100px', textAlign: 'center', paddingTop: '3px' }}>PRINCIPAL VERIFICATION</div>
-                    </div>
+                  <div style={{ border: '1px solid #777', padding: '1.5rem', background: '#fff', boxSizing: 'border-box', minWidth: '700px' }}>
+                    <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} />
                   </div>
                 </div>
               </div>
