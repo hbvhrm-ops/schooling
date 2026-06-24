@@ -28,3 +28,15 @@ export async function PUT(req: NextRequest) {
   await supabase.from('sms_templates').update({ message }).eq('id', id).eq('school_id', session.schoolId)
   return NextResponse.json({ success: true })
 }
+
+export async function DELETE(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  const supabase = createServerClient()
+  const { error } = await supabase.from('sms_templates').delete().eq('id', id).eq('school_id', session.schoolId)
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ success: true })
+}
