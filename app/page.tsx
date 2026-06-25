@@ -186,23 +186,15 @@ export default function LoginPage() {
         <div style={{
           marginTop: '2rem', paddingTop: '1.5rem',
           borderTop: '1px solid var(--border)',
-          display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem',
+          display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem',
         }}>
-          <div style={{
-            background: 'rgba(99,102,241,0.07)', borderRadius: '10px',
-            padding: '0.75rem', border: '1px solid rgba(99,102,241,0.12)',
-          }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Admin</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>username: <strong style={{color:'var(--primary-light)'}}>admin</strong></div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>password: <strong style={{color:'var(--primary-light)'}}>admin123</strong></div>
-          </div>
           <div style={{
             background: 'rgba(34,211,238,0.07)', borderRadius: '10px',
             padding: '0.75rem', border: '1px solid rgba(34,211,238,0.12)',
+            textAlign: 'center'
           }}>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>School</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>Use credentials</div>
-            <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>given by Admin</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 'bold' }}>School Login</div>
+            <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Use the credentials given by the Super Admin</div>
           </div>
         </div>
       </div>
