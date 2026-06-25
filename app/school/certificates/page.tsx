@@ -250,12 +250,12 @@ export default function CertificatesPage() {
       const isLast = i === count - 1
       html += `
         <div style="
-          width: 17px; 
-          height: 20px; 
+          width: 20px; 
+          height: 24px; 
           border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
           text-align: center; 
-          line-height: 20px; 
-          font-size: 11px; 
+          line-height: 24px; 
+          font-size: 13px; 
           font-family: monospace; 
           font-weight: bold; 
           color: #000;
@@ -280,12 +280,12 @@ export default function CertificatesPage() {
       const isLast = i === 4
       html += `
         <div style="
-          width: 17px; 
-          height: 20px; 
+          width: 20px; 
+          height: 24px; 
           border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
           text-align: center; 
-          line-height: 20px; 
-          font-size: 11px; 
+          line-height: 24px; 
+          font-size: 13px; 
           font-family: monospace; 
           font-weight: bold; 
           color: #000;
@@ -295,7 +295,7 @@ export default function CertificatesPage() {
     html += '</div>'
     
     // Dash
-    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 14px;">-</span>'
+    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 16px;">-</span>'
     
     // Segment 2: 7 digits
     html += '<div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">'
@@ -304,12 +304,12 @@ export default function CertificatesPage() {
       const isLast = i === 11
       html += `
         <div style="
-          width: 17px; 
-          height: 20px; 
+          width: 20px; 
+          height: 24px; 
           border-right: ${isLast ? 'none' : '1px solid #1e3a8a'}; 
           text-align: center; 
-          line-height: 20px; 
-          font-size: 11px; 
+          line-height: 24px; 
+          font-size: 13px; 
           font-family: monospace; 
           font-weight: bold; 
           color: #000;
@@ -319,17 +319,17 @@ export default function CertificatesPage() {
     html += '</div>'
     
     // Dash
-    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 14px;">-</span>'
+    html += '<span style="font-weight: bold; color: #1e3a8a; padding: 0 1px; font-size: 16px;">-</span>'
     
     // Segment 3: 1 digit
     html += `
       <div style="display: inline-flex; border: 1px solid #1e3a8a; background: #fff;">
         <div style="
-          width: 17px; 
-          height: 20px; 
+          width: 20px; 
+          height: 24px; 
           text-align: center; 
-          line-height: 20px; 
-          font-size: 11px; 
+          line-height: 24px; 
+          font-size: 13px; 
           font-family: monospace; 
           font-weight: bold; 
           color: #000;
@@ -361,15 +361,15 @@ export default function CertificatesPage() {
         border: 1px solid #1e3a8a; 
         border-radius: 12px; 
         padding: 0 15px; 
-        height: 22px; 
-        line-height: 22px; 
-        font-size: 11.5px; 
+        height: 26px; 
+        line-height: 26px; 
+        font-size: 13px; 
         font-family: monospace; 
         font-weight: bold; 
         background: #fff;
         color: #000;
         text-align: center;
-        min-width: 130px;
+        min-width: 155px;
       ">
         ${val || '&nbsp;'}
       </div>
@@ -384,9 +384,9 @@ export default function CertificatesPage() {
         border: 1px solid #1e3a8a; 
         border-radius: 12px; 
         padding: 0 12px; 
-        height: 22px; 
-        line-height: 22px; 
-        font-size: 12px; 
+        height: 26px; 
+        line-height: 26px; 
+        font-size: 13px; 
         background: #fff;
         color: #000;
         min-width: ${minWidth};
@@ -755,8 +755,8 @@ export default function CertificatesPage() {
         font-family: 'Arial', sans-serif;
         color: #1e3a8a;
         background-color: #fff;
-        font-size: 11px;
-        line-height: 1.35;
+        font-size: 13px;
+        line-height: 1.4;
         width: 100%;
         max-width: 800px;
         margin: 0 auto;
@@ -771,81 +771,81 @@ export default function CertificatesPage() {
         <div class="header-group" style="display: flex; flex-direction: column; gap: 4px;">
           <!-- Header section -->
           <div class="header-section" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 2px solid #1e3a8a; padding-bottom: 8px;">
-            <div class="logo-container" style="width: 80px; display: flex; justify-content: center; align-items: center;">
-              ${schoolLogoUrl ? `<img class="logo-img" src="${schoolLogoUrl}" alt="Logo" style="max-height: 65px; max-width: 65px; object-fit: contain;" />` : `<div class="logo-placeholder" style="font-size: 40px; color: #1e3a8a;">🏫</div>`}
+            <div class="logo-container" style="width: 90px; display: flex; justify-content: center; align-items: center;">
+              ${schoolLogoUrl ? `<img class="logo-img" src="${schoolLogoUrl}" alt="Logo" style="max-height: 75px; max-width: 75px; object-fit: contain;" />` : `<div class="logo-placeholder" style="font-size: 45px; color: #1e3a8a;">🏫</div>`}
             </div>
             <div class="title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
-              <h1 class="school-title" style="font-size: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
-              <p class="school-subtitle" style="font-size: 10px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
-              <p class="school-contacts" style="font-size: 9.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
+              <h1 class="school-title" style="font-size: 19px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
+              <p class="school-subtitle" style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
+              <p class="school-contacts" style="font-size: 10.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
             </div>
-            <div class="header-right" style="width: 100px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
-              <div class="photo-box" style="width: 75px; height: 85px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 7px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
+            <div class="header-right" style="width: 110px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+              <div class="photo-box" style="width: 85px; height: 95px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
                 ${studentInfo && studentInfo.photo_url ? `<img src="${studentInfo.photo_url}" style="width:100%; height:100%; object-fit:cover; border-radius:3px;" />` : 'Photo'}
               </div>
-              <div class="serial-no" style="font-size: 11px; font-weight: bold; color: #1e3a8a; margin-top: 4px; white-space: nowrap;">S. No. <u>&nbsp;${admissionNo || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;</u></div>
+              <div class="serial-no" style="font-size: 13px; font-weight: bold; color: #1e3a8a; margin-top: 4px; white-space: nowrap;">S. No. <u>&nbsp;${admissionNo || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;</u></div>
             </div>
           </div>
 
           <!-- Title Banner -->
-          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 5px 35px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">Admission Form</div>
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 15px; padding: 5px 35px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">Admission Form</div>
         </div>
 
         <!-- Flex Item 2: Student Data Fields -->
         <div class="form-grid" style="display: flex; flex-direction: column; gap: 8px;">
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Name of Student (In Block letters)</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Name of Student (In Block letters)</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${nameGrid}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father's Name</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Father's Name</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${fatherGrid}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father NIC</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Father NIC</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${nicGrid}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Date of Birth (in figure)</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Date of Birth (in figure)</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${dobFigureBox}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Date of Birth (in words)</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Date of Birth (in words)</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${dobWordsBox}</span>
           </div>
           
           <div class="form-row" style="display: flex; align-items: center;">
             <div style="display: flex; flex: 1; align-items: center;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Religion</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Religion</span>
               <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${religionBox}</span>
             </div>
             <div style="display: flex; flex: 1; align-items: center; justify-content: flex-end; padding-left: 20px;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 100px; text-align: right; padding-right: 15px; flex-shrink: 0;">Nationality</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 110px; text-align: right; padding-right: 15px; flex-shrink: 0;">Nationality</span>
               <span class="field-value" style="flex-grow: 0; display: flex; align-items: center;">${nationalityBox}</span>
             </div>
           </div>
 
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Address for correspondence</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Address for correspondence</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${corrAddressBox}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Postal Address</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Postal Address</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${postAddressBox}</span>
           </div>
           <div class="form-row" style="display: flex; align-items: center;">
-            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 175px; flex-shrink: 0;">Father or Guardian No</span>
+            <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 195px; flex-shrink: 0;">Father or Guardian No</span>
             <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${guardianNoBox}</span>
           </div>
         </div>
 
         <!-- Flex Item 3: Undertaking Group -->
         <div class="undertaking-group" style="display: flex; flex-direction: column; gap: 4px;">
-          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">UNDERTAKING</div>
-          <p class="undertaking-text" style="font-size: 10px; line-height: 1.4; text-align: justify; color: #1e3a8a; margin: 4px 0; font-weight: 500;">
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 4px 20px; margin: 5px auto; width: fit-content; letter-spacing: 1px; position: relative; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">UNDERTAKING</div>
+          <p class="undertaking-text" style="font-size: 11.5px; line-height: 1.45; text-align: justify; color: #1e3a8a; margin: 4px 0; font-weight: 500;">
             I solemnly declare that the informations given above are correct to the best of my knowledge. I shall abide by the rules/regulations laid down by the school administration.
           </p>
-          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 11px;">
+          <div style="display: flex; justify-content: space-between; margin-top: 10px; font-weight: bold; color: #1e3a8a; font-size: 13px;">
             <div>Date: <u>&nbsp;&nbsp;${admissionDate || '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'}&nbsp;&nbsp;</u></div>
             <div>Parent's Sign ___________________________</div>
           </div>
@@ -853,37 +853,37 @@ export default function CertificatesPage() {
 
         <!-- Flex Item 4: Office Use Group -->
         <div class="office-use-container" style="border: 1.5px solid #1e3a8a; border-radius: 8px; padding: 10px 14px 14px 14px; background-color: #fdfeff; position: relative; box-sizing: border-box; margin-top: 5px;">
-          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 11px; padding: 3px 20px; margin: -22px auto 10px auto; width: fit-content; letter-spacing: 1px; position: relative; z-index: 5; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">FOR OFFICE USE ONLY</div>
+          <div class="banner-ribbon" style="background-color: #1e3a8a; color: #fff; font-weight: 900; text-transform: uppercase; text-align: center; font-size: 13px; padding: 4px 20px; margin: -24px auto 10px auto; width: fit-content; letter-spacing: 1px; position: relative; z-index: 5; clip-path: polygon(15px 0%, calc(100% - 15px) 0%, 100% 50%, calc(100% - 15px) 100%, 15px 100%, 0% 50%);">FOR OFFICE USE ONLY</div>
           
           <div class="office-grid" style="display: flex; flex-direction: column; gap: 8px;">
             <div class="form-row" style="display: flex; align-items: center;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Class in which Admitted:</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 200px; flex-shrink: 0;">Class in which Admitted:</span>
               <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${classBox}</span>
             </div>
             <div class="form-row" style="display: flex; align-items: center;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Remarks of the adm. Committee:</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 200px; flex-shrink: 0;">Remarks of the adm. Committee:</span>
               <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${remarksBox}</span>
             </div>
             <div class="form-row" style="display: flex; align-items: center;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Admission No:</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 200px; flex-shrink: 0;">Admission No:</span>
               <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${admNoBox}</span>
             </div>
             <div class="form-row" style="display: flex; align-items: center;">
-              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 11px; width: 185px; flex-shrink: 0;">Date of Admission:</span>
+              <span class="field-label" style="font-weight: bold; color: #1e3a8a; font-size: 13px; width: 200px; flex-shrink: 0;">Date of Admission:</span>
               <span class="field-value" style="flex-grow: 1; display: flex; align-items: center;">${admDateBox}</span>
             </div>
           </div>
 
           <!-- Office Signatures and Stamp Seal -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-weight: bold; color: #1e3a8a; font-size: 11px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 30px; font-weight: bold; color: #1e3a8a; font-size: 13px; position: relative;">
             <div>Clerk's Signature ______________________</div>
             <div>Principal ______________________</div>
             
             <!-- Circular Seal Stamp -->
-            <div class="school-seal" style="width: 65px; height: 65px; border: 1.5px dashed rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; right: 140px; bottom: 8px; transform: rotate(-10deg); font-family: Arial, sans-serif; color: rgba(30, 58, 138, 0.45); background-color: transparent; pointer-events: none; z-index: 10;">
-              <div class="seal-inner" style="width: 57px; height: 57px; border: 0.75px solid rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
+            <div class="school-seal" style="width: 75px; height: 75px; border: 1.5px dashed rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; align-items: center; justify-content: center; position: absolute; right: 150px; bottom: 8px; transform: rotate(-10deg); font-family: Arial, sans-serif; color: rgba(30, 58, 138, 0.45); background-color: transparent; pointer-events: none; z-index: 10;">
+              <div class="seal-inner" style="width: 67px; height: 67px; border: 0.75px solid rgba(30, 58, 138, 0.45); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative;">
                 <div class="seal-text-curve" style="font-size: 4px; position: absolute; top: 5px; font-weight: bold; text-align: center; width: 100%; letter-spacing: 0.2px;">${sealText}</div>
-                <div class="seal-center" style="font-size: 7px; font-weight: 900; letter-spacing: 0.5px; border-top: 0.75px solid rgba(30, 58, 138, 0.45); border-bottom: 0.75px solid rgba(30, 58, 138, 0.45); padding: 1px 2px;">PRINCIPAL</div>
+                <div class="seal-center" style="font-size: 8.5px; font-weight: 900; letter-spacing: 0.5px; border-top: 0.75px solid rgba(30, 58, 138, 0.45); border-bottom: 0.75px solid rgba(30, 58, 138, 0.45); padding: 1px 2px;">PRINCIPAL</div>
               </div>
             </div>
           </div>
