@@ -29,7 +29,7 @@ export default function SlcPage() {
   const [students, setStudents] = useState<Student[]>([])
   const [template, setTemplate] = useState<SlcTemplate>({
     logo_url: '',
-    title: 'SCHOOL LEAVING CERTIFICATE',
+    title: 'School Leaving Certificate',
     body_text: '',
     signature_title: 'Principal',
   })

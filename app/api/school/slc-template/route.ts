@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 
-const DEFAULT_BODY = `This is to certify that {name}, son/daughter of {father_name}, was a student of this institution.
-
-During their time here, they were enrolled in {class_name} under Roll No: {roll_no}. Their date of birth is recorded as {dob}.
-
-The student has successfully completed their studies at this school and is leaving on {leaving_date}.
-Reason for leaving: {leaving_reason}
-Character and Conduct: {conduct}
-
-We wish them all the best in their future endeavors.`
+const DEFAULT_BODY = `It is to certify that Mr./Mrs. {name} S/O {father_name} is a brilliant student of this institution. The student with DOB of {dob} has passed {class_name} and is leaving this school on {leaving_date}. I wish him/her all the best.`
 
 export async function GET() {
   const session = await getSession()
@@ -36,7 +28,7 @@ export async function GET() {
       schoolLogo: school?.logo_url || '',
       template: {
         logo_url: '',
-        title: 'SCHOOL LEAVING CERTIFICATE',
+        title: 'School Leaving Certificate',
         body_text: DEFAULT_BODY,
         signature_title: 'Principal',
       }

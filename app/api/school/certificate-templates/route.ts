@@ -4,52 +4,35 @@ import { getSession } from '@/lib/auth'
 
 const DEFAULT_TEMPLATES: Record<string, { title: string; body_text: string; signature_title: string }> = {
   slc: {
-    title: 'SCHOOL LEAVING CERTIFICATE',
-    body_text: `This is to certify that {name}, son/daughter of {father_name}, was a student of this institution.
-
-During their time here, they were enrolled in {class_name} under Roll No: {roll_no}. Their date of birth is recorded as {dob}.
-
-The student has successfully completed their studies at this school and is leaving on {leaving_date}.
-Reason for leaving: {leaving_reason}
-Character and Conduct: {conduct}
-
-We wish them all the best in their future endeavors.`,
+    title: 'School Leaving Certificate',
+    body_text: `It is to certify that Mr./Mrs. {name} S/O {father_name} is a brilliant student of this institution. The student with DOB of {dob} has passed {class_name} and is leaving this school on {leaving_date}. I wish him/her all the best.`,
     signature_title: 'Principal'
   },
   birth: {
     title: 'BIRTH CERTIFICATE',
-    body_text: `This is to certify that according to our official school admission register, {name}, son/daughter of {father_name}, was born on {dob}.
+    body_text: `This is to certify that {name} son/daughter of {father_name} was born on {dob}.
+This certificate is issued on request of the parents/guardian 
+of the student.
 
-They were admitted to class {class_name} under Roll No: {roll_no} on {reg_date}. Their record shows their gender as {gender} and their address as {address}.
-
-This certificate is issued on request of the parents/guardian of the student.`,
+`,
     signature_title: 'Principal'
   },
   character: {
-    title: 'CHARACTER & CONDUCT CERTIFICATE',
-    body_text: `This is to certify that {name}, son/daughter of {father_name}, was enrolled in this institution in class {class_name} under Roll No: {roll_no}.
-
-During their stay in this school, they maintained a {conduct} moral character and demonstrated highly disciplined behavior. They participated actively in various class activities and showed respect to teachers and fellow students.
-
-We have no reason to believe otherwise, and we wish them the best of luck in their future.`,
+    title: 'CHARACTER  CERTIFICATE',
+    body_text: `This is to certify that {name}, son/daughter of {father_name} was a brilliant student of this institution.We wish him/her all the best for his future.`,
     signature_title: 'Principal'
   },
   sports: {
     title: 'CERTIFICATE OF SPORTS ACHIEVEMENT',
-    body_text: `This is to certify that {name}, son/daughter of {father_name}, representing class {class_name}, has actively participated in the {sport_name} tournament.
+    body_text: `This is to certify that {name} , son/daughter of {father_name} ,has actively participated in the {sport_name} tournament.
+They achieved the position of {achievement} at the {event_name}.
 
-They achieved the position of {achievement} at the {event_name} held on {date}.
-
-We commend their outstanding dedication, sportsmanship, and performance.`,
+`,
     signature_title: 'Principal'
   },
   top_positions: {
     title: 'CERTIFICATE OF ACADEMIC EXCELLENCE',
-    body_text: `This certificate is awarded to {name}, son/daughter of {father_name}, student of class {class_name} (Roll No: {roll_no}), in recognition of securing the {position} position in the {exam_name} examinations.
-
-They obtained {marks_obtained} marks out of a total of {total_marks}, achieving a percentage of {percentage}%.
-
-We congratulate them on this brilliant academic achievement and wish them continued success in their studies.`,
+    body_text: `This certificate is awarded to {name}, son/daughter of {father_name}, student of class {class_name} (Roll No: {roll_no}), in recognition of securing the {position} position in the {exam_name} examinations.`,
     signature_title: 'Principal'
   }
 }
