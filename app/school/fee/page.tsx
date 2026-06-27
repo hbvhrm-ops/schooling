@@ -342,19 +342,19 @@ export default function FeePage() {
               background: #fff;
             }
             .challan {
-              height: 99mm;
+              height: 96mm;
               width: 210mm;
               box-sizing: border-box;
               position: relative;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
-              padding: 8mm 15mm;
+              padding: 4mm 12mm;
             }
             .challan-inner {
               border: 1.5px solid #0f172a;
               border-radius: 8px;
-              padding: 6mm 10mm;
+              padding: 4mm 8mm;
               flex-grow: 1;
               display: flex;
               flex-direction: column;
@@ -363,37 +363,37 @@ export default function FeePage() {
             }
             .challan-header {
               text-align: center;
-              border-bottom: 2px solid #0f172a;
-              padding-bottom: 3mm;
-              margin-bottom: 3mm;
+              border-bottom: 2.2px solid #0f172a;
+              padding-bottom: 2mm;
+              margin-bottom: 2mm;
               display: flex;
               justify-content: space-between;
               align-items: center;
             }
             .school-name {
-              font-size: 1.15rem;
+              font-size: 1.1rem;
               font-weight: 800;
               text-transform: uppercase;
               color: #0f172a;
               letter-spacing: 0.5px;
             }
             .challan-title {
-              font-size: 1rem;
+              font-size: 0.95rem;
               font-weight: 800;
               letter-spacing: 1.5px;
               color: #eaeaea;
               background-color: #0f172a;
-              padding: 1.5mm 4mm;
+              padding: 1.2mm 3.5mm;
               border-radius: 4px;
             }
             .details-table {
               width: 100%;
-              font-size: 0.82rem;
+              font-size: 0.8rem;
               border-collapse: collapse;
-              margin-bottom: 3mm;
+              margin-bottom: 2mm;
             }
             .details-table td {
-              padding: 1.2mm 2mm;
+              padding: 0.8mm 1.5mm;
               color: #334155;
             }
             .details-table td strong {
@@ -406,26 +406,26 @@ export default function FeePage() {
             .fee-table {
               width: 100%;
               border-collapse: collapse;
-              font-size: 0.82rem;
-              margin-bottom: 3mm;
+              font-size: 0.8rem;
+              margin-bottom: 2mm;
             }
             .fee-table th {
               background-color: #0f172a;
               color: #fff;
-              padding: 1.5mm 3mm;
+              padding: 1.2mm 2.5mm;
               font-weight: 600;
-              font-size: 0.78rem;
+              font-size: 0.75rem;
               text-transform: uppercase;
             }
             .fee-table td {
-              padding: 2mm 3mm;
+              padding: 1.5mm 2.5mm;
               border-bottom: 1px solid #cbd5e1;
               color: #334155;
             }
             .total-row td {
               border-top: 1.5px solid #0f172a;
               border-bottom: none;
-              padding-top: 2.5mm;
+              padding-top: 2mm;
             }
             .challan-footer {
               display: flex;
