@@ -28,6 +28,21 @@ export default function FeePage() {
   const [assignTemplate, setAssignTemplate] = useState('')
   const [assignMonth, setAssignMonth] = useState(new Date().getMonth() + 1)
   const [assignYear, setAssignYear] = useState(new Date().getFullYear())
+
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || ''
+      return ''
+    }
+    const sess = getCookie('selected_session')
+    if (sess) {
+      const yearVal = parseInt(sess)
+      setSelYear(yearVal)
+      setAssignYear(yearVal)
+    }
+  }, [])
   const [assignStudentsList, setAssignStudentsList] = useState<{ id: string; name: string }[]>([])
   const [studentSearch, setStudentSearch] = useState('')
 

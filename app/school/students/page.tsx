@@ -58,8 +58,46 @@ export default function StudentsPage() {
   // Student promotion states
   const [promoteFromClass, setPromoteFromClass] = useState('')
   const [promoteToClass, setPromoteToClass] = useState('')
+  const [promoteToSession, setPromoteToSession] = useState('')
   const [promoting, setPromoting] = useState(false)
   const [uploadingCsv, setUploadingCsv] = useState(false)
+
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || ''
+      return ''
+    }
+    const sess = getCookie('selected_session') || new Date().getFullYear().toString()
+    setPromoteToSession((parseInt(sess) + 1).toString())
+  }, [])
+
+  useEffect(() => {
+    if (!promoteFromClass || classes.length === 0) return
+    let highestClassId = ''
+    let maxNum = -1
+    let highestClass = classes[0]
+    for (const cls of classes) {
+      const num = parseInt(cls.name.trim())
+      if (!isNaN(num) && num > maxNum) {
+        maxNum = num
+        highestClass = cls
+      }
+    }
+    if (maxNum !== -1) {
+      highestClassId = highestClass.id
+    } else {
+      const sorted = [...classes].sort((a, b) => b.name.localeCompare(a.name))
+      highestClassId = sorted[0]?.id || ''
+    }
+    
+    if (promoteFromClass === highestClassId) {
+      setPromoteToClass('discharge')
+    } else {
+      setPromoteToClass('')
+    }
+  }, [promoteFromClass, classes])
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -216,11 +254,14 @@ export default function StudentsPage() {
       setMsg({ type: 'danger', text: 'Please select both source and target classes' })
       return
     }
-    if (promoteFromClass === promoteToClass) {
+    if (promoteFromClass === promoteToClass && promoteToClass !== 'discharge') {
       setMsg({ type: 'danger', text: 'Source and target classes must be different' })
       return
     }
-    if (!confirm('Are you sure you want to promote all active students from the selected class to the target class?')) return
+    const confirmMsg = promoteToClass === 'discharge'
+      ? 'Are you sure you want to discharge/graduate all active students from the selected class?'
+      : 'Are you sure you want to promote all active students from the selected class to the target class?'
+    if (!confirm(confirmMsg)) return
 
     setPromoting(true)
     setMsg(null)
@@ -228,7 +269,11 @@ export default function StudentsPage() {
       const res = await fetch('/api/school/students/promote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fromClassId: promoteFromClass, toClassId: promoteToClass }),
+        body: JSON.stringify({ 
+          fromClassId: promoteFromClass, 
+          toClassId: promoteToClass,
+          toSession: promoteToSession 
+        }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -596,11 +641,18 @@ export default function StudentsPage() {
               <select className="form-select" value={promoteToClass} onChange={e => setPromoteToClass(e.target.value)}>
                 <option value="">Select target class</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="discharge">🎓 Discharge / Graduate Students</option>
               </select>
             </div>
-            <div className="alert alert-warning"><span>⚠️</span> This will move all active students from the selected class to the new class.</div>
+            <div className="form-group">
+              <label className="form-label">Target Session Year</label>
+              <select className="form-select" value={promoteToSession} onChange={e => setPromoteToSession(e.target.value)}>
+                {['2024', '2025', '2026', '2027', '2028'].map(y => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </div>
+            <div className="alert alert-warning"><span>⚠️</span> This will move all active students from the selected class to the new class and update their active academic session.</div>
             <button onClick={handlePromoteStudents} disabled={promoting} className="btn btn-primary">
-              {promoting ? '⏳ Promoting...' : '⬆️ Promote Students'}
+              {promoting ? '⏳ Promoting...' : '⬆️ Promote/Discharge Students'}
             </button>
           </div>
         </div>

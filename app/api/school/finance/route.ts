@@ -6,7 +6,8 @@ export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ feeCollected: 0, totalExpenses: 0, profit: 0, monthlyData: [], recentExpenses: [] })
   const { searchParams } = new URL(req.url)
-  const year = searchParams.get('year') || new Date().getFullYear()
+  const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+  const year = searchParams.get('year') || sessionYear
   const supabase = createServerClient()
 
   const yearStart = `${year}-01-01`

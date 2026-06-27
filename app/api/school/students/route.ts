@@ -10,11 +10,14 @@ export async function GET(req: NextRequest) {
   const classId = searchParams.get('class_id')
   const sectionId = searchParams.get('section_id')
   
+  const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+  
   const supabase = createServerClient()
   let query = supabase
     .from('students')
     .select('*, classes(name), sections(name)')
     .eq('school_id', session.schoolId)
+    .eq('session', sessionYear)
     
   if (classId) {
     query = query.eq('class_id', classId)
@@ -50,6 +53,7 @@ export async function POST(req: NextRequest) {
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   const body = await req.json()
   const supabase = createServerClient()
+  const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
   const { data, error } = await supabase.from('students').insert({
     school_id: session.schoolId,
     name: body.name,
@@ -63,6 +67,7 @@ export async function POST(req: NextRequest) {
     address: body.address || null,
     photo_url: body.photo_url || null,
     status: 'active',
+    session: body.session || sessionYear,
     additional_info: body.additional_info || {},
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })

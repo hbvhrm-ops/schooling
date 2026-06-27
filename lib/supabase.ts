@@ -214,7 +214,12 @@ class MockQueryBuilder {
       for (const filter of this.filters) {
         const val = row[filter.column]
         if (filter.type === 'eq') {
-          if (String(val) !== String(filter.value)) return false
+          if (filter.column === 'session') {
+            const rowSession = val || (row.created_at ? new Date(row.created_at).getFullYear().toString() : '2026')
+            if (String(rowSession) !== String(filter.value)) return false
+          } else {
+            if (String(val) !== String(filter.value)) return false
+          }
         } else if (filter.type === 'neq') {
           if (String(val) === String(filter.value)) return false
         } else if (filter.type === 'gte') {

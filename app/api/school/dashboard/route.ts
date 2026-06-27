@@ -1,24 +1,27 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@/lib/supabase'
 import { getSession } from '@/lib/auth'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     const session = await getSession()
     if (!session?.schoolId) return NextResponse.json({ stats: null })
 
     const supabase = createServerClient()
     const schoolId = session.schoolId
+    const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+
     const now = new Date()
     const month = now.getMonth() + 1
-    const year = now.getFullYear()
+    const year = parseInt(sessionYear)
     const monthStart = `${year}-${String(month).padStart(2, '0')}-01`
+    const monthEnd = `${year}-${String(month).padStart(2, '0')}-31`
 
     const [studentsRes, feeRes, expensesRes, recentFeeRes, schoolRes] = await Promise.all([
-      supabase.from('students').select('id, status, created_at').eq('school_id', schoolId),
-      supabase.from('fee_invoices').select('amount, status, paid_date').eq('school_id', schoolId).eq('status', 'paid').gte('paid_date', monthStart),
-      supabase.from('expenses').select('amount').eq('school_id', schoolId).gte('date', monthStart),
-      supabase.from('fee_invoices').select('amount, status, paid_date, students(name)').eq('school_id', schoolId).order('paid_date', { ascending: false }).limit(5),
+      supabase.from('students').select('id, status, created_at, session').eq('school_id', schoolId).eq('session', sessionYear),
+      supabase.from('fee_invoices').select('amount, status, paid_date').eq('school_id', schoolId).eq('status', 'paid').gte('paid_date', monthStart).lte('paid_date', monthEnd),
+      supabase.from('expenses').select('amount').eq('school_id', schoolId).gte('date', monthStart).lte('date', monthEnd),
+      supabase.from('fee_invoices').select('amount, status, paid_date, students(name, session)').eq('school_id', schoolId).eq('year', year).order('paid_date', { ascending: false }).limit(5),
       supabase.from('schools').select('name, logo_url').eq('id', schoolId).maybeSingle(),
     ])
 

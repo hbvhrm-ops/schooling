@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS students (
   address         TEXT,
   photo_url       TEXT,
   status          TEXT DEFAULT 'active' CHECK (status IN ('active','discharged')),
+  session         TEXT DEFAULT '2026',
   additional_info JSONB DEFAULT '{}'::jsonb,
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );

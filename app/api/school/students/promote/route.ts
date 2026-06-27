@@ -7,7 +7,8 @@ export async function POST(req: NextRequest) {
     const session = await getSession()
     if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const { fromClassId, toClassId } = await req.json()
+    const body = await req.json()
+    const { fromClassId, toClassId, toSession } = body
     if (!fromClassId || !toClassId) {
       return NextResponse.json({ error: 'From Class and To Class are required' }, { status: 400 })
     }
@@ -16,7 +17,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Source and target classes must be different' }, { status: 400 })
     }
 
+    const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+    const targetSession = toSession || (parseInt(sessionYear) + 1).toString()
+
     const supabase = createServerClient()
+
+    // Handle Discharge / Graduation of highest class
+    if (toClassId === 'discharge') {
+      const { error } = await supabase
+        .from('students')
+        .update({ status: 'discharged', session: targetSession })
+        .eq('school_id', session.schoolId)
+        .eq('class_id', fromClassId)
+        .eq('status', 'active')
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+      return NextResponse.json({ success: true })
+    }
 
     // 1. Fetch sections for the source (from) and target (to) classes
     const [fromSectionsRes, toSectionsRes] = await Promise.all([
@@ -59,7 +76,7 @@ export async function POST(req: NextRequest) {
 
       const { error: matchError } = await supabase
         .from('students')
-        .update({ class_id: toClassId, section_id: targetSectionId })
+        .update({ class_id: toClassId, section_id: targetSectionId, session: targetSession })
         .eq('school_id', session.schoolId)
         .eq('class_id', fromClassId)
         .eq('section_id', fromSec.id)
@@ -73,7 +90,7 @@ export async function POST(req: NextRequest) {
     // 3. Promote any remaining active students in the source class (e.g., sections without matches or null sections) to the new class with section_id = null
     const { error: remainingError } = await supabase
       .from('students')
-      .update({ class_id: toClassId, section_id: null })
+      .update({ class_id: toClassId, section_id: null, session: targetSession })
       .eq('school_id', session.schoolId)
       .eq('class_id', fromClassId)
       .eq('status', 'active')

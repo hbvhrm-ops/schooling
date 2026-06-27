@@ -64,6 +64,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [selectedSession, setSelectedSession] = useState('2026')
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768)
@@ -71,6 +72,30 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || ''
+      return ''
+    }
+    const sess = getCookie('selected_session')
+    if (sess) {
+      setSelectedSession(sess)
+    } else {
+      const defaultSess = new Date().getFullYear().toString()
+      document.cookie = `selected_session=${defaultSess}; path=/; max-age=31536000`
+      setSelectedSession(defaultSess)
+    }
+  }, [])
+
+  const handleSessionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value
+    document.cookie = `selected_session=${val}; path=/; max-age=31536000`
+    setSelectedSession(val)
+    window.location.reload()
+  }
 
   // Close sidebar on navigate
   useEffect(() => {
@@ -161,13 +186,43 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
 
           <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
             {(!collapsed || isMobile) && (
-              <div style={{
-                background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
-                padding: '0.75rem', marginBottom: '0.75rem',
-                border: '1px solid rgba(255,255,255,0.06)',
-              }}>
-                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>School</div>
-                <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>School Panel</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
+                  padding: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>School</div>
+                  <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#ffffff' }}>School Panel</div>
+                </div>
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
+                  padding: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                }}>
+                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.35rem' }}>Academic Session</div>
+                  <select 
+                    value={selectedSession}
+                    onChange={handleSessionChange}
+                    style={{
+                      width: '100%',
+                      background: '#1e293b',
+                      color: '#ffffff',
+                      border: '1px solid rgba(255,255,255,0.15)',
+                      padding: '0.35rem 0.5rem',
+                      fontSize: '0.85rem',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="2024">Session 2024</option>
+                    <option value="2025">Session 2025</option>
+                    <option value="2026">Session 2026</option>
+                    <option value="2027">Session 2027</option>
+                    <option value="2028">Session 2028</option>
+                  </select>
+                </div>
               </div>
             )}
             <button

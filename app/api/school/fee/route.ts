@@ -15,7 +15,8 @@ export async function GET(req: NextRequest) {
   }
   if (type === 'invoices') {
     const month = searchParams.get('month')
-    const year = searchParams.get('year')
+    const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+    const year = searchParams.get('year') || sessionYear
     const classId = searchParams.get('class_id')
     let query = supabase.from('fee_invoices').select('*, students(name, class_id)').eq('school_id', session.schoolId)
     if (month) query = query.eq('month', month)
@@ -57,6 +58,9 @@ export async function POST(req: NextRequest) {
       .single()
     if (tErr || !template) return NextResponse.json({ error: 'Template not found' }, { status: 400 })
 
+    const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
+    const targetYear = body.year || parseInt(sessionYear)
+
     const invoices = []
     if (body.student_id) {
       invoices.push({
@@ -64,7 +68,7 @@ export async function POST(req: NextRequest) {
         student_id: body.student_id,
         fee_template_id: body.fee_template_id,
         month: body.month,
-        year: body.year,
+        year: targetYear,
         amount: template.amount,
         status: 'pending'
       })
@@ -75,6 +79,7 @@ export async function POST(req: NextRequest) {
         .eq('school_id', session.schoolId)
         .eq('class_id', body.class_id)
         .eq('status', 'active')
+        .eq('session', sessionYear)
       
       for (const student of (students || [])) {
         invoices.push({
@@ -82,7 +87,7 @@ export async function POST(req: NextRequest) {
           student_id: student.id,
           fee_template_id: body.fee_template_id,
           month: body.month,
-          year: body.year,
+          year: targetYear,
           amount: template.amount,
           status: 'pending'
         })

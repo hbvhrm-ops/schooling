@@ -13,6 +13,23 @@ export default function ExpensesPage() {
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
   const [budget, setBudget] = useState({ month: new Date().getMonth() + 1, year: new Date().getFullYear(), amount: '' })
 
+  useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || ''
+      return ''
+    }
+    const sess = getCookie('selected_session')
+    if (sess) {
+      const yearVal = parseInt(sess)
+      setBudget(b => ({ ...b, year: yearVal }))
+      if (yearVal !== new Date().getFullYear()) {
+        setForm(f => ({ ...f, date: `${sess}-01-01` }))
+      }
+    }
+  }, [])
+
   const load = useCallback(async () => {
     setLoading(true)
     const r = await fetch('/api/school/expenses').then(res => res.json()).catch(() => ({}))

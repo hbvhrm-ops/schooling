@@ -13,6 +13,19 @@ export default function FinancePage() {
   const [year, setYear] = useState(new Date().getFullYear())
 
   useEffect(() => {
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`
+      const parts = value.split(`; ${name}=`)
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || ''
+      return ''
+    }
+    const sess = getCookie('selected_session')
+    if (sess) {
+      setYear(parseInt(sess))
+    }
+  }, [])
+
+  useEffect(() => {
     fetch(`/api/school/finance?year=${year}`)
       .then(r => r.json())
       .then(d => setData(d))
