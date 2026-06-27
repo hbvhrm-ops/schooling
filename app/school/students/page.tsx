@@ -73,31 +73,7 @@ export default function StudentsPage() {
     setPromoteToSession((parseInt(sess) + 1).toString())
   }, [])
 
-  useEffect(() => {
-    if (!promoteFromClass || classes.length === 0) return
-    let highestClassId = ''
-    let maxNum = -1
-    let highestClass = classes[0]
-    for (const cls of classes) {
-      const num = parseInt(cls.name.trim())
-      if (!isNaN(num) && num > maxNum) {
-        maxNum = num
-        highestClass = cls
-      }
-    }
-    if (maxNum !== -1) {
-      highestClassId = highestClass.id
-    } else {
-      const sorted = [...classes].sort((a, b) => b.name.localeCompare(a.name))
-      highestClassId = sorted[0]?.id || ''
-    }
-    
-    if (promoteFromClass === highestClassId) {
-      setPromoteToClass('discharge')
-    } else {
-      setPromoteToClass('')
-    }
-  }, [promoteFromClass, classes])
+
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -249,18 +225,25 @@ export default function StudentsPage() {
     }
   }
 
-  async function handlePromoteStudents() {
-    if (!promoteFromClass || !promoteToClass) {
-      setMsg({ type: 'danger', text: 'Please select both source and target classes' })
+  async function handlePromoteAction(isDischarge: boolean) {
+    if (!promoteFromClass) {
+      setMsg({ type: 'danger', text: 'Please select a source class' })
       return
     }
-    if (promoteFromClass === promoteToClass && promoteToClass !== 'discharge') {
+    const targetClass = isDischarge ? 'discharge' : promoteToClass
+    if (!isDischarge && !targetClass) {
+      setMsg({ type: 'danger', text: 'Please select a target class' })
+      return
+    }
+    if (!isDischarge && promoteFromClass === targetClass) {
       setMsg({ type: 'danger', text: 'Source and target classes must be different' })
       return
     }
-    const confirmMsg = promoteToClass === 'discharge'
-      ? 'Are you sure you want to discharge/graduate all active students from the selected class?'
-      : 'Are you sure you want to promote all active students from the selected class to the target class?'
+    
+    const fromClassName = classes.find(c => c.id === promoteFromClass)?.name || ''
+    const confirmMsg = isDischarge
+      ? `Are you sure you want to graduate and discharge all active students from ${fromClassName}?`
+      : `Are you sure you want to promote all active students from ${fromClassName} to the target class?`
     if (!confirm(confirmMsg)) return
 
     setPromoting(true)
@@ -271,18 +254,18 @@ export default function StudentsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           fromClassId: promoteFromClass, 
-          toClassId: promoteToClass,
+          toClassId: targetClass,
           toSession: promoteToSession 
         }),
       })
       const data = await res.json()
       if (res.ok) {
-        setMsg({ type: 'success', text: 'Students promoted successfully!' })
+        setMsg({ type: 'success', text: isDischarge ? 'Students graduated successfully!' : 'Students promoted successfully!' })
         setPromoteFromClass('')
         setPromoteToClass('')
         load() // Refresh students list
       } else {
-        setMsg({ type: 'danger', text: data.error || 'Failed to promote students' })
+        setMsg({ type: 'danger', text: data.error || 'Failed to process promotion' })
       }
     } catch {
       setMsg({ type: 'danger', text: 'Error connecting to the server' })
@@ -626,34 +609,64 @@ export default function StudentsPage() {
       {/* Promote Tab */}
       {tab === 'promote' && (
         <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⬆️ Promote Students</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Bulk promote all students from one class to the next.</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⬆️ Promote & Graduate Students</h3>
+          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Bulk promote students to the next class, or graduate the senior class.</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            
             <div className="form-group">
-              <label className="form-label">From Class</label>
+              <label className="form-label">From Class *</label>
               <select className="form-select" value={promoteFromClass} onChange={e => setPromoteFromClass(e.target.value)}>
                 <option value="">Select current class</option>
                 {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label className="form-label">To Class</label>
-              <select className="form-select" value={promoteToClass} onChange={e => setPromoteToClass(e.target.value)}>
-                <option value="">Select target class</option>
-                {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                <option value="discharge">🎓 Discharge / Graduate Students</option>
-              </select>
+
+            <div style={{ padding: '1rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+              <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem', color: 'var(--primary)' }}>Option A: Promote to Next Class</h4>
+              <div className="form-group" style={{ marginBottom: '0.75rem' }}>
+                <label className="form-label">To Class</label>
+                <select className="form-select" value={promoteToClass} onChange={e => setPromoteToClass(e.target.value)}>
+                  <option value="">Select target class</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Target Session Year</label>
+                <select className="form-select" value={promoteToSession} onChange={e => setPromoteToSession(e.target.value)}>
+                  {['2024', '2025', '2026', '2027', '2028'].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <button 
+                onClick={() => handlePromoteAction(false)} 
+                disabled={promoting || !promoteFromClass || !promoteToClass} 
+                className="btn btn-primary"
+                style={{ width: '100%' }}
+              >
+                {promoting ? '⏳ Promoting...' : '⬆️ Bulk Promote Students'}
+              </button>
             </div>
-            <div className="form-group">
-              <label className="form-label">Target Session Year</label>
-              <select className="form-select" value={promoteToSession} onChange={e => setPromoteToSession(e.target.value)}>
-                {['2024', '2025', '2026', '2027', '2028'].map(y => <option key={y} value={y}>{y}</option>)}
-              </select>
+
+            <div style={{ padding: '1rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px' }}>
+              <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem', color: 'var(--success)' }}>Option B: Graduate / Discharge Senior Class</h4>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label className="form-label">Graduation Session Year</label>
+                <select className="form-select" value={promoteToSession} onChange={e => setPromoteToSession(e.target.value)}>
+                  {['2024', '2025', '2026', '2027', '2028'].map(y => <option key={y} value={y}>{y}</option>)}
+                </select>
+              </div>
+              <button 
+                onClick={() => handlePromoteAction(true)} 
+                disabled={promoting || !promoteFromClass} 
+                className="btn btn-success"
+                style={{ width: '100%' }}
+              >
+                {promoting ? '⏳ Discharging...' : '🎓 Graduate & Discharge Students'}
+              </button>
             </div>
-            <div className="alert alert-warning"><span>⚠️</span> This will move all active students from the selected class to the new class and update their active academic session.</div>
-            <button onClick={handlePromoteStudents} disabled={promoting} className="btn btn-primary">
-              {promoting ? '⏳ Promoting...' : '⬆️ Promote/Discharge Students'}
-            </button>
+
+            <div className="alert alert-warning">
+              <span>⚠️</span> Promoting or graduating will shift/update students' academic records for the chosen session year.
+            </div>
           </div>
         </div>
       )}
