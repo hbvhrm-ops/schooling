@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Fragment } from 'react'
 
 interface Student {
   id: string
@@ -1777,20 +1777,27 @@ export default function CertificatesPage() {
                         <table>
                           <thead>
                             <tr>
-                              <th style={{ width: '80px' }}>S.No</th>
-                              <th style={{ width: '120px' }}>Roll No</th>
-                              <th>Student Name</th>
+                              <th rowSpan={2} style={{ width: '80px' }}>S.No</th>
+                              <th rowSpan={2} style={{ width: '120px' }}>Roll No</th>
+                              <th rowSpan={2}>Student Name</th>
+                              <th rowSpan={2}>Father Name</th>
                               {classSubjects.map(sub => (
-                                <th key={sub.id}>{sub.name}</th>
+                                <th key={sub.id} colSpan={2} style={{ textAlign: 'center' }}>{sub.name}</th>
                               ))}
-                              <th>Total Marks</th>
-                              <th>%age</th>
+                            </tr>
+                            <tr>
+                              {classSubjects.map(sub => (
+                                <Fragment key={sub.id}>
+                                  <th style={{ textAlign: 'center', fontSize: '0.8rem', background: 'var(--bg-base)' }}>Total</th>
+                                  <th style={{ textAlign: 'center', fontSize: '0.8rem', background: 'var(--bg-base)' }}>Obt</th>
+                                </Fragment>
+                              ))}
                             </tr>
                           </thead>
                           <tbody>
                             {students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection)).length === 0 ? (
                               <tr>
-                                <td colSpan={3 + classSubjects.length + 2} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                                <td colSpan={4 + (classSubjects.length * 2)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                                   No registered student rows found for this filter selection.
                                 </td>
                               </tr>
@@ -1798,33 +1805,25 @@ export default function CertificatesPage() {
                               students
                                 .filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection))
                                 .map((s, idx) => {
-                                  let totalObtained = 0
-                                  let totalMax = 0
-                                  
                                   const subjectCells = classSubjects.map(sub => {
                                     const res = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
-                                    if (res) {
-                                      totalObtained += Number(res.marks_obtained) || 0
-                                      totalMax += Number(res.total_marks) || 100
-                                    }
+                                    const obt = res ? res.marks_obtained : '—'
+                                    const total = res ? res.total_marks : '100'
                                     return (
-                                      <td key={sub.id} style={{ textAlign: 'center' }}>
-                                        {res ? res.marks_obtained : '—'}
-                                      </td>
+                                      <Fragment key={sub.id}>
+                                        <td style={{ textAlign: 'center' }}>{total}</td>
+                                        <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{obt}</td>
+                                      </Fragment>
                                     )
                                   })
-                                  
-                                  const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
-                                  const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
                                   
                                   return (
                                     <tr key={s.id}>
                                       <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
                                       <td style={{ fontWeight: 'bold' }}>{s.roll_no || '—'}</td>
                                       <td style={{ fontWeight: 600 }}>{s.name}</td>
+                                      <td style={{ fontWeight: 600 }}>{s.father_name || '—'}</td>
                                       {subjectCells}
-                                      <td style={{ fontWeight: 'bold', color: 'var(--primary)', textAlign: 'center' }}>{totalDisplay}</td>
-                                      <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{percentage}</td>
                                     </tr>
                                   )
                                 })

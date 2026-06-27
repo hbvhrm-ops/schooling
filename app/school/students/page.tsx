@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback } from 'react'
+import imageCompression from 'browser-image-compression'
 
 interface Student {
   id: string; name: string; father_name: string; class_name: string; section_name: string;
@@ -54,6 +55,7 @@ export default function StudentsPage() {
   const [newFieldType, setNewFieldType] = useState<'text' | 'number' | 'dropdown'>('text')
   const [newFieldOptions, setNewFieldOptions] = useState('')
   const [addingField, setAddingField] = useState(false)
+  const [compressing, setCompressing] = useState(false)
 
   // Student promotion states
   const [promoteFromClass, setPromoteFromClass] = useState('')
@@ -91,39 +93,72 @@ export default function StudentsPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
-  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressPhoto = async (file: File): Promise<File | Blob> => {
+    const options = {
+      maxSizeMB: 0.15,
+      maxWidthOrHeight: 800,
+      useWebWorker: true
+    }
+    return await imageCompression(file, options)
+  }
+
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('File is too large. Please select an image under 2MB.')
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result
-        if (typeof result === 'string') {
-          setForm(f => ({ ...f, photo_url: result }))
+      setCompressing(true)
+      try {
+        const compressedFile = await compressPhoto(file)
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const result = event.target?.result
+          if (typeof result === 'string') {
+            setForm(f => ({ ...f, photo_url: result }))
+          }
         }
+        reader.readAsDataURL(compressedFile)
+      } catch (error) {
+        console.error('Image compression failed, using original file:', error)
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const result = event.target?.result
+          if (typeof result === 'string') {
+            setForm(f => ({ ...f, photo_url: result }))
+          }
+        }
+        reader.readAsDataURL(file)
+      } finally {
+        setCompressing(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
-  const handleEditPhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEditPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        alert('File is too large. Please select an image under 2MB.')
-        return
-      }
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result
-        if (typeof result === 'string') {
-          setEditForm(f => ({ ...f, photo_url: result }))
+      setCompressing(true)
+      try {
+        const compressedFile = await compressPhoto(file)
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const result = event.target?.result
+          if (typeof result === 'string') {
+            setEditForm(f => ({ ...f, photo_url: result }))
+          }
         }
+        reader.readAsDataURL(compressedFile)
+      } catch (error) {
+        console.error('Image compression failed, using original file:', error)
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          const result = event.target?.result
+          if (typeof result === 'string') {
+            setEditForm(f => ({ ...f, photo_url: result }))
+          }
+        }
+        reader.readAsDataURL(file)
+      } finally {
+        setCompressing(false)
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -434,7 +469,9 @@ export default function StudentsPage() {
             {/* Photo Upload Section */}
             <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)' }}>
               <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {form.photo_url ? (
+                {compressing ? (
+                  <span style={{ fontSize: '1.5rem', animation: 'spin 1s linear infinite' }}>⏳</span>
+                ) : form.photo_url ? (
                   <img src={form.photo_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>👤</span>
@@ -443,11 +480,11 @@ export default function StudentsPage() {
               <div>
                 <label className="form-label" style={{ marginBottom: '0.4rem', display: 'block', fontWeight: 600 }}>Student Photo (Optional)</label>
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
-                    📷 Choose Photo
-                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} />
+                  <label className="btn btn-secondary btn-sm" style={{ cursor: compressing ? 'not-allowed' : 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem', opacity: compressing ? 0.6 : 1 }}>
+                    {compressing ? '⏳ Compressing...' : '📷 Choose Photo'}
+                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handlePhotoChange} disabled={compressing} />
                   </label>
-                  {form.photo_url && (
+                  {form.photo_url && !compressing && (
                     <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setForm(f => ({ ...f, photo_url: '' }))}>
                       Remove
                     </button>
@@ -786,7 +823,9 @@ export default function StudentsPage() {
                 {/* Photo Upload Section */}
                 <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)' }}>
                   <div style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '50%', background: 'var(--bg-input)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                    {editForm.photo_url ? (
+                    {compressing ? (
+                      <span style={{ fontSize: '1.5rem', animation: 'spin 1s linear infinite' }}>⏳</span>
+                    ) : editForm.photo_url ? (
                       <img src={editForm.photo_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
                       <span style={{ fontSize: '2rem', color: 'var(--text-muted)' }}>👤</span>
@@ -795,11 +834,11 @@ export default function StudentsPage() {
                   <div>
                     <label className="form-label" style={{ marginBottom: '0.4rem', display: 'block', fontWeight: 600 }}>Student Photo (Optional)</label>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                      <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem' }}>
-                        📷 Change Photo
-                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleEditPhotoChange} />
+                      <label className="btn btn-secondary btn-sm" style={{ cursor: compressing ? 'not-allowed' : 'pointer', margin: 0, padding: '0.3rem 0.6rem', fontSize: '0.85rem', opacity: compressing ? 0.6 : 1 }}>
+                        {compressing ? '⏳ Compressing...' : '📷 Change Photo'}
+                        <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleEditPhotoChange} disabled={compressing} />
                       </label>
-                      {editForm.photo_url && (
+                      {editForm.photo_url && !compressing && (
                         <button type="button" className="btn btn-danger btn-sm" style={{ padding: '0.3rem 0.6rem', fontSize: '0.85rem' }} onClick={() => setEditForm(f => ({ ...f, photo_url: '' }))}>
                           Remove
                         </button>
