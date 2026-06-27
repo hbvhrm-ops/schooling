@@ -567,61 +567,57 @@ export default function CertificatesPage() {
             }
             .header {
               text-align: center;
-              margin-bottom: 4px;
+              margin-bottom: 15px;
               flex-shrink: 0;
             }
             .logo {
-              max-height: 38px;
-              margin-bottom: 2px;
+              max-height: 80px;
+              margin-bottom: 12px;
               object-fit: contain;
             }
             .logo-placeholder {
-              font-size: 22px;
-              margin-bottom: 2px;
+              font-size: 45px;
+              margin-bottom: 10px;
               color: #4a3e28;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 13px;
+              font-size: 24px;
               font-weight: 800;
               color: #4a3e28;
-              letter-spacing: 1.5px;
-              margin-bottom: 0px;
+              letter-spacing: 2px;
+              margin-bottom: 5px;
               text-transform: uppercase;
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 15px;
+              font-size: 32px;
               font-weight: 800;
-              letter-spacing: 3px;
-              margin: 2px 0 1px;
+              letter-spacing: 4px;
+              margin: 15px 0 5px;
               color: #6e5a3c;
               text-transform: uppercase;
-              border-bottom: 2px double #6e5a3c;
+              border-bottom: 3px double #6e5a3c;
               display: inline-block;
-              padding-bottom: 1px;
+              padding-bottom: 4px;
             }
             .cert-subtitle {
-              font-size: 7.5px;
+              font-size: 11px;
               color: #777;
-              letter-spacing: 2px;
+              letter-spacing: 3px;
               text-transform: uppercase;
-              margin-bottom: 4px;
+              margin-bottom: 25px;
             }
             .cert-body {
-              font-size: 16.5px;
-              line-height: 1.8;
+              font-size: 20px;
+              line-height: 2.0;
               text-align: justify;
-              margin: 4px 0 16px 0;
+              margin: 20px 0;
               white-space: pre-line;
-              text-indent: 30px;
+              text-indent: 40px;
               flex: 1 1 auto;
               min-height: 0;
               overflow: hidden;
-              display: -webkit-box;
-              -webkit-line-clamp: 6;
-              -webkit-box-orient: vertical;
-              text-overflow: ellipsis;
             }
             /* Robust handles for name or academic inline-block scaling */
             .cert-body span.highlight, .cert-body strong.highlight {
@@ -641,14 +637,14 @@ export default function CertificatesPage() {
             }
             .sig-block {
               text-align: center;
-              width: 220px;
+              width: 240px;
             }
             .sig-line {
-              border-top: 1px solid #777;
-              margin-top: 30px;
-              padding-top: 6px;
+              border-top: 1.5px solid #777;
+              margin-top: 50px;
+              padding-top: 8px;
               font-family: 'Cinzel', serif;
-              font-size: 10px;
+              font-size: 13px;
               font-weight: 800;
               color: #4a3e28;
               text-transform: uppercase;
@@ -962,6 +958,11 @@ export default function CertificatesPage() {
     const examName = examTypes.find(e => e.id === awardExam)?.name || 'Examination'
     const subjectName = awardSubject ? (subjects.find(s => s.id === awardSubject)?.name || '') : 'All Subjects'
 
+    // Get subjects for this class
+    const classSubjects = awardSubject 
+      ? subjects.filter(s => s.id === awardSubject)
+      : subjects.filter(s => s.class_id === awardClass)
+
     // Sort students by roll no (or name if roll no missing)
     const filteredStudents = students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection))
     filteredStudents.sort((a, b) => {
@@ -974,14 +975,30 @@ export default function CertificatesPage() {
     const totalMarks = awardTotalMarks || '100'
 
     const rowsHTML = filteredStudents.map((s, idx) => {
-      const resultObj = awardResults.find(r => r.student_id === s.id)
-      const obtained = resultObj ? resultObj.marks_obtained : ''
+      let totalObtained = 0
+      let totalMax = 0
+      
+      const subjectCellsHTML = classSubjects.map(sub => {
+        const resultObj = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
+        if (resultObj) {
+          totalObtained += Number(resultObj.marks_obtained) || 0
+          totalMax += Number(resultObj.total_marks) || 100
+          return `<td>${resultObj.marks_obtained}</td>`
+        }
+        return `<td>—</td>`
+      }).join('')
+      
+      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
+      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
+      
       return `
         <tr>
           <td>${idx + 1}</td>
           <td class="roll-no">${s.roll_no || '—'}</td>
           <td class="student-name">${s.name}</td>
-          <td class="marks-obtained">${obtained !== '' ? obtained : '&nbsp;'}</td>
+          ${subjectCellsHTML}
+          <td class="marks-obtained" style="font-weight: bold;">${totalDisplay}</td>
+          <td class="percentage" style="font-weight: bold;">${percentage}</td>
         </tr>
       `
     }).join('')
@@ -1153,14 +1170,16 @@ export default function CertificatesPage() {
           <table class="award-table">
             <thead>
               <tr>
-                <th style="width: 10%">S.No</th>
-                <th style="width: 20%">Roll No</th>
-                <th style="width: 45%">Student Name</th>
-                <th style="width: 25%">Obtained Marks</th>
+                <th>S.No</th>
+                <th>Roll No</th>
+                <th>Student Name</th>
+                ${classSubjects.map(sub => `<th>${sub.name}</th>`).join('')}
+                <th>Total Marks</th>
+                <th>%age</th>
               </tr>
             </thead>
             <tbody>
-              ${rowsHTML || '<tr><td colspan="4" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>'}
+              ${rowsHTML || `<tr><td colspan="${3 + classSubjects.length + 2}" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>`}
             </tbody>
           </table>
 
@@ -1189,6 +1208,11 @@ export default function CertificatesPage() {
 
   // Pre-compiled live preview text
   const compiledPreviewBody = selectedStudent ? compileTemplate(template.body_text, selectedStudent) : ''
+  const classSubjects = awardClass
+    ? (awardSubject 
+        ? subjects.filter(s => s.id === awardSubject)
+        : subjects.filter(s => s.class_id === awardClass))
+    : []
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)', animation: 'fadeIn 0.3s ease' }}>
@@ -1756,13 +1780,17 @@ export default function CertificatesPage() {
                               <th style={{ width: '80px' }}>S.No</th>
                               <th style={{ width: '120px' }}>Roll No</th>
                               <th>Student Name</th>
-                              <th>Obtained Marks</th>
+                              {classSubjects.map(sub => (
+                                <th key={sub.id}>{sub.name}</th>
+                              ))}
+                              <th>Total Marks</th>
+                              <th>%age</th>
                             </tr>
                           </thead>
                           <tbody>
                             {students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection)).length === 0 ? (
                               <tr>
-                                <td colSpan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                                <td colSpan={3 + classSubjects.length + 2} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
                                   No registered student rows found for this filter selection.
                                 </td>
                               </tr>
@@ -1770,17 +1798,33 @@ export default function CertificatesPage() {
                               students
                                 .filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection))
                                 .map((s, idx) => {
-                                  const res = awardResults.find(r => r.student_id === s.id)
+                                  let totalObtained = 0
+                                  let totalMax = 0
+                                  
+                                  const subjectCells = classSubjects.map(sub => {
+                                    const res = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
+                                    if (res) {
+                                      totalObtained += Number(res.marks_obtained) || 0
+                                      totalMax += Number(res.total_marks) || 100
+                                    }
+                                    return (
+                                      <td key={sub.id} style={{ textAlign: 'center' }}>
+                                        {res ? res.marks_obtained : '—'}
+                                      </td>
+                                    )
+                                  })
+                                  
+                                  const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
+                                  const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
+                                  
                                   return (
                                     <tr key={s.id}>
                                       <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
                                       <td style={{ fontWeight: 'bold' }}>{s.roll_no || '—'}</td>
                                       <td style={{ fontWeight: 600 }}>{s.name}</td>
-                                      <td>
-                                        <div style={{ padding: '0.4rem', border: '1px solid var(--border)', background: 'var(--bg-base)', borderRadius: '6px', textAlign: 'center', fontWeight: 'bold', color: 'var(--primary)', width: '120px', margin: '0 auto' }}>
-                                          {res ? res.marks_obtained : '—'}
-                                        </div>
-                                      </td>
+                                      {subjectCells}
+                                      <td style={{ fontWeight: 'bold', color: 'var(--primary)', textAlign: 'center' }}>{totalDisplay}</td>
+                                      <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{percentage}</td>
                                     </tr>
                                   )
                                 })
