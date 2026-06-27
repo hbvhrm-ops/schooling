@@ -18,9 +18,13 @@ export async function GET(req: NextRequest) {
     const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
     const year = searchParams.get('year') || sessionYear
     const classId = searchParams.get('class_id')
+    const studentId = searchParams.get('student_id')
     let query = supabase.from('fee_invoices').select('*, students(name, class_id)').eq('school_id', session.schoolId)
+    if (studentId) query = query.eq('student_id', studentId)
     if (month) query = query.eq('month', month)
-    if (year) query = query.eq('year', year)
+    if (year && !studentId) query = query.eq('year', year)
+    else if (year && studentId && searchParams.has('year')) query = query.eq('year', year)
+    
     const { data } = await query.order('created_at', { ascending: false })
     const invoices = (data || []).filter((inv: { students: { class_id: string } | null }) => !classId || inv.students?.class_id === classId)
       .map((inv: { id: string; students: { name: string } | null; amount: number; month: number; year: number; status: string; paid_date: string; amount_paid?: number }) => ({

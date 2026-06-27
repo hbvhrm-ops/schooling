@@ -36,12 +36,24 @@ export async function GET(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ report: [] })
   const { searchParams } = new URL(req.url)
+  const studentId = searchParams.get('student_id')
+  const supabase = createServerClient()
+
+  if (studentId) {
+    const { data, error } = await supabase
+      .from('attendance')
+      .select('*')
+      .eq('student_id', studentId)
+      .order('date', { ascending: false })
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+    return NextResponse.json({ attendance: data || [] })
+  }
+
   const classId = searchParams.get('class_id')
   const sectionId = searchParams.get('section_id')
   const date = searchParams.get('date')
   const month = searchParams.get('month') // YYYY-MM
   const type = searchParams.get('type') // 'daily' | 'monthly' | 'sessional'
-  const supabase = createServerClient()
 
   if (!classId) {
     return NextResponse.json({ error: 'Class ID is required' }, { status: 400 })

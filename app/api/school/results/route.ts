@@ -13,12 +13,17 @@ export async function GET(req: NextRequest) {
   const subjectId = searchParams.get('subject_id')
   const studentId = searchParams.get('student_id')
 
-  if (studentId && examTypeId) {
-    const { data, error } = await supabase
+  if (studentId) {
+    let query = supabase
       .from('results')
-      .select('*, students(*), subjects(*)')
-      .eq('exam_type_id', examTypeId)
+      .select('*, students(*), subjects(*), exam_types(*)')
       .eq('student_id', studentId)
+    
+    if (examTypeId) {
+      query = query.eq('exam_type_id', examTypeId)
+    }
+
+    const { data, error } = await query
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 })
