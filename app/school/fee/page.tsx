@@ -20,6 +20,15 @@ export default function FeePage() {
   const [selClass, setSelClass] = useState('')
 
   const [editingTemplateId, setEditingTemplateId] = useState<string | null>(null)
+
+  // Customizable Challan and Print Selection states
+  const [selectedInvoices, setSelectedInvoices] = useState<string[]>([])
+  const [challanSchoolName, setChallanSchoolName] = useState('EduManage School System')
+  const [challanBankName, setChallanBankName] = useState('National Bank of Pakistan')
+  const [challanAccountNo, setChallanAccountNo] = useState('1234-56789-0')
+  const [challanDueDate, setChallanDueDate] = useState('10th of the month')
+  const [challanPenalty, setChallanPenalty] = useState('Late fee of ₨ 100 applies after the due date.')
+  const [showChallanCustomizer, setShowChallanCustomizer] = useState(false)
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
   const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', status: '', paid_date: '' })
 
@@ -48,6 +57,7 @@ export default function FeePage() {
 
   const load = useCallback(async () => {
     setLoading(true)
+    setSelectedInvoices([])
     const [tr, cr, ir] = await Promise.all([
       fetch('/api/school/fee?type=templates').then(r => r.json()).catch(() => ({})),
       fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
@@ -208,25 +218,283 @@ export default function FeePage() {
     load()
   }
 
-  function printChallan(inv: Invoice) {
+  function printBulkChallans(invoicesToPrint: Invoice[]) {
+    if (invoicesToPrint.length === 0) return
     const win = window.open('', '_blank')
     if (!win) return
-    win.document.write(`<html><head><title>Challan</title><style>
-      body{font-family:Arial;margin:20px;} .challan{border:2px solid #333;padding:15px;max-width:400px;margin:auto;}
-      .header{text-align:center;border-bottom:2px solid #333;padding-bottom:10px;margin-bottom:10px;}
-      .row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dashed #ccc;}
-      .amount{font-size:20px;font-weight:bold;text-align:center;margin:10px 0;color:#0093cb;}
-    </style></head><body>
-    <div class="challan">
-      <div class="header"><h2>💳 Fee Challan</h2></div>
-      <div class="row"><span>Student:</span><strong>${inv.student_name}</strong></div>
-      <div class="row"><span>Month:</span><span>${inv.month}/${inv.year}</span></div>
-      <div class="row"><span>Status:</span><span>${inv.status.toUpperCase()}</span></div>
-      <div class="amount">₨ ${Number(inv.amount).toLocaleString()}</div>
-      <div style="text-align:center;color:#666;font-size:12px;margin-top:10px">EduManage School System</div>
-    </div>
-    <script>window.print();</script></body></html>`)
+
+    // Group invoices into chunks of 3
+    const chunks: Invoice[][] = []
+    for (let i = 0; i < invoicesToPrint.length; i += 3) {
+      chunks.push(invoicesToPrint.slice(i, i + 3))
+    }
+
+    const pagesHTML = chunks.map(chunk => {
+      const challansHTML = chunk.map((inv, idx) => {
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+        const billingPeriod = `${months[inv.month - 1]} ${inv.year}`
+        
+        return `
+          <div class="challan">
+            <div class="challan-inner">
+              <div class="challan-header">
+                <div class="school-name">${challanSchoolName}</div>
+                <div class="challan-title">FEE CHALLAN</div>
+              </div>
+              
+              <div class="challan-body">
+                <table class="details-table">
+                  <tr>
+                    <td><strong>Student Name:</strong></td>
+                    <td>${inv.student_name}</td>
+                    <td><strong>Invoice No:</strong></td>
+                    <td>#${inv.id.substring(0, 8).toUpperCase()}</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Billing Period:</strong></td>
+                    <td>${billingPeriod}</td>
+                    <td><strong>Due Date:</strong></td>
+                    <td><span class="highlight">${challanDueDate}</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Bank Name:</strong></td>
+                    <td>${challanBankName}</td>
+                    <td><strong>Account No:</strong></td>
+                    <td><strong>${challanAccountNo}</strong></td>
+                  </tr>
+                </table>
+
+                <table class="fee-table">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left;">Fee Description</th>
+                      <th style="text-align: right;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Monthly Fee / Tuition Charges</td>
+                      <td style="text-align: right; font-weight: bold;">₨ ${Number(inv.amount).toLocaleString()}</td>
+                    </tr>
+                    <tr class="total-row">
+                      <td><strong>NET PAYABLE AMOUNT:</strong></td>
+                      <td style="text-align: right; font-weight: bold; color: #1e3a8a; font-size: 1.15rem;">
+                        ₨ ${Number(inv.amount).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="challan-footer">
+                <div class="instructions">${challanPenalty}</div>
+                <div class="signatures">
+                  <div class="sig-col">
+                    <div class="sig-line">Parent Sign</div>
+                  </div>
+                  <div class="sig-col">
+                    <div class="sig-line">Cashier Sign</div>
+                  </div>
+                  <div class="sig-col">
+                    <div class="sig-line">Principal Sign</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            ${idx < chunk.length - 1 ? '<div class="dashed-divider">✂------------------ CUT HERE ------------------✂</div>' : ''}
+          </div>
+        `
+      }).join('')
+
+      return `
+        <div class="page-container">
+          ${challansHTML}
+        </div>
+      `
+    }).join('')
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Fee Challans - A4 Print</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+            @page {
+              size: A4 portrait;
+              margin: 0;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              width: 100%;
+              height: 100%;
+              background: #fff;
+              font-family: 'Inter', sans-serif;
+              color: #1e293b;
+            }
+            .page-container {
+              width: 210mm;
+              height: 297mm;
+              page-break-after: always;
+              display: flex;
+              flex-direction: column;
+              box-sizing: border-box;
+              background: #fff;
+            }
+            .challan {
+              height: 99mm;
+              width: 210mm;
+              box-sizing: border-box;
+              position: relative;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              padding: 8mm 15mm;
+            }
+            .challan-inner {
+              border: 1.5px solid #0f172a;
+              border-radius: 8px;
+              padding: 6mm 10mm;
+              flex-grow: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              background-color: #f8fafc;
+            }
+            .challan-header {
+              text-align: center;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 3mm;
+              margin-bottom: 3mm;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .school-name {
+              font-size: 1.15rem;
+              font-weight: 800;
+              text-transform: uppercase;
+              color: #0f172a;
+              letter-spacing: 0.5px;
+            }
+            .challan-title {
+              font-size: 1rem;
+              font-weight: 800;
+              letter-spacing: 1.5px;
+              color: #eaeaea;
+              background-color: #0f172a;
+              padding: 1.5mm 4mm;
+              border-radius: 4px;
+            }
+            .details-table {
+              width: 100%;
+              font-size: 0.82rem;
+              border-collapse: collapse;
+              margin-bottom: 3mm;
+            }
+            .details-table td {
+              padding: 1.2mm 2mm;
+              color: #334155;
+            }
+            .details-table td strong {
+              color: #0f172a;
+            }
+            .highlight {
+              color: #b91c1c;
+              font-weight: 700;
+            }
+            .fee-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 0.82rem;
+              margin-bottom: 3mm;
+            }
+            .fee-table th {
+              background-color: #0f172a;
+              color: #fff;
+              padding: 1.5mm 3mm;
+              font-weight: 600;
+              font-size: 0.78rem;
+              text-transform: uppercase;
+            }
+            .fee-table td {
+              padding: 2mm 3mm;
+              border-bottom: 1px solid #cbd5e1;
+              color: #334155;
+            }
+            .total-row td {
+              border-top: 1.5px solid #0f172a;
+              border-bottom: none;
+              padding-top: 2.5mm;
+            }
+            .challan-footer {
+              display: flex;
+              flex-direction: column;
+              gap: 3mm;
+            }
+            .instructions {
+              font-size: 0.72rem;
+              color: #475569;
+              font-style: italic;
+              border-left: 2.5px solid #cbd5e1;
+              padding-left: 3mm;
+              line-height: 1.4;
+            }
+            .signatures {
+              display: flex;
+              justify-content: space-between;
+              margin-top: 2mm;
+            }
+            .sig-col {
+              text-align: center;
+              width: 45mm;
+            }
+            .sig-line {
+              border-top: 1px dashed #475569;
+              padding-top: 1.5mm;
+              font-size: 0.72rem;
+              font-weight: 600;
+              color: #475569;
+              text-transform: uppercase;
+            }
+            .dashed-divider {
+              position: absolute;
+              bottom: 0;
+              left: 0;
+              right: 0;
+              text-align: center;
+              font-size: 0.68rem;
+              color: #94a3b8;
+              letter-spacing: 1px;
+              height: 0;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            }
+            @media print {
+              body { background: #fff; }
+              .challan-inner { background-color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          ${pagesHTML}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
     win.document.close()
+  }
+
+  function printChallan(inv: Invoice) {
+    printBulkChallans([inv])
   }
 
   const paidCount = invoices.filter(i => i.status === 'paid').length
@@ -387,16 +655,104 @@ export default function FeePage() {
             </div>
           </div>
 
+          {/* Challan Print Customizer Panel */}
+          <div className="card" style={{ marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button 
+                  onClick={() => setShowChallanCustomizer(!showChallanCustomizer)}
+                  className="btn btn-secondary"
+                >
+                  ⚙️ Customize Challan Settings
+                </button>
+                <button 
+                  onClick={() => {
+                    const selected = invoices.filter(inv => selectedInvoices.includes(inv.id))
+                    printBulkChallans(selected)
+                  }}
+                  className="btn btn-primary"
+                  disabled={selectedInvoices.length === 0}
+                >
+                  🖨️ Print Selected Challans (${selectedInvoices.length})
+                </button>
+              </div>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
+                {selectedInvoices.length} of {invoices.length} invoices selected
+              </div>
+            </div>
+
+            {showChallanCustomizer && (
+              <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">School Name Header</label>
+                  <input className="form-input" value={challanSchoolName} onChange={e => setChallanSchoolName(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Bank Name</label>
+                  <input className="form-input" value={challanBankName} onChange={e => setChallanBankName(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Account Number</label>
+                  <input className="form-input" value={challanAccountNo} onChange={e => setChallanAccountNo(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Due Date</label>
+                  <input className="form-input" value={challanDueDate} onChange={e => setChallanDueDate(e.target.value)} />
+                </div>
+                <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                  <label className="form-label">Instructions / Penalty Terms</label>
+                  <input className="form-input" value={challanPenalty} onChange={e => setChallanPenalty(e.target.value)} />
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="card" style={{ padding: 0 }}>
             {invoices.length === 0 ? (
               <div className="empty-state" style={{ padding: '3rem' }}><div className="empty-icon">💳</div><p>No fee history records found for the selected filters.</p></div>
             ) : (
               <div className="table-wrap" style={{ borderRadius: 0, border: 'none' }}>
                 <table>
-                  <thead><tr><th>#</th><th>Student</th><th>Amount</th><th>Month/Year</th><th>Status</th><th>Paid Date</th><th>Actions</th></tr></thead>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '40px' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={invoices.length > 0 && selectedInvoices.length === invoices.length}
+                          onChange={e => {
+                            if (e.target.checked) {
+                              setSelectedInvoices(invoices.map(inv => inv.id))
+                            } else {
+                              setSelectedInvoices([])
+                            }
+                          }}
+                        />
+                      </th>
+                      <th>#</th>
+                      <th>Student</th>
+                      <th>Amount</th>
+                      <th>Month/Year</th>
+                      <th>Status</th>
+                      <th>Paid Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
                   <tbody>
                     {invoices.map((inv, i) => (
                       <tr key={inv.id}>
+                        <td>
+                          <input 
+                            type="checkbox" 
+                            checked={selectedInvoices.includes(inv.id)}
+                            onChange={e => {
+                              if (e.target.checked) {
+                                setSelectedInvoices(prev => [...prev, inv.id])
+                              } else {
+                                setSelectedInvoices(prev => prev.filter(id => id !== inv.id))
+                              }
+                            }}
+                          />
+                        </td>
                         <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
                         <td style={{ fontWeight: 600 }}>{inv.student_name}</td>
                         <td style={{ fontWeight: 700, color: 'var(--success)' }}>₨ {Number(inv.amount).toLocaleString()}</td>
