@@ -90,3 +90,30 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id, name } = await req.json()
+  const supabase = createServerClient()
+  const { error } = await supabase.from('exam_types').update({ name }).eq('id', id).eq('school_id', session.schoolId)
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ success: true })
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { id } = await req.json()
+  const supabase = createServerClient()
+  
+  // Cascade delete results belonging to this exam type
+  await supabase.from('results').delete().eq('exam_type_id', id)
+  
+  // Cascade delete schedules belonging to this exam type
+  await supabase.from('schedules').delete().eq('exam_type_id', id)
+  
+  const { error } = await supabase.from('exam_types').delete().eq('id', id).eq('school_id', session.schoolId)
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ success: true })
+}

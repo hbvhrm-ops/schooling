@@ -120,6 +120,9 @@ export default function ResultPage() {
   // Print type
   const [printType, setPrintType] = useState<'dmc' | 'schedule' | null>(null)
 
+  const [editingExamTypeId, setEditingExamTypeId] = useState<string | null>(null)
+  const [editingExamTypeName, setEditingExamTypeName] = useState<string>('')
+
   // Load basics
   useEffect(() => {
     fetch('/api/school/classes').then(r => r.json()).then(d => setClasses(d.classes || []))
@@ -362,6 +365,40 @@ export default function ResultPage() {
     }
   }
 
+  async function updateExamType(id: string, name: string) {
+    if (!name.trim()) return
+    const r = await fetch('/api/school/results', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id, name })
+    })
+    if (r.ok) {
+      setExamTypes(et => et.map(item => item.id === id ? { ...item, name } : item))
+      setEditingExamTypeId(null)
+      setMsg({ type: 'success', text: 'Exam type updated successfully!' })
+    } else {
+      const data = await r.json()
+      setMsg({ type: 'danger', text: data.error || 'Failed to update exam type' })
+    }
+  }
+
+  async function deleteExamType(id: string) {
+    if (!window.confirm('Are you sure you want to delete this exam type? This will also permanently delete all scheduling and results associated with it!')) return
+    const r = await fetch('/api/school/results', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id })
+    })
+    if (r.ok) {
+      setExamTypes(et => et.filter(item => item.id !== id))
+      if (selExam === id) setSelExam('')
+      setMsg({ type: 'success', text: 'Exam type deleted successfully!' })
+    } else {
+      const data = await r.json()
+      setMsg({ type: 'danger', text: data.error || 'Failed to delete exam type' })
+    }
+  }
+
   async function saveResults() {
     if (!selClass || !selExam || !selSubject) {
       setMsg({ type: 'danger', text: 'Please select class, exam and subject first' })
@@ -504,14 +541,50 @@ export default function ResultPage() {
             <button onClick={addExamType} className="btn btn-primary">➕ Add</button>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-            {examTypes.map(et => (
-              <div key={et.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--bg-surface)', borderRadius: '10px', border: '1px solid var(--border)' }}>
-                <span style={{ fontWeight: 600 }}>{et.name}</span>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
-                  <span className="badge badge-primary">Exam</span>
+            {examTypes.map(et => {
+              const isEditing = editingExamTypeId === et.id
+              return (
+                <div key={et.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', background: 'var(--bg-surface)', borderRadius: '10px', border: '1px solid var(--border)' }}>
+                  {isEditing ? (
+                    <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                      <input 
+                        className="form-input form-input-sm" 
+                        style={{ margin: 0, flex: 1 }} 
+                        value={editingExamTypeName} 
+                        onChange={e => setEditingExamTypeName(e.target.value)} 
+                        onKeyDown={e => e.key === 'Enter' && updateExamType(et.id, editingExamTypeName)}
+                      />
+                      <button className="btn btn-success btn-sm" style={{ padding: '0.2rem 0.5rem' }} onClick={() => updateExamType(et.id, editingExamTypeName)}>💾</button>
+                      <button className="btn btn-secondary btn-sm" style={{ padding: '0.2rem 0.5rem' }} onClick={() => setEditingExamTypeId(null)}>❌</button>
+                    </div>
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: 600 }}>{et.name}</span>
+                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                        <span className="badge badge-primary">Exam</span>
+                        <button 
+                          className="btn btn-secondary btn-sm" 
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} 
+                          onClick={() => {
+                            setEditingExamTypeId(et.id)
+                            setEditingExamTypeName(et.name)
+                          }}
+                        >
+                          ✏️ Edit
+                        </button>
+                        <button 
+                          className="btn btn-danger btn-sm" 
+                          style={{ padding: '0.2rem 0.5rem', fontSize: '0.8rem' }} 
+                          onClick={() => deleteExamType(et.id)}
+                        >
+                          🗑️ Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
-              </div>
-            ))}
+              )
+            })}
             {examTypes.length === 0 && <div className="empty-state"><div className="empty-icon">📋</div><p>No exam types yet. Add your first one above.</p></div>}
           </div>
         </div>
