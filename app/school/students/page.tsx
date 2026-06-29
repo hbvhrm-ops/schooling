@@ -1524,7 +1524,7 @@ export default function StudentsPage() {
                       field_label: newFieldLabel.trim(),
                       field_type: newFieldType,
                       field_options: newFieldType === 'dropdown' ? newFieldOptions.trim() : null,
-                      is_required: true
+                      is_required: false
                     })
                   })
                   if (res.ok) {

@@ -59,7 +59,7 @@ export default function SettingsPage() {
           field_label: label.trim(),
           field_type: type,
           field_options: type === 'dropdown' ? options.trim() : null,
-          is_required: true, // Automatically required for all students
+          is_required: false, // Automatically optional for all students
         }),
       })
       const data = await res.json()
@@ -203,7 +203,7 @@ export default function SettingsPage() {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                       <strong style={{ fontSize: '0.95rem' }}>{f.field_label}</strong>
-                      {f.is_required && <span className="badge badge-danger">Required</span>}
+                       {f.is_required ? <span className="badge badge-danger">Required</span> : <span className="badge badge-secondary" style={{ background: 'var(--border)', color: 'var(--text-secondary)' }}>Optional</span>}
                     </div>
                     <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
                       Type: <span style={{ textTransform: 'capitalize', color: 'var(--primary-light)' }}>{f.field_type}</span>
