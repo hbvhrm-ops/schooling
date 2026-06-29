@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -95,6 +95,9 @@ export default function CertificatesPage() {
   // Admission Form specific states
   const [admissionFormMode, setAdmissionFormMode] = useState<'blank' | 'student'>('blank')
 
+  // Progress Report specific states
+  const [progressReportMode, setProgressReportMode] = useState<'blank' | 'student'>('blank')
+
   // Award List specific states
   const [awardClass, setAwardClass] = useState('')
   const [awardSection, setAwardSection] = useState('')
@@ -147,7 +150,7 @@ export default function CertificatesPage() {
 
   // Load certificate template when activeDoc changes
   const loadTemplate = useCallback(async (type: string) => {
-    if (type === 'admission' || type === 'award_list') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report') return
     try {
       const res = await fetch(`/api/school/certificate-templates?type=${type}`)
       const data = await res.json()
@@ -708,6 +711,294 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
+  function getProgressReportHtml(studentInfo: Student | null = null) {
+    const sName = studentInfo ? studentInfo.name : ''
+    const fName = studentInfo ? studentInfo.father_name : ''
+    const sRoll = studentInfo ? studentInfo.roll_no : ''
+    const sClass = studentInfo ? studentInfo.class_name : ''
+    const sId = studentInfo ? studentInfo.id.slice(0, 8) : ''
+
+    const underLine = (val: string, width: string = '100%') => `
+      <span style="border-bottom: 1.5px solid #1e3a8a; display: inline-block; min-width: ${width}; font-weight: bold; color: #000; padding: 0 5px; text-align: left; vertical-align: bottom;">
+        ${val || '&nbsp;'}
+      </span>
+    `
+
+    const emptyBox = `<span style="display: inline-block; width: 14px; height: 14px; border: 1.5px solid #1e3a8a; border-radius: 50%; vertical-align: middle; background: #fff; margin: 0 auto;"></span>`
+
+    return `
+      <div style="
+        font-family: 'Arial', sans-serif;
+        color: #1e3a8a;
+        background-color: #fff;
+        font-size: 11.5px;
+        line-height: 1.35;
+        width: 100%;
+        max-width: 800px;
+        margin: 0 auto;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 100%;
+      ">
+        <!-- Header Group -->
+        <div style="display: flex; flex-direction: column; gap: 4px; border-bottom: 2.5px solid #1e3a8a; padding-bottom: 8px; margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="width: 80px; display: flex; justify-content: center; align-items: center;">
+              ${schoolLogoUrl ? `<img src="${schoolLogoUrl}" alt="Logo" style="max-height: 65px; max-width: 65px; object-fit: contain;" />` : `<div style="font-size: 40px; color: #1e3a8a;">🏫</div>`}
+            </div>
+            <div style="flex-grow: 1; text-align: center; padding: 0 10px;">
+              <h1 style="font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 2px 0; color: #1e3a8a;">
+                ${schoolName ? schoolName.toUpperCase() : 'THE ABU OBAIDA ISLAMIC MODEL SCHOOL'}
+              </h1>
+              <h2 style="font-size: 11px; font-weight: 800; margin: 0; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: underline;">
+                STUDENT MONTHLY PROGRESS REPORT CARD OF THE AIMS
+              </h2>
+            </div>
+            <div style="width: 80px;"></div>
+          </div>
+        </div>
+
+        <!-- Student Meta Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; margin-bottom: 12px;">
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 140px; flex-shrink: 0;">NAME OF THE STUDENT:</span>
+            <span style="flex-grow: 1;">${underLine(sName, '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 100px; flex-shrink: 0;">FATHER NAME:</span>
+            <span style="flex-grow: 1;">${underLine(fName, '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 60px; flex-shrink: 0;">ID NO:</span>
+            <span style="flex-grow: 1;">${underLine(sId, '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 100px; flex-shrink: 0;">TEACHER NAME:</span>
+            <span style="flex-grow: 1;">${underLine('', '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 60px; flex-shrink: 0;">CLASS:</span>
+            <span style="flex-grow: 1;">${underLine(sClass, '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 100px; flex-shrink: 0;">MONTH/YEAR:</span>
+            <span style="flex-grow: 1;">${underLine('', '100%')}</span>
+          </div>
+        </div>
+
+        <!-- Skills and abilities / Attendance Table -->
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; margin-bottom: 12px; font-size: 11px;">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #1e3a8a;">
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: left; width: 25%;">Attendance</th>
+              <th colspan="3" style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: left;">Current Month Attendance: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %</th>
+              <th colspan="2" style="padding: 6px 8px; text-align: left;">Previous Month Attendance: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; %</th>
+            </tr>
+            <tr style="background: #f1f5f9; border-bottom: 1.5px solid #1e3a8a;">
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: left;">Skills and abilities</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 15%;">Outstanding</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 15%;">Very Good</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 15%;">Good</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 15%;">Satisfactory</th>
+              <th style="padding: 6px 8px; text-align: center; width: 15%;">Fair</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${['Reading', 'Writing', 'Speaking', 'Art'].map(skill => `
+              <tr style="border-bottom: 1px solid #1e3a8a;">
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; background: #fafafb;">${skill}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="padding: 6px 8px; text-align: center;">${emptyBox}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- Monthly Test Report Table -->
+        <div style="font-weight: bold; margin-bottom: 4px; text-transform: uppercase; font-size: 11px;">Monthly Test Report of All Subject</div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; margin-bottom: 12px; font-size: 11px;">
+          <tbody>
+            <tr style="border-bottom: 1.5px solid #1e3a8a; background: #f1f5f9; font-weight: bold;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; width: 35%;">Subject</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; width: 15%; text-align: center;">Marks Obtained</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; width: 35%;">Subject</td>
+              <td style="padding: 6px 8px; width: 15%; text-align: center;">Marks Obtained</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">English</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; text-align: center;"></td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">Science</td>
+              <td style="padding: 6px 8px; text-align: center;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">Math's</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; text-align: center;"></td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">physics</td>
+              <td style="padding: 6px 8px; text-align: center;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">Social studies</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; text-align: center;"></td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">chemistry</td>
+              <td style="padding: 6px 8px; text-align: center;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">Urdu</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; text-align: center;"></td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">biology</td>
+              <td style="padding: 6px 8px; text-align: center;"></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold;">Islamiyat + Nazira</td>
+              <td style="border-right: 1.5px solid #1e3a8a; padding: 6px 8px; text-align: center;"></td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; background: #fafafb;">Total and % age</td>
+              <td style="padding: 6px 8px; text-align: center; font-weight: bold;"></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Home Work Section -->
+        <div style="font-weight: bold; margin-bottom: 4px; text-transform: uppercase; font-size: 11px;">Home work</div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; margin-bottom: 12px; font-size: 11px; text-align: center;">
+          <tbody>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td rowspan="2" style="border-right: 1.5px solid #1e3a8a; padding: 8px; font-weight: bold; width: 15%; background: #f8fafc; text-align: left;">Home work</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; font-weight: bold; background: #fafafb; width: 15%; text-align: left;">Daily basis</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; width: 11.5%;">Monday</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; width: 11.5%;">Tuesday</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; width: 11.5%;">Wednesday</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; width: 11.5%;">Thursday</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; width: 11.5%;">Friday</td>
+              <td style="padding: 4px 6px; width: 11.5%;">Saturday</td>
+            </tr>
+            <tr style="border-bottom: 1.5px solid #1e3a8a; height: 28px;">
+              <td style="border-right: 1px solid #1e3a8a; background: #fafafb;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td></td>
+            </tr>
+            <tr style="border-bottom: 1px solid #1e3a8a;">
+              <td rowspan="2" style="border-right: 1.5px solid #1e3a8a; padding: 8px; font-weight: bold; background: #f8fafc; text-align: left;">Weekly basis</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px; font-weight: bold; background: #fafafb; text-align: left;">Weeks</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px;">1<sup>st</sup> week</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px;">2<sup>nd</sup> week</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px;">3<sup>rd</sup> week</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px;">4<sup>th</sup> week</td>
+              <td style="border-right: 1px solid #1e3a8a; padding: 4px 6px;">5<sup>th</sup> week</td>
+              <td style="background: #fafafb; color: #94a3b8;">—</td>
+            </tr>
+            <tr style="height: 28px;">
+              <td style="border-right: 1px solid #1e3a8a; background: #fafafb;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="border-right: 1px solid #1e3a8a;"></td>
+              <td style="background: #fafafb;"></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Personality and Character Section -->
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; margin-bottom: 12px; font-size: 11px;">
+          <thead>
+            <tr style="background: #f1f5f9; border-bottom: 1.5px solid #1e3a8a;">
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: left; width: 25%;">PERSONALITY AND CHARACTER</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 18.75%;">All of the time</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 18.75%;">Often</th>
+              <th style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center; width: 18.75%;">Rarely</th>
+              <th style="padding: 6px 8px; text-align: center; width: 18.75%;">None of the time</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${['Clean and orderly', 'Punctual', 'Attentive', 'Religious practices'].map(char => `
+              <tr style="border-bottom: 1px solid #1e3a8a;">
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; background: #fafafb;">${char}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="border-right: 1px solid #1e3a8a; padding: 6px 8px; text-align: center;">${emptyBox}</td>
+                <td style="padding: 6px 8px; text-align: center;">${emptyBox}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <!-- Remarks Section -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px;">
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 130px; flex-shrink: 0;">TEACHER REMARKS:</span>
+            <span style="flex-grow: 1;">${underLine('', '100%')}</span>
+          </div>
+          <div style="display: flex; align-items: flex-end;">
+            <span style="font-weight: bold; width: 140px; flex-shrink: 0;">PRINCIPAL REMARKS:</span>
+            <span style="flex-grow: 1;">${underLine('', '100%')}</span>
+          </div>
+        </div>
+
+        <!-- Date and Signatures -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-end; font-weight: bold; font-size: 11.5px; margin-top: 10px;">
+          <div style="width: 200px;">Date: ________________________</div>
+          <div style="width: 200px; text-align: center;">Teacher Signature</div>
+          <div style="width: 200px; text-align: right;">Principal Signature</div>
+        </div>
+      </div>
+    `
+  }
+
+  function handlePrintProgressReport() {
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const studentInfo = progressReportMode === 'student' && selectedStudent ? selectedStudent : null;
+    const bodyContent = getProgressReportHtml(studentInfo);
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Progress Report Form</title>
+          <style>
+            @page {
+              size: portrait;
+              margin: 10mm 15mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background-color: #fff;
+              -webkit-print-color-adjust: exact;
+            }
+            .print-page {
+              width: 100%;
+              box-sizing: border-box;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-page">
+            \${bodyContent}
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   // Render full HTML body for admission form (shared between preview and print window)
   function getAdmissionFormHtml(studentInfo: Student | null) {
     const sName = studentInfo ? studentInfo.name : '';
@@ -1253,6 +1544,9 @@ export default function CertificatesPage() {
             <button className={`nav-item ${activeDoc === 'award_list' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('award_list')}>
               <span style={{ marginRight: '0.5rem' }}>📊</span> Marks Award List
             </button>
+            <button className={`nav-item ${activeDoc === 'progress_report' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('progress_report')}>
+              <span style={{ marginRight: '0.5rem' }}>📈</span> Progress Report Card
+            </button>
           </div>
         </nav>
       </aside>
@@ -1270,6 +1564,7 @@ export default function CertificatesPage() {
             {activeDoc === 'top_positions' && '🥇 Academic Top Positions Certificate'}
             {activeDoc === 'admission' && '📝 Student Admission Form'}
             {activeDoc === 'award_list' && '📊 Examination Award List Sheet'}
+            {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
@@ -1279,6 +1574,7 @@ export default function CertificatesPage() {
             {activeDoc === 'top_positions' && 'Honor academic excellence in class final, mid or monthly tests.'}
             {activeDoc === 'admission' && 'Print blank or prefilled student registration templates.'}
             {activeDoc === 'award_list' && 'Create examiner grade tables with student indices for marking sheets.'}
+            {activeDoc === 'progress_report' && 'Print blank student monthly progress reports to fill manually.'}
           </p>
         </div>
 
@@ -1289,7 +1585,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -1307,7 +1603,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 
                 {/* Inputs card */}
@@ -1507,7 +1803,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Body</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -1687,6 +1983,71 @@ export default function CertificatesPage() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                   }}>
                     <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── PROGRESS REPORT VIEW ── */}
+            {activeDoc === 'progress_report' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Progress Report Settings</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Form Record Mode</label>
+                      <div style={{ display: 'flex', gap: '0.5rem' }}>
+                        <button className={`btn ${progressReportMode === 'blank' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setProgressReportMode('blank')}>
+                          📄 Blank Form
+                        </button>
+                        <button className={`btn ${progressReportMode === 'student' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }} onClick={() => setProgressReportMode('student')}>
+                          👤 Prefill Student
+                        </button>
+                      </div>
+                    </div>
+
+                    {progressReportMode === 'student' && (
+                      <div className="form-group animate-fade">
+                        <label className="form-label">Select Registered Student</label>
+                        {students.length === 0 ? (
+                          <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>⚠️ No active students registered in database.</p>
+                        ) : (
+                          <select className="form-select" value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
+                            {students.map(s => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} (Roll: {s.roll_no || '—'}) - {s.class_name || '—'}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                      </div>
+                    )}
+
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintProgressReport}>
+                      🖨️ Print Progress Report Form
+                    </button>
+                  </div>
+                </div>
+
+                {/* Progress Report Preview */}
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
+                    Form Sheet Preview
+                  </h3>
+
+                  <div style={{ 
+                    border: '1px solid #777', 
+                    padding: '6mm 10mm', 
+                    background: '#fff', 
+                    boxSizing: 'border-box', 
+                    width: '210mm', 
+                    height: '297mm',
+                    minWidth: '210mm',
+                    minHeight: '297mm',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: getProgressReportHtml(progressReportMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
                   </div>
                 </div>
               </div>

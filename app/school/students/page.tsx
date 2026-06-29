@@ -572,6 +572,131 @@ export default function StudentsPage() {
     win.document.close()
   }
 
+  function printStudentProgressReport(student: Student) {
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    // Group results by exam type
+    const grouped: Record<string, { examName: string; list: any[] }> = {}
+    reviewResults.forEach(r => {
+      const examId = r.exam_type_id
+      const examName = r.exam_types?.name || 'Standard Test'
+      if (!grouped[examId]) {
+        grouped[examId] = { examName, list: [] }
+      }
+      grouped[examId].list.push(r)
+    })
+
+    const getGrade = (percentage: number) => {
+      if (percentage >= 90) return { label: 'A+', color: '#065f46' }
+      if (percentage >= 80) return { label: 'A', color: '#065f46' }
+      if (percentage >= 70) return { label: 'B', color: '#1e3a8a' }
+      if (percentage >= 60) return { label: 'C', color: '#1e3a8a' }
+      if (percentage >= 50) return { label: 'D', color: '#92400e' }
+      return { label: 'F', color: '#991b1b' }
+    }
+
+    const tablesHtml = Object.entries(grouped).map(([examId, data]) => {
+      let totalObtained = 0
+      let totalMax = 0
+
+      const rows = data.list.map(r => {
+        const obt = Number(r.marks_obtained) || 0
+        const max = Number(r.total_marks) || 100
+        const percentage = max > 0 ? (obt / max) * 100 : 0
+        const grade = getGrade(percentage)
+        totalObtained += obt
+        totalMax += max
+
+        return `
+          <tr>
+            <td><strong>${r.subjects?.name || 'Subject'}</strong></td>
+            <td style="text-align: center;">${max}</td>
+            <td style="text-align: center; font-weight: bold;">${r.marks_obtained}</td>
+            <td style="text-align: center;">${percentage.toFixed(1)}%</td>
+            <td style="text-align: center; font-weight: bold; color: ${grade.color};">${grade.label}</td>
+          </tr>
+        `
+      }).join('')
+
+      const overallPercent = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0
+      const overallGrade = getGrade(overallPercent)
+
+      return `
+        <div style="margin-bottom: 30px; border: 1px solid #ddd; border-radius: 8px; overflow: hidden;">
+          <div style="background-color: #f5f5f5; padding: 12px 15px; font-weight: bold; font-size: 14px; border-bottom: 1px solid #ddd;">
+            ${data.examName}
+          </div>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="background-color: #fafafa;">
+                <th style="border-bottom: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 12px;">Subject</th>
+                <th style="border-bottom: 1px solid #ddd; padding: 8px 10px; text-align: center; font-size: 12px; width: 15%;">Max Marks</th>
+                <th style="border-bottom: 1px solid #ddd; padding: 8px 10px; text-align: center; font-size: 12px; width: 15%;">Obtained</th>
+                <th style="border-bottom: 1px solid #ddd; padding: 8px 10px; text-align: center; font-size: 12px; width: 15%;">Percentage</th>
+                <th style="border-bottom: 1px solid #ddd; padding: 8px 10px; text-align: center; font-size: 12px; width: 15%;">Grade</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+          <div style="background-color: #fcfcfc; padding: 12px 15px; border-top: 1px solid #ddd; display: flex; justify-content: space-between; font-size: 12px; font-weight: bold;">
+            <div>Total Score: ${totalObtained} / ${totalMax}</div>
+            <div>Overall Percentage: ${overallPercent.toFixed(1)}%</div>
+            <div>Grade: <span style="color: ${overallGrade.color}; font-size: 13px;">${overallGrade.label}</span></div>
+          </div>
+        </div>
+      `
+    }).join('')
+
+    win.document.write(`
+      <html>
+      <head>
+        <title>Progress Report - ${student.name}</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0093cb; padding-bottom: 15px; margin-bottom: 20px; }
+          .header h1 { margin: 0; font-size: 22px; color: #0093cb; }
+          .header p { margin: 5px 0 0 0; font-size: 12px; color: #666; }
+          .meta { font-size: 13px; color: #555; background: #f5f5f5; padding: 12px 15px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: left; font-size: 12px; }
+          th { font-weight: 600; }
+          .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1>🎓 Academic Progress Report</h1>
+            <p>Student: <strong>${student.name}</strong></p>
+          </div>
+          <div style="text-align: right; font-size: 12px; color: #666;">
+            <p>Class: ${student.class_name || '—'} ${student.section_name ? `(${student.section_name})` : ''}</p>
+            <p>Roll No: ${student.roll_no || '—'}</p>
+          </div>
+        </div>
+        
+        <div class="meta">
+          <div><strong>Father Name:</strong> ${student.father_name || '—'}</div>
+          <div><strong>Report Date:</strong> ${new Date().toLocaleDateString()}</div>
+        </div>
+
+        ${tablesHtml || '<p style="text-align: center; padding: 30px; color: #999;">No examination result records found.</p>'}
+
+        <div class="footer">Generated by EduManage School Management System</div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() { window.print(); window.close(); }, 300);
+          }
+        </script>
+      </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -1387,7 +1512,14 @@ export default function StudentsPage() {
                       {/* Results / Progress Report Panel */}
                       {activeReviewSubTab === 'results' && (
                         <div className="card">
-                          <h3 style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '1.25rem' }}>📊 Academic Examinations Progress Report</h3>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', margin: 0 }}>📊 Academic Examinations Progress Report</h3>
+                            {reviewResults.length > 0 && (
+                              <button onClick={() => printStudentProgressReport(student)} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                🖨️ Print Report
+                              </button>
+                            )}
+                          </div>
                           
                           {reviewResults.length === 0 ? (
                             <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
