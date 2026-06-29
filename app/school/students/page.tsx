@@ -72,6 +72,7 @@ export default function StudentsPage() {
   const [statusFilter, setStatusFilter] = useState('active')
   const [classFilter, setClassFilter] = useState('')
   const [feeStatusFilter, setFeeStatusFilter] = useState('')
+  const [genderFilter, setGenderFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [viewStudent, setViewStudent] = useState<Student | null>(null)
   const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '', reg_date: getTodayString() })
@@ -142,21 +143,53 @@ export default function StudentsPage() {
 
 
 
-  const load = useCallback(async () => {
-    setLoading(true)
-    const [sr, cr, fr] = await Promise.all([
-      fetch('/api/school/students').then(r => r.json()).catch(() => ({})),
-      fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
-      fetch('/api/school/registration-fields').then(r => r.json()).catch(() => ({})),
-    ])
-    setStudents(sr.students || [])
-    setClasses(cr.classes || [])
-    setSections(cr.sections || [])
-    setCustomFields(fr.fields || [])
-    setLoading(false)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
+
+  const load = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1)
   }, [])
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { load() }, [load])
+
+  // Load classes, sections, and registration fields
+  useEffect(() => {
+    async function init() {
+      setLoading(true)
+      const [cr, fr] = await Promise.all([
+        fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/registration-fields').then(r => r.json()).catch(() => ({})),
+      ])
+      const loadedClasses = cr.classes || []
+      setClasses(loadedClasses)
+      setSections(cr.sections || [])
+      setCustomFields(fr.fields || [])
+
+      // Default to class 10th or class containing '10'
+      const class10 = loadedClasses.find((c: ClassItem) => c.name.trim().toLowerCase().includes('10')) || loadedClasses[0]
+      if (class10) {
+        setClassFilter(class10.name)
+      } else {
+        // If no classes exist, fetch all students
+        const sr = await fetch('/api/school/students').then(r => r.json()).catch(() => ({}))
+        setStudents(sr.students || [])
+        setLoading(false)
+      }
+    }
+    init()
+  }, [refreshTrigger])
+
+  // Load students reactively on classFilter change
+  useEffect(() => {
+    if (classes.length === 0) return
+
+    async function fetchStudents() {
+      setLoading(true)
+      const matchedClass = classes.find(c => c.name === classFilter)
+      const url = matchedClass ? `/api/school/students?class_id=${matchedClass.id}` : '/api/school/students'
+      const sr = await fetch(url).then(r => r.json()).catch(() => ({}))
+      setStudents(sr.students || [])
+      setLoading(false)
+    }
+    fetchStudents()
+  }, [classFilter, classes, refreshTrigger])
 
   const compressPhoto = async (file: File): Promise<File | Blob> => {
     const options = {
@@ -233,7 +266,8 @@ export default function StudentsPage() {
     const matchStatus = !statusFilter || s.status === statusFilter
     const matchClass = !classFilter || s.class_name === classFilter
     const matchFeeStatus = !feeStatusFilter || (feeStatusFilter === 'unpaid' && s.has_unpaid_dues)
-    return matchSearch && matchStatus && matchClass && matchFeeStatus
+    const matchGender = !genderFilter || s.gender === genderFilter
+    return matchSearch && matchStatus && matchClass && matchFeeStatus && matchGender
   })
 
   async function handleSubmit(e: React.FormEvent) {
@@ -441,6 +475,103 @@ export default function StudentsPage() {
     win.document.close()
   }
 
+  function printStudentList() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    
+    const filterDetails = [
+      classFilter ? `Class: ${classFilter}` : '',
+      statusFilter ? `Status: ${statusFilter}` : '',
+      genderFilter ? `Gender: ${genderFilter}` : '',
+      feeStatusFilter ? `Fee Status: ${feeStatusFilter}` : '',
+      search ? `Search: "${search}"` : ''
+    ].filter(Boolean).join(' | ') || 'All Students'
+
+    const rows = filtered.map((s, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td><strong>${s.name}</strong></td>
+        <td>${s.father_name || '—'}</td>
+        <td>${s.class_name || '—'} ${s.section_name ? `(${s.section_name})` : ''}</td>
+        <td>${s.roll_no || '—'}</td>
+        <td>${s.gender || '—'}</td>
+        <td>${s.contact || '—'}</td>
+        <td>${s.status}</td>
+      </tr>
+    `).join('')
+
+    win.document.write(`
+      <html>
+      <head>
+        <title>Student List</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
+          .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0093cb; padding-bottom: 15px; margin-bottom: 20px; }
+          .header h1 { margin: 0; font-size: 24px; color: #0093cb; }
+          .header p { margin: 5px 0 0 0; font-size: 12px; color: #666; }
+          .meta { font-size: 13px; color: #555; background: #f5f5f5; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; }
+          table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+          th, td { border: 1px solid #ddd; padding: 10px 12px; text-align: left; font-size: 13px; }
+          th { background-color: #0093cb; color: white; font-weight: 600; }
+          tr:nth-child(even) { background-color: #f9f9f9; }
+          .footer { text-align: center; margin-top: 30px; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 10px; }
+          @media print {
+            body { margin: 20px; }
+            button { display: none; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <h1>🏫 EduManage School System</h1>
+            <p>Student Directory / Report</p>
+          </div>
+          <div style="text-align: right;">
+            <p style="font-weight: bold; font-size: 14px;">Total Records: ${filtered.length}</p>
+            <p>Date: ${new Date().toLocaleDateString()}</p>
+          </div>
+        </div>
+        
+        <div class="meta">
+          <div><strong>Active Filters:</strong> ${filterDetails}</div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Father Name</th>
+              <th>Class</th>
+              <th>Roll No</th>
+              <th>Gender</th>
+              <th>Contact</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+
+        <div class="footer">
+          Generated automatically by EduManage School Management System
+        </div>
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            }, 300);
+          }
+        </script>
+      </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
@@ -484,12 +615,23 @@ export default function StudentsPage() {
                 <option value="">All Fee Status</option>
                 <option value="unpaid">Unpaid Dues</option>
               </select>
+              <select className="form-select" style={{ width: '140px' }} value={genderFilter} onChange={e => setGenderFilter(e.target.value)}>
+                <option value="">All Genders</option>
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
           </div>
 
           <div className="card" style={{ padding: 0 }}>
             <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontWeight: 700 }}>Students ({filtered.length})</h3>
+              {filtered.length > 0 && (
+                <button onClick={printStudentList} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  🖨️ Print List
+                </button>
+              )}
             </div>
             {loading ? (
               <div className="empty-state"><div className="empty-icon">⏳</div><p>Loading...</p></div>
