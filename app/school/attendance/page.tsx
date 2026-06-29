@@ -78,11 +78,49 @@ export default function AttendancePage() {
   const [sessionalSearch, setSessionalSearch] = useState('')
   const [sessionalLoading, setSessionalLoading] = useState(false)
 
+  const [schoolName, setSchoolName] = useState('EduManage School')
+  const [schoolLogoUrl, setSchoolLogoUrl] = useState('')
+
   useEffect(() => {
     fetch('/api/school/classes').then(r => r.json()).then(d => {
       setClasses(d.classes || [])
       setSections(d.sections || [])
     })
+
+    // Pre-fill school name from dashboard/session
+    fetch('/api/school/dashboard')
+      .then(r => r.json())
+      .then(d => {
+        if (d.schoolName) {
+          setSchoolName(d.schoolName)
+        }
+      })
+      .catch(() => {})
+
+    // Automatically load logo from certificate templates
+    const loadSchoolLogo = async () => {
+      let fallbackLogo = ''
+      const types = ['slc', 'birth', 'character', 'sports', 'top_positions']
+      for (const type of types) {
+        try {
+          const r = await fetch(`/api/school/certificate-templates?type=${type}`)
+          if (r.ok) {
+            const d = await r.json()
+            if (d.schoolLogo) {
+              fallbackLogo = d.schoolLogo
+            }
+            if (d.template?.logo_url) {
+              setSchoolLogoUrl(d.template.logo_url)
+              return // Use first logo found
+            }
+          }
+        } catch {}
+      }
+      if (fallbackLogo) {
+        setSchoolLogoUrl(fallbackLogo)
+      }
+    }
+    loadSchoolLogo()
   }, [])
 
   const filteredSections = sections.filter(s => !selClass || s.class_id === selClass)
@@ -278,8 +316,10 @@ export default function AttendancePage() {
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
           .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0093cb; padding-bottom: 15px; margin-bottom: 20px; }
-          .header h1 { margin: 0; font-size: 22px; color: #0093cb; }
-          .header p { margin: 5px 0 0 0; font-size: 12px; color: #666; }
+          .logo-area { display: flex; align-items: center; gap: 15px; }
+          .logo-area img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+          .school-info h2 { margin: 0; font-size: 20px; color: #0093cb; font-weight: 800; }
+          .school-info p { margin: 2px 0 0 0; font-size: 12px; color: #666; }
           .meta { font-size: 13px; color: #555; background: #f5f5f5; padding: 10px 15px; border-radius: 6px; margin-bottom: 20px; display: flex; justify-content: space-between; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 12px; }
@@ -290,13 +330,16 @@ export default function AttendancePage() {
       </head>
       <body>
         <div class="header">
-          <div>
-            <h1>🏫 Daily Attendance Report</h1>
-            <p>Class: ${className} | Section: ${sectionName}</p>
+          <div class="logo-area">
+            ${schoolLogoUrl ? `<img src="${schoolLogoUrl}" alt="Logo" />` : `<div style="font-size: 32px;">🏫</div>`}
+            <div class="school-info">
+              <h2>${schoolName}</h2>
+              <p>Daily Attendance Report | Class: ${className} | Section: ${sectionName}</p>
+            </div>
           </div>
           <div style="text-align: right;">
             <p><strong>Date:</strong> ${date}</p>
-            <p>Generated: ${new Date().toLocaleDateString()}</p>
+            <p style="margin-top: 3px; font-size: 11px; color: #666;">Generated: ${new Date().toLocaleDateString()}</p>
           </div>
         </div>
         <div class="meta">
@@ -406,8 +449,10 @@ export default function AttendancePage() {
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
           .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0093cb; padding-bottom: 15px; margin-bottom: 20px; }
-          .header h1 { margin: 0; font-size: 22px; color: #0093cb; }
-          .header p { margin: 5px 0 0 0; font-size: 12px; color: #666; }
+          .logo-area { display: flex; align-items: center; gap: 15px; }
+          .logo-area img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+          .school-info h2 { margin: 0; font-size: 20px; color: #0093cb; font-weight: 800; }
+          .school-info p { margin: 2px 0 0 0; font-size: 12px; color: #666; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 12px; }
           th { background-color: #0093cb; color: white; font-weight: 600; }
@@ -417,12 +462,15 @@ export default function AttendancePage() {
       </head>
       <body>
         <div class="header">
-          <div>
-            <h1>🏫 Monthly Attendance Report (${date.slice(0, 7)})</h1>
-            <p>Class: ${className} | Section: ${sectionName} | View: ${activeMonthlyTab === 'students' ? 'Student Summary' : 'Daily Trends'}</p>
+          <div class="logo-area">
+            ${schoolLogoUrl ? `<img src="${schoolLogoUrl}" alt="Logo" />` : `<div style="font-size: 32px;">🏫</div>`}
+            <div class="school-info">
+              <h2>${schoolName}</h2>
+              <p>Monthly Attendance Report (${date.slice(0, 7)}) | Class: ${className} | Section: ${sectionName} | View: ${activeMonthlyTab === 'students' ? 'Student Summary' : 'Daily Trends'}</p>
+            </div>
           </div>
           <div style="text-align: right;">
-            <p>Generated: ${new Date().toLocaleDateString()}</p>
+            <p style="font-size: 11px; color: #666;">Generated: ${new Date().toLocaleDateString()}</p>
           </div>
         </div>
         ${content}
@@ -465,8 +513,10 @@ export default function AttendancePage() {
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; margin: 30px; color: #333; }
           .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0093cb; padding-bottom: 15px; margin-bottom: 20px; }
-          .header h1 { margin: 0; font-size: 22px; color: #0093cb; }
-          .header p { margin: 5px 0 0 0; font-size: 12px; color: #666; }
+          .logo-area { display: flex; align-items: center; gap: 15px; }
+          .logo-area img { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+          .school-info h2 { margin: 0; font-size: 20px; color: #0093cb; font-weight: 800; }
+          .school-info p { margin: 2px 0 0 0; font-size: 12px; color: #666; }
           table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
           th, td { border: 1px solid #ddd; padding: 8px 10px; text-align: left; font-size: 12px; }
           th { background-color: #0093cb; color: white; font-weight: 600; }
@@ -476,12 +526,15 @@ export default function AttendancePage() {
       </head>
       <body>
         <div class="header">
-          <div>
-            <h1>🏫 Sessional Attendance Report</h1>
-            <p>Class: ${className} | Section: ${sectionName}</p>
+          <div class="logo-area">
+            ${schoolLogoUrl ? `<img src="${schoolLogoUrl}" alt="Logo" />` : `<div style="font-size: 32px;">🏫</div>`}
+            <div class="school-info">
+              <h2>${schoolName}</h2>
+              <p>Sessional Attendance Report | Class: ${className} | Section: ${sectionName}</p>
+            </div>
           </div>
           <div style="text-align: right;">
-            <p>Generated: ${new Date().toLocaleDateString()}</p>
+            <p style="font-size: 11px; color: #666;">Generated: ${new Date().toLocaleDateString()}</p>
           </div>
         </div>
         <table>
