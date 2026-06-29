@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
     status: 'active',
     session: body.session || sessionYear,
     additional_info: body.additional_info || {},
+    created_at: body.created_at || undefined,
   }).select().single()
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   return NextResponse.json({ student: data }, { status: 201 })
@@ -87,8 +88,14 @@ export async function PUT(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { id } = await req.json()
+  const { id, all } = await req.json()
   const supabase = createServerClient()
-  await supabase.from('students').delete().eq('id', id).eq('school_id', session.schoolId)
+  if (all === true) {
+    const { error } = await supabase.from('students').delete().eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  } else {
+    const { error } = await supabase.from('students').delete().eq('id', id).eq('school_id', session.schoolId)
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  }
   return NextResponse.json({ success: true })
 }

@@ -25,6 +25,43 @@ interface CustomField {
 
 type Tab = 'list' | 'register' | 'bulk' | 'promote' | 'review'
 
+const getTodayString = () => {
+  const today = new Date()
+  const dd = String(today.getDate()).padStart(2, '0')
+  const mm = String(today.getMonth() + 1).padStart(2, '0')
+  const yyyy = today.getFullYear()
+  return `${dd}-${mm}-${yyyy}`
+}
+
+const formatDateToUI = (dateInput?: string | Date) => {
+  if (!dateInput) return '—'
+  const date = new Date(dateInput)
+  if (isNaN(date.getTime())) return '—'
+  const dd = String(date.getDate()).padStart(2, '0')
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const yyyy = date.getFullYear()
+  return `${dd}-${mm}-${yyyy}`
+}
+
+const parseUIDateToISO = (dateStr?: string) => {
+  if (!dateStr) return null
+  const match = dateStr.trim().match(/^(\d{2})[-/](\d{2})[-/](\d{4})$/)
+  if (match) {
+    const day = parseInt(match[1], 10)
+    const month = parseInt(match[2], 10) - 1
+    const year = parseInt(match[3], 10)
+    const date = new Date(year, month, day)
+    if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+      return date.toISOString()
+    }
+  }
+  const parsed = Date.parse(dateStr)
+  if (!isNaN(parsed)) {
+    return new Date(parsed).toISOString()
+  }
+  return null
+}
+
 export default function StudentsPage() {
   const [tab, setTab] = useState<Tab>('list')
   const [students, setStudents] = useState<Student[]>([])
@@ -37,7 +74,7 @@ export default function StudentsPage() {
   const [feeStatusFilter, setFeeStatusFilter] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [viewStudent, setViewStudent] = useState<Student | null>(null)
-  const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
+  const [form, setForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '', reg_date: getTodayString() })
   const [customFields, setCustomFields] = useState<CustomField[]>([])
   const [customForm, setCustomForm] = useState<Record<string, string>>({})
   const [submitting, setSubmitting] = useState(false)
@@ -45,7 +82,7 @@ export default function StudentsPage() {
 
   // Edit student states
   const [editingStudent, setEditingStudent] = useState<Student | null>(null)
-  const [editForm, setEditForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
+  const [editForm, setEditForm] = useState({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '', reg_date: '' })
   const [editCustomForm, setEditCustomForm] = useState<Record<string, string>>({})
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
@@ -64,6 +101,8 @@ export default function StudentsPage() {
   const [reviewAttendance, setReviewAttendance] = useState<any[]>([])
   const [loadingReviewData, setLoadingReviewData] = useState(false)
   const [activeReviewSubTab, setActiveReviewSubTab] = useState<'results' | 'fees' | 'attendance'>('results')
+  const [showDeleteAllModal, setShowDeleteAllModal] = useState(false)
+  const [confirmText, setConfirmText] = useState('')
 
   const loadStudentReviewData = useCallback(async (studentId: string) => {
     setLoadingReviewData(true)
@@ -208,12 +247,20 @@ export default function StudentsPage() {
       return
     }
 
-    const payload = { ...form, additional_info: customForm }
+    const enrollmentISO = parseUIDateToISO(form.reg_date)
+    if (form.reg_date && !enrollmentISO) {
+      setMsg({ type: 'danger', text: 'Please enter enrollment date in DD-MM-YYYY or DD/MM/YYYY format.' })
+      setSubmitting(false)
+      return
+    }
+
+    const { reg_date, ...restForm } = form
+    const payload = { ...restForm, additional_info: customForm, created_at: enrollmentISO || undefined }
     const r = await fetch('/api/school/students', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
     const d = await r.json()
     if (!r.ok) { setMsg({ type: 'danger', text: d.error || 'Failed' }); setSubmitting(false); return }
     setMsg({ type: 'success', text: 'Student registered successfully!' })
-    setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
+    setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '', reg_date: getTodayString() })
     setCustomForm({})
     load(); setSubmitting(false)
   }
@@ -264,6 +311,31 @@ export default function StudentsPage() {
     if (!confirm('Permanently delete this student?')) return
     await fetch('/api/school/students', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
     load()
+  }
+
+  async function handleDeleteAll() {
+    setSubmitting(true)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/school/students', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ all: true })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setMsg({ type: 'success', text: 'All student records deleted successfully!' })
+        setShowDeleteAllModal(false)
+        setConfirmText('')
+        load()
+      } else {
+        setMsg({ type: 'danger', text: data.error || 'Failed to delete all student records' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Connection error' })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDeleteCustomField(id: string) {
@@ -473,6 +545,7 @@ export default function StudentsPage() {
                                 contact: s.contact || '',
                                 address: s.address || '',
                                 photo_url: s.photo_url || '',
+                                reg_date: formatDateToUI(s.reg_date),
                               })
                               setEditCustomForm(s.additional_info || {})
                             }} className="btn btn-secondary btn-sm" title="Edit Student">✏️</button>
@@ -557,7 +630,19 @@ export default function StudentsPage() {
               <div className="form-group"><label className="form-label">Date of Birth</label><input className="form-input" type="date" value={form.dob} onChange={e => setForm(f => ({ ...f, dob: e.target.value }))} /></div>
               <div className="form-group"><label className="form-label">Contact</label><input className="form-input" value={form.contact} onChange={e => setForm(f => ({ ...f, contact: e.target.value }))} /></div>
             </div>
-            <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
+            <div className="grid-2">
+              <div className="form-group">
+                <label className="form-label">Enrollment Date *</label>
+                <input 
+                  className="form-input" 
+                  placeholder="DD-MM-YYYY" 
+                  value={form.reg_date} 
+                  onChange={e => setForm(f => ({ ...f, reg_date: e.target.value }))} 
+                  required 
+                />
+              </div>
+              <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
+            </div>
             
             {/* Custom Dynamic Fields */}
             <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 2' }}>
@@ -637,7 +722,7 @@ export default function StudentsPage() {
             <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem', gridColumn: 'span 2' }}>
               <button type="submit" className="btn btn-primary" disabled={submitting}>{submitting ? '⏳ Saving...' : '✅ Register Student'}</button>
               <button type="button" className="btn btn-secondary" onClick={() => {
-                setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '' })
+                setForm({ name: '', father_name: '', class_id: '', section_id: '', roll_no: '', gender: 'Male', dob: '', contact: '', address: '', photo_url: '', reg_date: getTodayString() })
                 setCustomForm({})
               }}>🔄 Reset</button>
             </div>
@@ -647,30 +732,46 @@ export default function StudentsPage() {
 
       {/* Bulk Tab */}
       {tab === 'bulk' && (
-        <div className="card" style={{ maxWidth: '600px' }}>
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📥 Bulk Enrollment via CSV</h3>
-          <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Upload a CSV file to register multiple students at once.</p>
-          <div style={{ background: 'var(--bg-surface)', borderRadius: '12px', padding: '1.5rem', border: '2px dashed var(--border)', textAlign: 'center', marginBottom: '1rem' }}>
-            <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📄</div>
-            {uploadingCsv ? (
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.2rem' }}>⏳ Processing enrollment CSV...</p>
-            ) : (
-              <>
-                <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Drag & drop your CSV file here or click to browse</p>
-                <input type="file" accept=".csv" style={{ display: 'none' }} id="csv-upload" onChange={handleCsvUpload} />
-                <label htmlFor="csv-upload" className="btn btn-primary" style={{ cursor: 'pointer' }}>📂 Choose CSV File</label>
-              </>
-            )}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '600px' }}>
+          <div className="card">
+            <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📥 Bulk Enrollment via CSV</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Upload a CSV file to register multiple students at once.</p>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: '12px', padding: '1.5rem', border: '2px dashed var(--border)', textAlign: 'center', marginBottom: '1rem' }}>
+              <div style={{ fontSize: '3rem', marginBottom: '0.75rem' }}>📄</div>
+              {uploadingCsv ? (
+                <p style={{ color: 'var(--text-secondary)', marginBottom: '1.2rem' }}>⏳ Processing enrollment CSV...</p>
+              ) : (
+                <>
+                  <p style={{ color: 'var(--text-secondary)', marginBottom: '1rem' }}>Drag & drop your CSV file here or click to browse</p>
+                  <input type="file" accept=".csv" style={{ display: 'none' }} id="csv-upload" onChange={handleCsvUpload} />
+                  <label htmlFor="csv-upload" className="btn btn-primary" style={{ cursor: 'pointer' }}>📂 Choose CSV File</label>
+                </>
+              )}
+            </div>
+            <div className="alert alert-info">
+              <span>ℹ️</span> CSV columns: name, father_name, class, section, roll_no, gender, dob, contact, address
+            </div>
+            <button className="btn btn-secondary" style={{ marginTop: '1rem' }} onClick={() => {
+              const csv = 'name,father_name,class,section,roll_no,gender,dob,contact,address\nAli Khan,Hassan Khan,Grade 1,A,001,Male,2015-03-15,03001234567,Lahore'
+              const blob = new Blob([csv], { type: 'text/csv' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = 'student_template.csv'; a.click()
+            }}>⬇️ Download Template</button>
           </div>
-          <div className="alert alert-info">
-            <span>ℹ️</span> CSV columns: name, father_name, class, section, roll_no, gender, dob, contact, address
+
+          <div className="card" style={{ border: '1px solid var(--danger-border, #fecaca)', background: 'var(--danger-bg-subtle, rgba(239, 68, 68, 0.02))' }}>
+            <h3 style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--danger, #ef4444)' }}>⚠️ Reset Student Database</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.9rem', lineHeight: '1.5' }}>
+              If you made mistakes importing or entering data, you can delete all student records from the database. This action is irreversible.
+            </p>
+            <button 
+              type="button" 
+              className="btn btn-danger" 
+              onClick={() => setShowDeleteAllModal(true)}
+            >
+              🗑️ Delete All Students
+            </button>
           </div>
-          <button className="btn btn-secondary" style={{ marginTop: '1rem' }} onClick={() => {
-            const csv = 'name,father_name,class,section,roll_no,gender,dob,contact,address\nAli Khan,Hassan Khan,Grade 1,A,001,Male,2015-03-15,03001234567,Lahore'
-            const blob = new Blob([csv], { type: 'text/csv' })
-            const url = URL.createObjectURL(blob)
-            const a = document.createElement('a'); a.href = url; a.download = 'student_template.csv'; a.click()
-          }}>⬇️ Download Template</button>
         </div>
       )}
 
@@ -763,7 +864,7 @@ export default function StudentsPage() {
                 </div>
               </div>
               <div className="grid-2" style={{ gap: '0.75rem' }}>
-                {[['Father Name', viewStudent.father_name], ['Class', `${viewStudent.class_name} ${viewStudent.section_name ? `(${viewStudent.section_name})` : ''}`], ['Roll No', viewStudent.roll_no], ['Gender', viewStudent.gender], ['Contact', viewStudent.contact], ['Reg Date', viewStudent.reg_date ? new Date(viewStudent.reg_date).toLocaleDateString() : '—']].map(([k, v]) => (
+                {[['Father Name', viewStudent.father_name], ['Class', `${viewStudent.class_name} ${viewStudent.section_name ? `(${viewStudent.section_name})` : ''}`], ['Roll No', viewStudent.roll_no], ['Gender', viewStudent.gender], ['Contact', viewStudent.contact], ['Reg Date', formatDateToUI(viewStudent.reg_date)]].map(([k, v]) => (
                   <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
                     <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{v || '—'}</div>
@@ -816,6 +917,13 @@ export default function StudentsPage() {
                   return
                 }
 
+                const enrollmentISO = parseUIDateToISO(editForm.reg_date)
+                if (editForm.reg_date && !enrollmentISO) {
+                  setMsg({ type: 'danger', text: 'Please enter enrollment date in DD-MM-YYYY or DD/MM/YYYY format.' })
+                  setEditingSubmitting(false)
+                  return
+                }
+
                 try {
                   const res = await fetch('/api/school/students', {
                     method: 'PUT',
@@ -833,6 +941,7 @@ export default function StudentsPage() {
                       address: editForm.address || null,
                       photo_url: editForm.photo_url || null,
                       additional_info: editCustomForm,
+                      created_at: enrollmentISO || editingStudent.reg_date,
                     })
                   })
                   
@@ -911,7 +1020,19 @@ export default function StudentsPage() {
                   <div className="form-group"><label className="form-label">Date of Birth</label><input className="form-input" type="date" value={editForm.dob} onChange={e => setEditForm(f => ({ ...f, dob: e.target.value }))} /></div>
                   <div className="form-group"><label className="form-label">Contact</label><input className="form-input" value={editForm.contact} onChange={e => setEditForm(f => ({ ...f, contact: e.target.value }))} /></div>
                 </div>
-                <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                <div className="grid-2">
+                  <div className="form-group">
+                    <label className="form-label">Enrollment Date *</label>
+                    <input 
+                      className="form-input" 
+                      placeholder="DD-MM-YYYY" 
+                      value={editForm.reg_date} 
+                      onChange={e => setEditForm(f => ({ ...f, reg_date: e.target.value }))} 
+                      required 
+                    />
+                  </div>
+                  <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={editForm.address} onChange={e => setEditForm(f => ({ ...f, address: e.target.value }))} /></div>
+                </div>
                 
                 {/* Custom Dynamic Fields */}
                 {customFields.length > 0 && (
@@ -1071,7 +1192,7 @@ export default function StudentsPage() {
                       </div>
                       <div>
                         <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Admission Date</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{student.reg_date ? new Date(student.reg_date).toLocaleDateString() : '—'}</strong>
+                        <strong style={{ color: 'var(--text-base)' }}>{formatDateToUI(student.reg_date)}</strong>
                       </div>
                     </div>
                   </div>
@@ -1447,6 +1568,51 @@ export default function StudentsPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDeleteAllModal && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setShowDeleteAllModal(false)}>
+          <div className="modal animate-slide" style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 style={{ fontWeight: 700, color: 'var(--danger)' }}>⚠️ Confirm Delete All Students</h3>
+              <button onClick={() => { setShowDeleteAllModal(false); setConfirmText('') }} className="btn btn-secondary btn-icon">✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <p style={{ marginBottom: '1rem', lineHeight: '1.5' }}>
+                You are about to delete <strong>ALL</strong> student records from the database. This will also delete all associated records (such as attendance and invoices due to cascade constraints).
+              </p>
+              <p style={{ fontWeight: 600, color: 'var(--danger)', marginBottom: '1.25rem' }}>
+                This action is permanent and cannot be undone.
+              </p>
+              <div className="form-group" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <label className="form-label">Type <strong>DELETE ALL</strong> to confirm:</label>
+                <input 
+                  className="form-input" 
+                  placeholder="DELETE ALL" 
+                  value={confirmText} 
+                  onChange={e => setConfirmText(e.target.value)} 
+                />
+              </div>
+            </div>
+            <div className="modal-footer" style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => { setShowDeleteAllModal(false); setConfirmText('') }}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="btn btn-danger" 
+                disabled={confirmText !== 'DELETE ALL' || submitting} 
+                onClick={handleDeleteAll}
+              >
+                {submitting ? '⏳ Deleting...' : 'Delete All Records'}
+              </button>
             </div>
           </div>
         </div>
