@@ -983,7 +983,7 @@ export default function CertificatesPage() {
         </head>
         <body>
           <div class="print-page">
-            \${bodyContent}
+            ${bodyContent}
           </div>
           <script>
             window.onload = function() {
