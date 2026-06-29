@@ -37,6 +37,8 @@ export default function FeePage() {
   const [assignTemplate, setAssignTemplate] = useState('')
   const [assignMonth, setAssignMonth] = useState(new Date().getMonth() + 1)
   const [assignYear, setAssignYear] = useState(new Date().getFullYear())
+  const [discountType, setDiscountType] = useState<'none' | 'percentage' | 'fixed'>('none')
+  const [discountValue, setDiscountValue] = useState<string>('')
 
   useEffect(() => {
     const getCookie = (name: string) => {
@@ -192,7 +194,9 @@ export default function FeePage() {
           student_id: assignStudent || null,
           fee_template_id: assignTemplate,
           month: assignMonth,
-          year: assignYear
+          year: assignYear,
+          discount_type: assignStudent ? discountType : 'none',
+          discount_value: assignStudent && discountType !== 'none' ? parseFloat(discountValue) : 0
         })
       })
       if (r.ok) {
@@ -201,6 +205,8 @@ export default function FeePage() {
         setAssignClass('')
         setAssignStudent('')
         setAssignTemplate('')
+        setDiscountType('none')
+        setDiscountValue('')
         load()
       } else {
         const d = await r.json()
@@ -599,6 +605,69 @@ export default function FeePage() {
                 {templates.map(t => <option key={t.id} value={t.id}>{t.name} — ₨{Number(t.amount).toLocaleString()}</option>)}
               </select>
             </div>
+            {assignStudent && (
+              <div style={{ background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div className="form-group">
+                    <label className="form-label">Discount Type</label>
+                    <select className="form-select" value={discountType} onChange={e => { setDiscountType(e.target.value as any); setDiscountValue('') }}>
+                      <option value="none">No Discount</option>
+                      <option value="percentage">Percentage (%)</option>
+                      <option value="fixed">Fixed Amount (₨)</option>
+                    </select>
+                  </div>
+                  {discountType !== 'none' && (
+                    <div className="form-group">
+                      <label className="form-label">Discount Value *</label>
+                      <input
+                        className="form-input"
+                        type="number"
+                        placeholder={discountType === 'percentage' ? 'e.g. 10' : 'e.g. 500'}
+                        value={discountValue}
+                        onChange={e => setDiscountValue(e.target.value)}
+                        required
+                        min="0"
+                        max={discountType === 'percentage' ? '100' : undefined}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {assignTemplate && (() => {
+                  const tmpl = templates.find(t => t.id === assignTemplate)
+                  if (!tmpl) return null
+                  const baseAmt = Number(tmpl.amount)
+                  let discountAmt = 0
+                  const val = parseFloat(discountValue) || 0
+                  if (discountType === 'percentage') {
+                    discountAmt = baseAmt * (val / 100)
+                  } else if (discountType === 'fixed') {
+                    discountAmt = val
+                  }
+                  let netAmt = baseAmt - discountAmt
+                  if (netAmt < 0) netAmt = 0
+
+                  return (
+                    <div style={{ fontSize: '0.85rem', background: 'var(--bg-base)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                        <span>Base Fee:</span>
+                        <span>₨ {baseAmt.toLocaleString()}</span>
+                      </div>
+                      {discountType !== 'none' && (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--danger)', marginBottom: '0.25rem' }}>
+                          <span>Discount Deduction:</span>
+                          <span>- ₨ {discountAmt.toLocaleString()}</span>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 'bold', borderTop: '1px solid var(--border)', paddingTop: '0.25rem', marginTop: '0.25rem', color: 'var(--primary)' }}>
+                        <span>Net Payable Fee:</span>
+                        <span>₨ {netAmt.toLocaleString()}</span>
+                      </div>
+                    </div>
+                  )
+                })()}
+              </div>
+            )}
             <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="form-group">
                 <label className="form-label">Month *</label>

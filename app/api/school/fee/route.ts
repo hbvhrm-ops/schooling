@@ -67,13 +67,25 @@ export async function POST(req: NextRequest) {
 
     const invoices = []
     if (body.student_id) {
+      let finalAmount = template.amount
+      const discountType = body.discount_type || 'none'
+      const discountValue = parseFloat(body.discount_value) || 0
+
+      if (discountType === 'percentage') {
+        finalAmount = template.amount - (template.amount * (discountValue / 100))
+      } else if (discountType === 'fixed') {
+        finalAmount = template.amount - discountValue
+      }
+
+      if (finalAmount < 0) finalAmount = 0
+
       invoices.push({
         school_id: session.schoolId,
         student_id: body.student_id,
         fee_template_id: body.fee_template_id,
         month: body.month,
         year: targetYear,
-        amount: template.amount,
+        amount: finalAmount,
         status: 'pending'
       })
     } else {
