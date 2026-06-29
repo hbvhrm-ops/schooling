@@ -118,7 +118,7 @@ export default function ResultPage() {
   const [customExamYear, setCustomExamYear] = useState('2026')
 
   // Print type
-  const [printType, setPrintType] = useState<'dmc' | 'schedule' | null>(null)
+  const [printType, setPrintType] = useState<'dmc' | 'schedule' | 'roll-no-slip' | null>(null)
 
   const [editingExamTypeId, setEditingExamTypeId] = useState<string | null>(null)
   const [editingExamTypeName, setEditingExamTypeName] = useState<string>('')
@@ -524,7 +524,8 @@ export default function ResultPage() {
           ['exam-types', '📋 Exam Types'],
           ['schedule', '📅 Schedule'],
           ['add-result', '✏️ Add Result'],
-          ['dmc', '📄 DMC']
+          ['dmc', '📄 DMC'],
+          ['roll-no-slip', '🎫 Roll No Slip']
         ].map(([t, l]) => (
           <button key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>{l}</button>
         ))}
@@ -1088,6 +1089,177 @@ export default function ResultPage() {
         </div>
       )}
 
+      {/* Roll No Slip Tab */}
+      {tab === 'roll-no-slip' && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 2fr', gap: '1.5rem', alignItems: 'start' }}>
+          {/* Controls card */}
+          <div className="card">
+            <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>🎫 Step 5: Roll No Slips</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="form-group">
+                <label className="form-label">Select Exam *</label>
+                <select className="form-select" value={selExam} onChange={e => setSelExam(e.target.value)}>
+                  <option value="">Choose exam type</option>
+                  {examTypes.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Select Class *</label>
+                <select className="form-select" value={selClass} onChange={e => { setSelClass(e.target.value); setSelStudent('') }}>
+                  <option value="">Choose class</option>
+                  {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Select Student (Optional)</label>
+                <select className="form-select" value={selStudent} onChange={e => setSelStudent(e.target.value)} disabled={!selClass}>
+                  <option value="">All Students (Batch Print)</option>
+                  {students.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.roll_no || '—'})</option>)}
+                </select>
+              </div>
+
+              <button 
+                onClick={() => {
+                  setPrintType('roll-no-slip')
+                  setTimeout(() => {
+                    window.print()
+                  }, 150)
+                }} 
+                className="btn btn-primary"
+                disabled={!selClass || !selExam || (selStudent === '' && students.length === 0)}
+                style={{ justifyContent: 'center' }}
+              >
+                🖨️ Print Roll No Slip(s)
+              </button>
+            </div>
+          </div>
+
+          {/* Live Preview card */}
+          <div className="card" style={{ background: '#f8fafc', overflow: 'auto', maxHeight: '700px' }}>
+            <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Live Slip Preview</h3>
+            {!selClass || !selExam ? (
+              <div className="empty-state"><div className="empty-icon">🎫</div><p>Select exam and class to view roll no slips</p></div>
+            ) : students.length === 0 ? (
+              <div className="empty-state"><div className="empty-icon">👥</div><p>No student records found for this class</p></div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {(() => {
+                  const activeExamName = examTypes.find(e => e.id === selExam)?.name || ''
+                  const activeClassName = classes.find(c => c.id === selClass)?.name || ''
+                  const previewStudents = selStudent 
+                    ? students.filter(s => s.id === selStudent)
+                    : students
+
+                  return previewStudents.map(student => {
+                    const sectionName = student.section_name || '—'
+                    return (
+                      <div key={student.id} style={{ background: 'white', border: '1px solid var(--border)', borderRadius: '8px', padding: '1.25rem', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                        {/* Slip Header */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2.5px solid #006ac3', paddingBottom: '0.5rem', marginBottom: '1rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {customLogoUrl ? (
+                              <img src={customLogoUrl} alt="Logo" style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover' }} />
+                            ) : (
+                              <div style={{ fontSize: '1.75rem' }}>🏫</div>
+                            )}
+                            <div>
+                              <h4 style={{ margin: 0, fontWeight: 800, fontSize: '0.95rem', color: '#006ac3', textTransform: 'uppercase' }}>{customSchoolName}</h4>
+                              <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)' }}>{customLocation}</span>
+                            </div>
+                          </div>
+                          <div style={{ textAlign: 'right' }}>
+                            <span style={{ fontWeight: 800, fontSize: '0.8rem', background: '#006ac315', color: '#006ac3', padding: '0.2rem 0.6rem', borderRadius: '4px' }}>
+                              ROLL NO SLIP
+                            </span>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>{activeExamName}</div>
+                          </div>
+                        </div>
+
+                        {/* Student Details and Photo Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: '1rem', marginBottom: '1rem' }}>
+                          {/* Info Column */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '0.4rem 0.75rem', fontSize: '0.8rem' }}>
+                            <span style={{ color: 'var(--text-secondary)' }}>Student Name:</span>
+                            <strong>{student.name}</strong>
+
+                            <span style={{ color: 'var(--text-secondary)' }}>Father's Name:</span>
+                            <strong>{student.father_name || '—'}</strong>
+
+                            <span style={{ color: 'var(--text-secondary)' }}>Class & Section:</span>
+                            <strong>{activeClassName} ({sectionName})</strong>
+
+                            <span style={{ color: 'var(--text-secondary)' }}>Roll No:</span>
+                            <strong>{student.roll_no || '—'}</strong>
+
+                            <span style={{ color: 'var(--text-secondary)' }}>Student ID:</span>
+                            <span style={{ fontFamily: 'monospace' }}>{student.id.slice(0, 8)}</span>
+                          </div>
+
+                          {/* Image Box */}
+                          <div style={{ width: '80px', height: '90px', border: '1.5px solid var(--border)', borderRadius: '6px', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            {student.photo_url ? (
+                              <img src={student.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                              <span style={{ fontSize: '2rem', color: '#cbd5e1' }}>👤</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Exam Schedule Sub-table */}
+                        <div style={{ marginBottom: '1rem' }}>
+                          <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>📅 Exam Schedule</span>
+                          {schedulesList.length === 0 ? (
+                            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>No exam schedules set for this class.</p>
+                          ) : (
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
+                              <thead>
+                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                                  <th style={{ padding: '0.3rem 0.5rem', textAlign: 'left' }}>Subject</th>
+                                  <th style={{ padding: '0.3rem 0.5rem', textAlign: 'left' }}>Date</th>
+                                  <th style={{ padding: '0.3rem 0.5rem', textAlign: 'left' }}>Time</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {schedulesList.map(s => (
+                                  <tr key={s.subject_id} style={{ borderBottom: '1px solid var(--border)' }}>
+                                    <td style={{ padding: '0.3rem 0.5rem', fontWeight: 600 }}>{s.subject_name}</td>
+                                    <td style={{ padding: '0.3rem 0.5rem' }}>{s.date ? formatDateNumeric(s.date) : '—'}</td>
+                                    <td style={{ padding: '0.3rem 0.5rem' }}>{s.time || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          )}
+                        </div>
+
+                        {/* Instructions */}
+                        <div style={{ fontSize: '0.65rem', color: 'var(--text-secondary)', borderTop: '1px solid var(--border)', paddingTop: '0.5rem', lineHeight: '1.4' }}>
+                          <strong>Important Instructions:</strong>
+                          <ul style={{ margin: '0.2rem 0 0 0', paddingLeft: '1rem' }}>
+                            <li>Please bring this Roll No Slip to the examination hall daily.</li>
+                            <li>Mobile phones, smartwatches, and helper materials are strictly prohibited.</li>
+                            <li>Arrive at least 15 minutes before the exam starts.</li>
+                          </ul>
+                        </div>
+
+                        {/* Signatures */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', marginTop: '1.25rem', fontWeight: 'bold' }}>
+                          <div>Class Teacher Sign: _________________</div>
+                          <div>Principal Sign: _________________</div>
+                        </div>
+
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Style settings for Printing on same page */}
       <style>{`
         @media print {
@@ -1459,6 +1631,132 @@ export default function ResultPage() {
                   )}
                 </tbody>
               </table>
+            </div>
+          )}
+          {printType === 'roll-no-slip' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '10px', background: 'white' }}>
+              {(() => {
+                const activeExamName = examTypes.find(e => e.id === selExam)?.name || ''
+                const activeClassName = classes.find(c => c.id === selClass)?.name || ''
+                const printStudents = selStudent 
+                  ? students.filter(s => s.id === selStudent)
+                  : students
+
+                return printStudents.map(student => {
+                  const sectionName = student.section_name || '—'
+                  return (
+                    <div 
+                      key={student.id} 
+                      style={{ 
+                        pageBreakAfter: 'always', 
+                        border: '1.5px dashed #475569', 
+                        borderRadius: '8px', 
+                        padding: '20px', 
+                        background: 'white',
+                        fontFamily: 'system-ui, sans-serif',
+                        color: '#1e293b',
+                        width: '680px',
+                        margin: '0 auto'
+                      }}
+                    >
+                      {/* Slip Header */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px solid #006ac3', paddingBottom: '0.5rem', marginBottom: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                          {customLogoUrl ? (
+                            <img src={customLogoUrl} alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover' }} />
+                          ) : (
+                            <div style={{ fontSize: '2rem' }}>🏫</div>
+                          )}
+                          <div>
+                            <h3 style={{ margin: 0, fontWeight: 900, fontSize: '1.1rem', color: '#006ac3', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h3>
+                            <span style={{ fontSize: '0.75rem', color: '#475569' }}>{customLocation}</span>
+                          </div>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                          <span style={{ fontWeight: 900, fontSize: '0.9rem', color: 'white', background: '#006ac3', padding: '0.3rem 0.75rem', borderRadius: '4px', display: 'inline-block' }}>
+                            ROLL NO SLIP
+                          </span>
+                          <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '0.3rem', fontWeight: 600 }}>{activeExamName}</div>
+                        </div>
+                      </div>
+
+                      {/* Student Details and Photo Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 100px', gap: '1.5rem', marginBottom: '1.25rem' }}>
+                        {/* Info Column */}
+                        <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr', gap: '0.5rem 1rem', fontSize: '0.9rem' }}>
+                          <span style={{ color: '#475569' }}>Student Name:</span>
+                          <strong style={{ color: '#0f172a' }}>{student.name}</strong>
+
+                          <span style={{ color: '#475569' }}>Father's Name:</span>
+                          <strong style={{ color: '#0f172a' }}>{student.father_name || '—'}</strong>
+
+                          <span style={{ color: '#475569' }}>Class & Section:</span>
+                          <strong style={{ color: '#0f172a' }}>{activeClassName} ({sectionName})</strong>
+
+                          <span style={{ color: '#475569' }}>Roll No:</span>
+                          <strong style={{ color: '#0f172a' }}>{student.roll_no || '—'}</strong>
+
+                          <span style={{ color: '#475569' }}>Student ID:</span>
+                          <span style={{ fontFamily: 'monospace', color: '#0f172a', fontWeight: 'bold' }}>{student.id.slice(0, 8)}</span>
+                        </div>
+
+                        {/* Image Box */}
+                        <div style={{ width: '90px', height: '105px', border: '2px solid #cbd5e1', borderRadius: '6px', background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                          {student.photo_url ? (
+                            <img src={student.photo_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '2.5rem', color: '#cbd5e1' }}>👤</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Exam Schedule Sub-table */}
+                      <div style={{ marginBottom: '1.25rem' }}>
+                        <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: '#475569', marginBottom: '0.5rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '3px' }}>📅 Exam Schedule</span>
+                        {schedulesList.length === 0 ? (
+                          <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>No exam schedules set for this class.</p>
+                        ) : (
+                          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                            <thead>
+                              <tr style={{ background: '#f8fafc', borderBottom: '1.5px solid #cbd5e1' }}>
+                                <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 700 }}>Subject</th>
+                                <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 700 }}>Date</th>
+                                <th style={{ padding: '0.4rem 0.6rem', textAlign: 'left', fontWeight: 700 }}>Time</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {schedulesList.map(s => (
+                                <tr key={s.subject_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                  <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600, color: '#0f172a' }}>{s.subject_name}</td>
+                                  <td style={{ padding: '0.4rem 0.6rem', color: '#334155' }}>{s.date ? formatDateNumeric(s.date) : '—'}</td>
+                                  <td style={{ padding: '0.4rem 0.6rem', color: '#334155' }}>{s.time || '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
+
+                      {/* Instructions */}
+                      <div style={{ fontSize: '0.75rem', color: '#475569', borderTop: '1.5px solid #cbd5e1', paddingTop: '0.65rem', lineHeight: '1.5' }}>
+                        <strong>Important Instructions:</strong>
+                        <ul style={{ margin: '0.25rem 0 0 0', paddingLeft: '1.25rem' }}>
+                          <li>Please bring this Roll No Slip to the examination hall daily.</li>
+                          <li>Mobile phones, smartwatches, and helper materials are strictly prohibited.</li>
+                          <li>Arrive at least 15 minutes before the exam starts.</li>
+                        </ul>
+                      </div>
+
+                      {/* Signatures */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginTop: '1.75rem', fontWeight: 'bold', color: '#0f172a' }}>
+                        <div style={{ width: '220px', borderTop: '1px solid #94a3b8', paddingTop: '4px', textAlign: 'center' }}>Class Teacher Signature</div>
+                        <div style={{ width: '220px', borderTop: '1px solid #94a3b8', paddingTop: '4px', textAlign: 'center' }}>Principal Signature</div>
+                      </div>
+
+                    </div>
+                  )
+                })
+              })()}
             </div>
           )}
         </div>
