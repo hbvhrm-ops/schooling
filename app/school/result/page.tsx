@@ -482,14 +482,14 @@ export default function ResultPage() {
     setPrintType('dmc')
     setTimeout(() => {
       window.print()
-    }, 150)
+    }, 600)
   }
 
   function printClassDmcs() {
     setPrintType('class-dmc')
     setTimeout(() => {
       window.print()
-    }, 250)
+    }, 800)
   }
 
   // Construct active print values
@@ -1159,7 +1159,7 @@ export default function ResultPage() {
                   setPrintType('roll-no-slip')
                   setTimeout(() => {
                     window.print()
-                  }, 150)
+                  }, 600)
                 }} 
                 className="btn btn-primary"
                 disabled={!selClass || !selExam || (selStudent === '' && students.length === 0)}
