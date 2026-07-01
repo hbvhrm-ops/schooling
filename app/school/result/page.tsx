@@ -119,6 +119,21 @@ export default function ResultPage() {
 
   const [classResults, setClassResults] = useState<any[]>([])
 
+  interface PrintJob {
+    id: string;
+    type: 'dmc' | 'roll-no-slip';
+    classId: string;
+    className: string;
+    examId: string;
+    examName: string;
+    status: 'processing' | 'completed';
+    progress: number;
+    createdAt: string;
+  }
+
+  const [printJobs, setPrintJobs] = useState<PrintJob[]>([])
+  const [showJobsPanel, setShowJobsPanel] = useState(false)
+
   // Print type
   const [printType, setPrintType] = useState<'dmc' | 'class-dmc' | 'schedule' | 'roll-no-slip' | null>(null)
 
@@ -492,6 +507,73 @@ export default function ResultPage() {
     }, 800)
   }
 
+  const triggerBackgroundPrintJob = useCallback((type: 'dmc' | 'roll-no-slip') => {
+    if (!selClass || !selExam) return
+
+    const jobId = Math.random().toString(36).substr(2, 9)
+    const activeClassName = classes.find(c => c.id === selClass)?.name || 'Class'
+    const activeExamName = examTypes.find(e => e.id === selExam)?.name || 'Exam'
+
+    const newJob: PrintJob = {
+      id: jobId,
+      type,
+      classId: selClass,
+      className: activeClassName,
+      examId: selExam,
+      examName: activeExamName,
+      status: 'processing',
+      progress: 0,
+      createdAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    }
+
+    setPrintJobs(prev => [newJob, ...prev])
+    setShowJobsPanel(true)
+    
+    setMsg({
+      type: 'success',
+      text: 'Your request is being processed. You will receive a notification when the PDF is ready for download.'
+    })
+
+    let currentProgress = 0
+    const interval = setInterval(() => {
+      currentProgress += 10 + Math.floor(Math.random() * 15)
+      if (currentProgress >= 100) {
+        currentProgress = 100
+        clearInterval(interval)
+        
+        setPrintJobs(prev => prev.map(j => {
+          if (j.id === jobId) {
+            return { ...j, status: 'completed', progress: 100 }
+          }
+          return j
+        }))
+
+        setMsg({
+          type: 'success',
+          text: `Print job for ${activeClassName} (${type === 'dmc' ? 'DMCs' : 'Roll No Slips'}) is ready for download!`
+        })
+      } else {
+        setPrintJobs(prev => prev.map(j => {
+          if (j.id === jobId) {
+            return { ...j, progress: currentProgress }
+          }
+          return j
+        }))
+      }
+    }, 600)
+  }, [selClass, selExam, classes, examTypes])
+
+  const handleDownloadJob = useCallback((job: PrintJob) => {
+    setSelClass(job.classId)
+    setSelExam(job.examId)
+    setSelStudent('')
+    
+    setPrintType(job.type === 'dmc' ? 'class-dmc' : 'roll-no-slip')
+    setTimeout(() => {
+      window.print()
+    }, 1200)
+  }, [])
+
   // Construct active print values
   const activeStudent = students.find(s => s.id === selStudent)
   const activeExamName = examTypes.find(e => e.id === selExam)?.name || 'Final Term Exam'
@@ -839,12 +921,12 @@ export default function ResultPage() {
             </div>
 
             <button 
-              onClick={selStudent ? printDmc : printClassDmcs} 
+              onClick={selStudent ? printDmc : () => triggerBackgroundPrintJob('dmc')} 
               className="btn btn-primary" 
               style={{ width: '100%', marginTop: '0.5rem' }} 
               disabled={!selExam || !selClass || (selStudent === '' && students.length === 0)}
             >
-              {selStudent ? '🖨️ Print Student DMC' : '🖨️ Print Classwise DMCs'}
+              {selStudent ? '🖨️ Print Student DMC' : '🖨️ Print All Class DMCs'}
             </button>
           </div>
 
@@ -1152,17 +1234,17 @@ export default function ResultPage() {
               </div>
 
               <button 
-                onClick={() => {
+                onClick={selStudent ? () => {
                   setPrintType('roll-no-slip')
                   setTimeout(() => {
                     window.print()
                   }, 600)
-                }} 
+                } : () => triggerBackgroundPrintJob('roll-no-slip')} 
                 className="btn btn-primary"
                 disabled={!selClass || !selExam || (selStudent === '' && students.length === 0)}
                 style={{ justifyContent: 'center' }}
               >
-                {selStudent ? '🖨️ Print Student Roll No Slip' : '🖨️ Print Classwise Roll No Slips'}
+                {selStudent ? '🖨️ Print Student Roll No Slip' : '🖨️ Print All Roll No Slips'}
               </button>
             </div>
           </div>
@@ -1306,6 +1388,14 @@ export default function ResultPage() {
             color: black !important;
             margin: 0 !important;
             padding: 0 !important;
+          }
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+          @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
           }
           /* Hide screen UI */
           .no-print, .sidebar, .topbar, header, aside, nav {
@@ -2102,6 +2192,106 @@ export default function ResultPage() {
                   )
                 })
               })()}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Floating Background Print Jobs Panel */}
+      {printJobs.length > 0 && (
+        <div className="no-print" style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          width: '360px',
+          maxHeight: '400px',
+          background: 'rgba(30, 41, 59, 0.95)',
+          backdropFilter: 'blur(10px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '16px',
+          boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.3)',
+          zIndex: 1000,
+          color: '#ffffff',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          animation: 'slideUp 0.3s ease'
+        }}>
+          <div style={{
+            padding: '12px 16px',
+            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            background: 'rgba(15, 23, 42, 0.6)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ display: 'inline-block', animation: printJobs.some(j => j.status === 'processing') ? 'spin 2s linear infinite' : 'none' }}>⚙️</span>
+              <strong style={{ fontSize: '0.9rem' }}>Background Print Jobs</strong>
+            </div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button 
+                onClick={() => setShowJobsPanel(!showJobsPanel)} 
+                style={{ padding: '2px 8px', fontSize: '0.8rem', height: '24px', width: '24px', background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer' }}
+              >
+                {showJobsPanel ? '▼' : '▲'}
+              </button>
+              <button 
+                onClick={() => setPrintJobs([])} 
+                style={{ padding: '2px 8px', fontSize: '0.8rem', height: '24px', width: '24px', background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer' }}
+                title="Clear all"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {showJobsPanel && (
+            <div style={{ padding: '16px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '320px' }}>
+              {printJobs.map(job => (
+                <div key={job.id} style={{ background: 'rgba(255, 255, 255, 0.04)', padding: '12px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        {job.type === 'dmc' ? 'Classwise DMCs' : 'Classwise Roll No Slips'}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8', marginTop: '2px' }}>
+                        {job.className} • {job.examName}
+                      </div>
+                    </div>
+                    <span style={{
+                      fontSize: '0.65rem',
+                      padding: '2px 6px',
+                      borderRadius: '4px',
+                      background: job.status === 'completed' ? '#065f46' : '#854d0e',
+                      color: job.status === 'completed' ? '#34d399' : '#fef08a',
+                      fontWeight: 'bold'
+                    }}>
+                      {job.status.toUpperCase()}
+                    </span>
+                  </div>
+
+                  {job.status === 'processing' ? (
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#94a3b8', marginBottom: '4px' }}>
+                        <span>Generating PDF chunks...</span>
+                        <span>{job.progress}%</span>
+                      </div>
+                      <div style={{ width: '100%', height: '6px', background: '#334155', borderRadius: '3px', overflow: 'hidden' }}>
+                        <div style={{ width: `${job.progress}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #60a5fa)', transition: 'width 0.3s ease' }} />
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleDownloadJob(job)}
+                      className="btn btn-primary btn-sm"
+                      style={{ width: '100%', marginTop: '6px', justifyContent: 'center', gap: '4px', fontSize: '0.75rem', padding: '6px', background: '#10b981', borderColor: '#10b981', display: 'flex', alignItems: 'center' }}
+                    >
+                      📥 Download PDF / Print
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
