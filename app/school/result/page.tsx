@@ -808,9 +808,9 @@ export default function ResultPage() {
 
             <div className="form-group">
               <label className="form-label">Student *</label>
-              <select className="form-select" value={selStudent} onChange={e => setSelStudent(e.target.value)}>
-                <option value="">Select Student</option>
-                {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              <select className="form-select" value={selStudent} onChange={e => setSelStudent(e.target.value)} disabled={!selClass}>
+                <option value="">All Students (Print Classwise)</option>
+                {students.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.roll_no || '—'})</option>)}
               </select>
             </div>
 
@@ -839,28 +839,25 @@ export default function ResultPage() {
             </div>
 
             <button 
-              onClick={printDmc} 
+              onClick={selStudent ? printDmc : printClassDmcs} 
               className="btn btn-primary" 
               style={{ width: '100%', marginTop: '0.5rem' }} 
-              disabled={!selExam || !selClass || !selStudent}
+              disabled={!selExam || !selClass || (selStudent === '' && students.length === 0)}
             >
-              🖨️ Print DMC
-            </button>
-
-            <button 
-              onClick={printClassDmcs} 
-              className="btn btn-secondary" 
-              style={{ width: '100%', marginTop: '0.5rem' }} 
-              disabled={!selExam || !selClass || students.length === 0}
-            >
-              🖨️ Print All Class DMCs
+              {selStudent ? '🖨️ Print Student DMC' : '🖨️ Print Classwise DMCs'}
             </button>
           </div>
 
           {/* Certificate Live Preview */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {!selExam || !selClass || !selStudent ? (
-              <div className="card empty-state"><div className="empty-icon">📄</div><p>Select exam, class, and student on the left to preview certificate</p></div>
+            {!selExam || !selClass ? (
+              <div className="card empty-state"><div className="empty-icon">📄</div><p>Select exam and class on the left to preview certificate</p></div>
+            ) : !selStudent ? (
+              <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <div style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>📊</div>
+                <h4 style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Classwise DMCs Selected</h4>
+                <p style={{ fontSize: '0.85rem' }}>You have selected all students in class. Click the button on the left to print all DMCs classwise.</p>
+              </div>
             ) : loading ? (
               <div className="card empty-state"><p>Loading certificate details...</p></div>
             ) : (() => {
@@ -1149,7 +1146,7 @@ export default function ResultPage() {
               <div className="form-group">
                 <label className="form-label">Select Student (Optional)</label>
                 <select className="form-select" value={selStudent} onChange={e => setSelStudent(e.target.value)} disabled={!selClass}>
-                  <option value="">All Students (Batch Print)</option>
+                  <option value="">All Students (Classwise)</option>
                   {students.map(s => <option key={s.id} value={s.id}>{s.name} (Roll: {s.roll_no || '—'})</option>)}
                 </select>
               </div>
@@ -1165,7 +1162,7 @@ export default function ResultPage() {
                 disabled={!selClass || !selExam || (selStudent === '' && students.length === 0)}
                 style={{ justifyContent: 'center' }}
               >
-                🖨️ Print Roll No Slip(s)
+                {selStudent ? '🖨️ Print Student Roll No Slip' : '🖨️ Print Classwise Roll No Slips'}
               </button>
             </div>
           </div>
@@ -1173,8 +1170,14 @@ export default function ResultPage() {
           {/* Live Preview card */}
           <div className="card" style={{ background: '#f8fafc', overflow: 'auto', maxHeight: '700px' }}>
             <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Live Slip Preview</h3>
-            {!selClass || !selExam ? (
-              <div className="empty-state"><div className="empty-icon">🎫</div><p>Select exam and class to view roll no slips</p></div>
+            {!selExam || !selClass ? (
+              <div className="empty-state"><div className="empty-icon">🎫</div><p>Select exam and class to preview slip</p></div>
+            ) : !selStudent ? (
+              <div className="empty-state" style={{ padding: '3rem', textAlign: 'center' }}>
+                <div className="empty-icon" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.5 }}>🎫</div>
+                <h4 style={{ fontWeight: 700, marginBottom: '0.5rem', color: 'var(--text-primary)' }}>Classwise Roll No Slips Selected</h4>
+                <p style={{ fontSize: '0.85rem' }}>You have selected all students in class. Click the button on the left to print all roll no slips classwise.</p>
+              </div>
             ) : students.length === 0 ? (
               <div className="empty-state"><div className="empty-icon">👥</div><p>No student records found for this class</p></div>
             ) : (
