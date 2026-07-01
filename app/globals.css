@@ -383,7 +383,7 @@ tbody tr:last-child td { border-bottom: none; }
 /* ── Print ─────────────────────────────────────────────── */
 @media print {
   .sidebar, .topbar, .no-print { display: none !important; }
-  .page-content { margin-left: 0 !important; padding: 0 !important; }
+  main, .page-content { margin-left: 0 !important; padding: 0 !important; }
   body { background: white !important; color: black !important; }
   .print-only { display: block !important; }
 }

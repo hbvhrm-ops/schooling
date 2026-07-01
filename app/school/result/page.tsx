@@ -179,7 +179,11 @@ export default function ResultPage() {
 
   // Listen to afterprint event to reset printing state
   useEffect(() => {
-    const handleAfterPrint = () => setPrintType(null)
+    const handleAfterPrint = () => {
+      setTimeout(() => {
+        setPrintType(null)
+      }, 500)
+    }
     window.addEventListener('afterprint', handleAfterPrint)
     return () => window.removeEventListener('afterprint', handleAfterPrint)
   }, [])
@@ -1301,8 +1305,12 @@ export default function ResultPage() {
             padding: 0 !important;
           }
           /* Hide screen UI */
-          .no-print {
+          .no-print, .sidebar, .topbar, header, aside, nav {
             display: none !important;
+          }
+          main {
+            margin-left: 0 !important;
+            padding: 0 !important;
           }
           #printable-area-wrapper {
             display: block !important;
