@@ -341,6 +341,12 @@ export default function StudentsPage() {
     load()
   }
 
+  async function handleReEnroll(id: string) {
+    if (!confirm('Re-enroll this student?')) return
+    await fetch('/api/school/students', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'active' }) })
+    load()
+  }
+
   async function handleDelete(id: string) {
     if (!confirm('Permanently delete this student?')) return
     await fetch('/api/school/students', { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })
@@ -818,6 +824,7 @@ export default function StudentsPage() {
                             }} className="btn btn-secondary btn-sm" title="Edit Student">✏️</button>
                             <button onClick={() => printID(s)} className="btn btn-secondary btn-sm" title="Print ID Card">🪪</button>
                             {s.status === 'active' && <button onClick={() => handleDischarge(s.id)} className="btn btn-warning btn-sm">📤 Discharge</button>}
+                            {s.status === 'discharged' && <button onClick={() => handleReEnroll(s.id)} className="btn btn-success btn-sm">📥 Enroll Again</button>}
                             <button onClick={() => handleDelete(s.id)} className="btn btn-danger btn-sm">🗑️</button>
                           </div>
                         </td>
