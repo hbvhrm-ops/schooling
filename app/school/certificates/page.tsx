@@ -52,6 +52,10 @@ export default function CertificatesPage() {
   const [schoolName, setSchoolName] = useState('EduManage School')
   const [schoolLogoUrl, setSchoolLogoUrl] = useState('')
   const [defaultSchoolLogo, setDefaultSchoolLogo] = useState('')
+  const [schoolContact, setSchoolContact] = useState('')
+  const [schoolAddress, setSchoolAddress] = useState('')
+  const [schoolPsra, setSchoolPsra] = useState('')
+  const [schoolBise, setSchoolBise] = useState('')
 
   // Certificate template state (for currently active type)
   const [template, setTemplate] = useState<CertificateTemplate>({
@@ -141,6 +145,18 @@ export default function CertificatesPage() {
       if (templateRes.schoolName) {
         setSchoolName(templateRes.schoolName)
       }
+      if (templateRes.schoolContact) {
+        setSchoolContact(templateRes.schoolContact)
+      }
+      if (templateRes.schoolAddress) {
+        setSchoolAddress(templateRes.schoolAddress)
+      }
+      if (templateRes.schoolPsra) {
+        setSchoolPsra(templateRes.schoolPsra)
+      }
+      if (templateRes.schoolBise) {
+        setSchoolBise(templateRes.schoolBise)
+      }
     } catch {
       setMsg({ type: 'danger', text: 'Error loading workspace metadata' })
     } finally {
@@ -165,6 +181,18 @@ export default function CertificatesPage() {
         }
         if (data.schoolLogo) {
           setDefaultSchoolLogo(data.schoolLogo)
+        }
+        if (data.schoolContact) {
+          setSchoolContact(data.schoolContact)
+        }
+        if (data.schoolAddress) {
+          setSchoolAddress(data.schoolAddress)
+        }
+        if (data.schoolPsra) {
+          setSchoolPsra(data.schoolPsra)
+        }
+        if (data.schoolBise) {
+          setSchoolBise(data.schoolBise)
         }
         if (data.template.logo_url) {
           setSchoolLogoUrl(data.template.logo_url)
@@ -677,6 +705,18 @@ export default function CertificatesPage() {
                   <div class="header">
                     ${(template.logo_url || defaultSchoolLogo) ? `<img class="logo" src="${template.logo_url || defaultSchoolLogo}" alt="School Logo" />` : '<div class="logo-placeholder">🎓</div>'}
                     <div class="school-title">${schoolName}</div>
+                    ${(schoolAddress || schoolContact) ? `
+                      <div style="font-size: 11px; color: #555; text-align: center; margin-bottom: 5px; font-family: sans-serif; font-weight: bold;">
+                        ${schoolAddress ? `${schoolAddress}` : ''}
+                        ${schoolContact ? ` &nbsp;|&nbsp; Cell: ${schoolContact}` : ''}
+                      </div>
+                    ` : ''}
+                    ${(schoolPsra || schoolBise) ? `
+                      <div style="font-size: 10px; color: #666; text-align: center; margin-bottom: 8px; font-family: sans-serif; font-style: italic;">
+                        ${schoolPsra ? `PSRA Reg No: ${schoolPsra}` : ''}
+                        ${schoolBise ? `${schoolPsra ? ' &nbsp;|&nbsp; ' : ''}BISE No: ${schoolBise}` : ''}
+                      </div>
+                    ` : ''}
                     <div class="cert-title">${template.title}</div>
                     <div class="cert-subtitle">Official Institution Release Document</div>
                   </div>
@@ -752,8 +792,20 @@ export default function CertificatesPage() {
               <h1 style="font-size: 17px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 2px 0; color: #1e3a8a;">
                 ${schoolName ? schoolName.toUpperCase() : 'THE ABU OBAIDA ISLAMIC MODEL SCHOOL'}
               </h1>
+              ${(schoolAddress || schoolContact || schoolPsra || schoolBise) ? `
+                <div style="font-size: 9px; font-weight: bold; color: #4b5563; margin-bottom: 2px;">
+                  ${schoolAddress ? `${schoolAddress}` : ''}
+                  ${schoolContact ? ` &bull; Cell: ${schoolContact}` : ''}
+                </div>
+                ${(schoolPsra || schoolBise) ? `
+                  <div style="font-size: 8px; color: #64748b; font-style: italic; margin-bottom: 4px;">
+                    ${schoolPsra ? `PSRA Reg: ${schoolPsra}` : ''}
+                    ${schoolBise ? `${schoolPsra ? ' &bull; ' : ''}BISE: ${schoolBise}` : ''}
+                  </div>
+                ` : ''}
+              ` : ''}
               <h2 style="font-size: 11px; font-weight: 800; margin: 0; color: #4b5563; text-transform: uppercase; letter-spacing: 0.5px; text-decoration: underline;">
-                STUDENT MONTHLY PROGRESS REPORT CARD OF THE AIMS
+                STUDENT MONTHLY PROGRESS REPORT CARD
               </h2>
             </div>
             <div style="width: 80px;"></div>
@@ -1063,8 +1115,14 @@ export default function CertificatesPage() {
             </div>
             <div class="title-container" style="flex-grow: 1; text-align: center; padding: 0 10px;">
               <h1 class="school-title" style="font-size: 19px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 0 3px 0; color: #1e3a8a;">${schoolName}</h1>
-              <p class="school-subtitle" style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">Al-Haaj Bahri Karam Colony Amankot Swat.</p>
-              <p class="school-contacts" style="font-size: 10.5px; font-weight: bold; color: #4b5563; margin: 0;">Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341</p>
+              <p class="school-subtitle" style="font-size: 11px; font-weight: bold; margin: 0 0 4px 0; color: #4b5563;">
+                ${schoolAddress || 'Al-Haaj Bahri Karam Colony Amankot Swat.'}
+              </p>
+              <p class="school-contacts" style="font-size: 10.5px; font-weight: bold; color: #4b5563; margin: 0;">
+                ${schoolContact ? `Cell: ${schoolContact}` : 'Cell: 0345-1908832 &nbsp;|&nbsp; Tel: 0946-724341'}
+                ${schoolPsra ? ` &nbsp;|&nbsp; PSRA Reg No: ${schoolPsra}` : ''}
+                ${schoolBise ? ` &nbsp;|&nbsp; BISE No: ${schoolBise}` : ''}
+              </p>
             </div>
             <div class="header-right" style="width: 110px; text-align: right; display: flex; flex-direction: column; align-items: flex-end; gap: 5px;">
               <div class="photo-box" style="width: 85px; height: 95px; border: 1px solid #1e3a8a; border-radius: 4px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 8px; font-weight: bold; color: #1e3a8a; background-color: #f8fafc;">
@@ -1437,6 +1495,18 @@ export default function CertificatesPage() {
         <body>
           <div class="header">
             <div class="school-name">${schoolName}</div>
+            ${(schoolAddress || schoolContact || schoolPsra || schoolBise) ? `
+              <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+                ${schoolAddress ? `${schoolAddress}` : ''}
+                ${schoolContact ? ` &bull; Cell: ${schoolContact}` : ''}
+              </div>
+              ${(schoolPsra || schoolBise) ? `
+                <div style="font-size: 10px; color: #64748b; font-style: italic; margin-bottom: 8px;">
+                  ${schoolPsra ? `PSRA Reg No: ${schoolPsra}` : ''}
+                  ${schoolBise ? `${schoolPsra ? ' &bull; ' : ''}BISE No: ${schoolBise}` : ''}
+                </div>
+              ` : ''}
+            ` : ''}
             <div class="subject-info">
               SUBJECT: <span>${subjectName || 'All Subjects'}</span> &nbsp;&bull;&nbsp; TOTAL MARKS: <span>${totalMarks}</span>
             </div>

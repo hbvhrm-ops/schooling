@@ -38,6 +38,10 @@ export default function SlcPage() {
   const [msg, setMsg] = useState<{ type: string; text: string } | null>(null)
   const [schoolName, setSchoolName] = useState('')
   const [schoolLogo, setSchoolLogo] = useState('')
+  const [schoolContact, setSchoolContact] = useState('')
+  const [schoolAddress, setSchoolAddress] = useState('')
+  const [schoolPsra, setSchoolPsra] = useState('')
+  const [schoolBise, setSchoolBise] = useState('')
 
   // Certificate variables state
   const [selectedStudentId, setSelectedStudentId] = useState('')
@@ -72,6 +76,18 @@ export default function SlcPage() {
       }
       if (tr.schoolLogo) {
         setSchoolLogo(tr.schoolLogo)
+      }
+      if (tr.schoolContact) {
+        setSchoolContact(tr.schoolContact)
+      }
+      if (tr.schoolAddress) {
+        setSchoolAddress(tr.schoolAddress)
+      }
+      if (tr.schoolPsra) {
+        setSchoolPsra(tr.schoolPsra)
+      }
+      if (tr.schoolBise) {
+        setSchoolBise(tr.schoolBise)
       }
       if (tr.template) {
         setTemplate(tr.template)
@@ -140,6 +156,18 @@ export default function SlcPage() {
         }
         if (data.schoolLogo) {
           setSchoolLogo(data.schoolLogo)
+        }
+        if (data.schoolContact) {
+          setSchoolContact(data.schoolContact)
+        }
+        if (data.schoolAddress) {
+          setSchoolAddress(data.schoolAddress)
+        }
+        if (data.schoolPsra) {
+          setSchoolPsra(data.schoolPsra)
+        }
+        if (data.schoolBise) {
+          setSchoolBise(data.schoolBise)
         }
         if (data.template) {
           setTemplate(data.template)
@@ -335,6 +363,18 @@ export default function SlcPage() {
                   <div class="header">
                     ${(template.logo_url || schoolLogo) ? `<img class="logo" src="${template.logo_url || schoolLogo}" alt="School Logo" />` : '<div class="logo-placeholder">🏫</div>'}
                     <div class="school-title">${schoolName || 'EduManage School System'}</div>
+                    ${(schoolAddress || schoolContact) ? `
+                      <div style="font-size: 11px; color: #555; text-align: center; margin-bottom: 5px; font-family: sans-serif; font-weight: bold;">
+                        ${schoolAddress ? `${schoolAddress}` : ''}
+                        ${schoolContact ? ` &nbsp;|&nbsp; Cell: ${schoolContact}` : ''}
+                      </div>
+                    ` : ''}
+                    ${(schoolPsra || schoolBise) ? `
+                      <div style="font-size: 10px; color: #666; text-align: center; margin-bottom: 8px; font-family: sans-serif; font-style: italic;">
+                        ${schoolPsra ? `PSRA Reg No: ${schoolPsra}` : ''}
+                        ${schoolBise ? `${schoolPsra ? ' &nbsp;|&nbsp; ' : ''}BISE No: ${schoolBise}` : ''}
+                      </div>
+                    ` : ''}
                     <div class="cert-title">${template.title}</div>
                     <div class="cert-subtitle">Official Academic Release Certificate</div>
                   </div>

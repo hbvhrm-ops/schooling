@@ -513,8 +513,9 @@ export default function ResultPage() {
   const activeSecRankStr = activeSecRankInfo ? `${getOrdinal(activeSecRankInfo.rank)} Out of ${activeSecRankInfo.total}` : '—'
 
   return (
-    <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
-      <div style={{ marginBottom: '2rem' }}>
+    <div style={{ animation: 'fadeIn 0.3s ease' }}>
+      <div className="no-print" style={{ padding: '2rem' }}>
+        <div style={{ marginBottom: '2rem' }}>
         <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>📝 Result Management</h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage exams, schedules and Detailed Marks Certificates</p>
       </div>
@@ -1259,6 +1260,7 @@ export default function ResultPage() {
           </div>
         </div>
       )}
+      </div>
 
       {/* Style settings for Printing on same page */}
       <style>{`
@@ -1269,8 +1271,8 @@ export default function ResultPage() {
             margin: 0 !important;
             padding: 0 !important;
           }
-          /* Hide everything except the print wrapper */
-          body > *:not(#printable-area-wrapper) {
+          /* Hide screen UI */
+          .no-print {
             display: none !important;
           }
           #printable-area-wrapper {
@@ -1648,15 +1650,16 @@ export default function ResultPage() {
                     <div 
                       key={student.id} 
                       style={{ 
-                        pageBreakAfter: 'always', 
+                        pageBreakInside: 'avoid',
+                        pageBreakAfter: 'auto', 
                         border: '1.5px dashed #475569', 
                         borderRadius: '8px', 
                         padding: '20px', 
                         background: 'white',
                         fontFamily: 'system-ui, sans-serif',
                         color: '#1e293b',
-                        width: '680px',
-                        margin: '0 auto'
+                        width: '100%',
+                        margin: '0 auto 24px auto'
                       }}
                     >
                       {/* Slip Header */}

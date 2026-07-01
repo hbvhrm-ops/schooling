@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS schools (
   password_hash   TEXT NOT NULL,
   contact         TEXT,
   logo_url        TEXT,
+  address         TEXT,
+  psra_reg_no     TEXT,
+  bise_no         TEXT,
   active          BOOLEAN DEFAULT TRUE,
   monthly_income  NUMERIC(10,2) DEFAULT 0,
   created_at      TIMESTAMPTZ DEFAULT NOW()

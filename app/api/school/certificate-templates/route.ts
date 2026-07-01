@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   const supabase = createServerClient()
   const [templateRes, schoolRes] = await Promise.all([
     supabase.from('certificate_templates').select('*').eq('school_id', session.schoolId).eq('type', type).maybeSingle(),
-    supabase.from('schools').select('name, logo_url').eq('id', session.schoolId).maybeSingle()
+    supabase.from('schools').select('name, logo_url, contact, address, psra_reg_no, bise_no').eq('id', session.schoolId).maybeSingle()
   ])
 
   if (templateRes.error) {
@@ -70,6 +70,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       schoolName: school?.name || session.schoolName,
       schoolLogo: school?.logo_url || '',
+      schoolContact: school?.contact || '',
+      schoolAddress: school?.address || '',
+      schoolPsra: school?.psra_reg_no || '',
+      schoolBise: school?.bise_no || '',
       template: {
         logo_url: '',
         ...defaultTemplate
@@ -80,6 +84,10 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     schoolName: school?.name || session.schoolName,
     schoolLogo: school?.logo_url || '',
+    schoolContact: school?.contact || '',
+    schoolAddress: school?.address || '',
+    schoolPsra: school?.psra_reg_no || '',
+    schoolBise: school?.bise_no || '',
     template: data
   })
 }
@@ -115,13 +123,17 @@ export async function POST(req: NextRequest) {
 
   const { data: school } = await supabase
     .from('schools')
-    .select('name, logo_url')
+    .select('name, logo_url, contact, address, psra_reg_no, bise_no')
     .eq('id', session.schoolId)
     .maybeSingle()
 
   return NextResponse.json({
     schoolName: school?.name || session.schoolName,
     schoolLogo: school?.logo_url || '',
+    schoolContact: school?.contact || '',
+    schoolAddress: school?.address || '',
+    schoolPsra: school?.psra_reg_no || '',
+    schoolBise: school?.bise_no || '',
     template: data
   })
 }

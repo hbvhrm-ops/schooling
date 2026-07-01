@@ -74,6 +74,17 @@ export default function FeePage() {
   useEffect(() => { load() }, [load])
 
   useEffect(() => {
+    fetch('/api/school/profile')
+      .then(r => r.json())
+      .then(data => {
+        if (data.school?.name) {
+          setChallanSchoolName(data.school.name)
+        }
+      })
+      .catch(err => console.error('Error loading school name in fee page:', err))
+  }, [])
+
+  useEffect(() => {
     const url = assignClass 
       ? `/api/school/students?class_id=${assignClass}`
       : `/api/school/students`

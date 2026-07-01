@@ -53,7 +53,7 @@ const navGroups: NavGroup[] = [
       { href: '/school/staff', label: 'Staff', icon: '👥' },
       { href: '/school/data', label: 'Data Import/Export', icon: '🗄️' },
       { href: '/school/security', label: 'Security', icon: '🔐' },
-      { href: '/school/settings', label: 'Customize Fields', icon: '⚙️' },
+      { href: '/school/settings', label: 'User Settings', icon: '⚙️' },
     ]
   },
 ]
@@ -65,12 +65,26 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
   const [mobileOpen, setMobileOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [selectedSession, setSelectedSession] = useState('2026')
+  const [schoolName, setSchoolName] = useState('School Portal')
+  const [schoolLogo, setSchoolLogo] = useState('')
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768)
     handleResize()
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
+  useEffect(() => {
+    fetch('/api/school/profile')
+      .then(r => r.json())
+      .then(data => {
+        if (data.school) {
+          setSchoolName(data.school.name || 'School Portal')
+          setSchoolLogo(data.school.logo_url || '')
+        }
+      })
+      .catch(err => console.error('Error fetching school profile in layout:', err))
   }, [])
 
   useEffect(() => {
@@ -120,7 +134,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
           <button onClick={() => setMobileOpen(!mobileOpen)} className="btn" style={{ background: 'transparent', border: 'none', color: '#ffffff', fontSize: '1.5rem', padding: 0, cursor: 'pointer' }}>
             ☰
           </button>
-          <div style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff' }}>EduManage School</div>
+          <div style={{ fontWeight: 800, fontSize: '1rem', color: '#ffffff' }}>{schoolName}</div>
           <div style={{ width: '24px' }} />
         </div>
       )}
@@ -144,18 +158,30 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
           <div className="sidebar-logo" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: (collapsed && !isMobile) ? 'center' : 'space-between', borderBottom: '1px solid var(--border)' }}>
             {(!collapsed || isMobile) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
-                  background: 'linear-gradient(135deg, var(--primary), var(--accent))',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
-                }}>🏫</div>
-                <div>
-                  <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1, color: '#ffffff' }}>EduManage</div>
+                {schoolLogo ? (
+                  <img src={schoolLogo} alt="School Logo" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', background: '#ffffff', border: '1px solid var(--border)', padding: '2px', flexShrink: 0 }} />
+                ) : (
+                  <div style={{
+                    width: '36px', height: '36px', borderRadius: '10px', flexShrink: 0,
+                    background: 'linear-gradient(135deg, var(--primary), var(--accent))',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem',
+                  }}>🏫</div>
+                )}
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontWeight: 800, fontSize: '0.95rem', lineHeight: 1.2, color: '#ffffff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={schoolName}>
+                    {schoolName}
+                  </div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>School Portal</div>
                 </div>
               </div>
             )}
-            {collapsed && !isMobile && <div style={{ fontSize: '1.3rem' }}>🏫</div>}
+            {collapsed && !isMobile && (
+              schoolLogo ? (
+                <img src={schoolLogo} alt="School Logo" style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'contain', background: '#ffffff', padding: '1px' }} />
+              ) : (
+                <div style={{ fontSize: '1.3rem' }}>🏫</div>
+              )
+            )}
             {!isMobile && (
               <button onClick={() => setCollapsed(!collapsed)} className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }}>
                 {collapsed ? '→' : '←'}

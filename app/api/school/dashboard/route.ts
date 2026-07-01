@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       supabase.from('fee_invoices').select('amount, status, paid_date').eq('school_id', schoolId).eq('status', 'paid').gte('paid_date', monthStart).lte('paid_date', monthEnd),
       supabase.from('expenses').select('amount').eq('school_id', schoolId).gte('date', monthStart).lte('date', monthEnd),
       supabase.from('fee_invoices').select('amount, status, paid_date, students(name, session)').eq('school_id', schoolId).eq('year', year).order('paid_date', { ascending: false }).limit(5),
-      supabase.from('schools').select('name, logo_url').eq('id', schoolId).maybeSingle(),
+      supabase.from('schools').select('name, logo_url, contact, address, psra_reg_no, bise_no').eq('id', schoolId).maybeSingle(),
     ])
 
     const students = (studentsRes.data || []) as any[]
@@ -45,6 +45,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       schoolName: schoolData?.name || session.schoolName,
       schoolLogo: schoolData?.logo_url || '',
+      schoolContact: schoolData?.contact || '',
+      schoolAddress: schoolData?.address || '',
+      schoolPsra: schoolData?.psra_reg_no || '',
+      schoolBise: schoolData?.bise_no || '',
       stats: { totalStudents, newAdmissions, dischargedStudents, feeCollected, totalExpenses, profit },
       recentFee
     })
