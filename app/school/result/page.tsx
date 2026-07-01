@@ -1244,7 +1244,7 @@ export default function ResultPage() {
                         {/* Exam Schedule Sub-table */}
                         <div style={{ marginBottom: '1rem' }}>
                           <span style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>📅 Exam Schedule</span>
-                          {schedulesList.length === 0 ? (
+                          {schedulesList.filter(s => s.date || s.time).length === 0 ? (
                             <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>No exam schedules set for this class.</p>
                           ) : (
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.75rem' }}>
@@ -1256,7 +1256,7 @@ export default function ResultPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {schedulesList.map(s => (
+                                {schedulesList.filter(s => s.date || s.time).map(s => (
                                   <tr key={s.subject_id} style={{ borderBottom: '1px solid var(--border)' }}>
                                     <td style={{ padding: '0.3rem 0.5rem', fontWeight: 600 }}>{s.subject_name}</td>
                                     <td style={{ padding: '0.3rem 0.5rem' }}>{s.date ? formatDateNumeric(s.date) : '—'}</td>
@@ -1318,7 +1318,7 @@ export default function ResultPage() {
             margin: 0 !important;
             padding: 0 !important;
           }
-          .dmc-print-card {
+          .dmc-print-card, .roll-no-slip-card {
             border: none !important;
             box-shadow: none !important;
             width: 100% !important;
@@ -1986,16 +1986,18 @@ export default function ResultPage() {
                   return (
                     <div 
                       key={student.id} 
+                      className="roll-no-slip-card"
                       style={{ 
                         pageBreakInside: 'avoid',
-                        pageBreakAfter: 'auto', 
+                        pageBreakAfter: 'always', 
+                        breakAfter: 'page', 
                         border: '1.5px dashed #475569', 
                         borderRadius: '8px', 
                         padding: '20px', 
                         background: 'white',
                         fontFamily: 'system-ui, sans-serif',
                         color: '#1e293b',
-                        width: '100%',
+                        width: '740px',
                         margin: '0 auto 24px auto'
                       }}
                     >
@@ -2053,7 +2055,7 @@ export default function ResultPage() {
                       {/* Exam Schedule Sub-table */}
                       <div style={{ marginBottom: '1.25rem' }}>
                         <span style={{ display: 'block', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: '#475569', marginBottom: '0.5rem', borderBottom: '1px solid #cbd5e1', paddingBottom: '3px' }}>📅 Exam Schedule</span>
-                        {schedulesList.length === 0 ? (
+                        {schedulesList.filter(s => s.date || s.time).length === 0 ? (
                           <p style={{ fontSize: '0.8rem', color: '#64748b', margin: 0 }}>No exam schedules set for this class.</p>
                         ) : (
                           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
@@ -2065,7 +2067,7 @@ export default function ResultPage() {
                               </tr>
                             </thead>
                             <tbody>
-                              {schedulesList.map(s => (
+                              {schedulesList.filter(s => s.date || s.time).map(s => (
                                 <tr key={s.subject_id} style={{ borderBottom: '1px solid #e2e8f0' }}>
                                   <td style={{ padding: '0.4rem 0.6rem', fontWeight: 600, color: '#0f172a' }}>{s.subject_name}</td>
                                   <td style={{ padding: '0.4rem 0.6rem', color: '#334155' }}>{s.date ? formatDateNumeric(s.date) : '—'}</td>
