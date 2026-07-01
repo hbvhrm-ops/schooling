@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -166,7 +166,7 @@ export default function CertificatesPage() {
 
   // Load certificate template when activeDoc changes
   const loadTemplate = useCallback(async (type: string) => {
-    if (type === 'admission' || type === 'award_list' || type === 'progress_report') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form') return
     try {
       const res = await fetch(`/api/school/certificate-templates?type=${type}`)
       const data = await res.json()
@@ -1296,6 +1296,342 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
+  // Print Result Form (with Class Position column)
+  function handlePrintResultForm() {
+    if (!awardClass || !awardExam) return
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const className = classes.find(c => c.id === awardClass)?.name || 'Class'
+    const sectionName = awardSection ? (sections.find(s => s.id === awardSection)?.name || '') : 'All Sections'
+    const examName = examTypes.find(e => e.id === awardExam)?.name || 'Examination'
+    const subjectName = awardSubject ? (subjects.find(s => s.id === awardSubject)?.name || '') : 'All Subjects'
+
+    // Get subjects for this class
+    const classSubjects = awardSubject 
+      ? subjects.filter(s => s.id === awardSubject)
+      : subjects.filter(s => s.class_id === awardClass)
+
+    // Filter students
+    const filteredStudents = students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection))
+    
+    // Compute total obtained and total max marks for ranking
+    const studentsWithTotals = filteredStudents.map(s => {
+      let totalObtained = 0
+      let totalMax = 0
+      let hasAnyMarks = false
+
+      classSubjects.forEach(sub => {
+        const resultObj = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
+        if (resultObj) {
+          totalObtained += Number(resultObj.marks_obtained) || 0
+          totalMax += Number(resultObj.total_marks) || 100
+          hasAnyMarks = true
+        }
+      })
+
+      return {
+        student: s,
+        totalObtained,
+        totalMax,
+        hasAnyMarks
+      }
+    })
+
+    // Sort students by totalObtained DESC
+    studentsWithTotals.sort((a, b) => b.totalObtained - a.totalObtained)
+
+    // Assign positions (ranking)
+    let currentRank = 0
+    let lastMarks = -1
+    let rankCounter = 0
+
+    const rankedStudents = studentsWithTotals.map((item, idx) => {
+      if (!item.hasAnyMarks) {
+        return { ...item, positionText: '—', position: 9999 }
+      }
+      
+      rankCounter++
+      if (item.totalObtained !== lastMarks) {
+        currentRank = rankCounter
+        lastMarks = item.totalObtained
+      }
+
+      let suffix = 'th'
+      if (currentRank === 1) suffix = 'st'
+      else if (currentRank === 2) suffix = 'nd'
+      else if (currentRank === 3) suffix = 'rd'
+
+      const positionText = `${currentRank}${suffix}`
+      return {
+        ...item,
+        position: currentRank,
+        positionText
+      }
+    })
+
+    // Sort by roll no to match the Award List layout
+    rankedStudents.sort((a, b) => {
+      const aRoll = Number(a.student.roll_no) || 9999
+      const bRoll = Number(b.student.roll_no) || 9999
+      if (aRoll !== bRoll) return aRoll - bRoll
+      return a.student.name.localeCompare(b.student.name)
+    })
+
+    const totalMarks = awardTotalMarks || '100'
+
+    const rowsHTML = rankedStudents.map((item, idx) => {
+      const s = item.student
+      const totalObtained = item.totalObtained
+      const totalMax = item.totalMax
+      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
+      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
+      
+      const subjectCellsHTML = classSubjects.map(sub => {
+        const resultObj = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
+        if (resultObj) {
+          return `<td>${resultObj.marks_obtained}</td>`
+        }
+        return `<td>—</td>`
+      }).join('')
+
+      const isTop3 = item.position === 1 || item.position === 2 || item.position === 3
+      const positionDisplay = isTop3 ? `<strong>${item.positionText}</strong>` : item.positionText
+      
+      return `
+        <tr>
+          <td>${idx + 1}</td>
+          <td class="roll-no">${s.roll_no || '—'}</td>
+          <td class="student-name">${s.name}</td>
+          ${subjectCellsHTML}
+          <td class="marks-obtained" style="font-weight: bold;">${totalDisplay}</td>
+          <td class="percentage" style="font-weight: bold;">${percentage}</td>
+          <td class="position-col">${positionDisplay}</td>
+        </tr>
+      `
+    }).join('')
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Result Form - Class ${className} - ${examName}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,400&display=swap');
+            
+            body {
+              font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              color: #1e293b;
+              margin: 40px;
+              padding: 0;
+              line-height: 1.5;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 25px;
+              border-bottom: 2px solid #0f172a;
+              padding-bottom: 20px;
+            }
+            .school-name {
+              font-family: 'Playfair Display', Georgia, serif;
+              font-size: 28px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              color: #0f172a;
+              margin-bottom: 8px;
+            }
+            .subject-info {
+              font-size: 15px;
+              font-weight: 600;
+              color: #475569;
+              margin-top: 5px;
+              letter-spacing: 0.5px;
+            }
+            .subject-info span {
+              color: #0f172a;
+              font-weight: 700;
+            }
+            .sheet-title {
+              font-size: 16px;
+              font-weight: 800;
+              margin-top: 15px;
+              letter-spacing: 2px;
+              color: #1e293b;
+              text-transform: uppercase;
+            }
+            .meta-table {
+              width: 100%;
+              margin-bottom: 25px;
+              font-size: 12px;
+              border-collapse: collapse;
+              background-color: #f8fafc;
+              border: 1px solid #e2e8f0;
+            }
+            .meta-table td {
+              padding: 10px 14px;
+              border: 1px solid #e2e8f0;
+            }
+            .meta-label {
+              font-weight: 700;
+              color: #64748b;
+              text-transform: uppercase;
+              font-size: 10px;
+              letter-spacing: 0.5px;
+              width: 15%;
+            }
+            .meta-value {
+              font-weight: 700;
+              color: #0f172a;
+              font-size: 13px;
+              width: 35%;
+            }
+            .award-table {
+              width: 100%;
+              border-collapse: collapse;
+              font-size: 13px;
+              margin-bottom: 40px;
+              border: 1px solid #cbd5e1;
+            }
+            .award-table th, .award-table td {
+              border: 1px solid #cbd5e1;
+              padding: 10px 12px;
+              text-align: center;
+            }
+            .award-table th {
+              background-color: #f1f5f9;
+              color: #334155;
+              font-weight: 700;
+              text-transform: uppercase;
+              font-size: 11px;
+              letter-spacing: 0.5px;
+            }
+            .award-table tr:nth-child(even) {
+              background-color: #f8fafc;
+            }
+            .award-table td.student-name {
+              text-align: left;
+              font-weight: 700;
+              color: #0f172a;
+              padding-left: 20px;
+            }
+            .award-table td.roll-no {
+              font-weight: 700;
+              color: #475569;
+            }
+            .award-table td.marks-obtained {
+              font-weight: 800;
+              font-size: 14px;
+              color: #0f172a;
+            }
+            .award-table td.position-col {
+              font-weight: 500;
+              font-size: 13px;
+              color: #1e3a8a;
+            }
+            .footer {
+              margin-top: 60px;
+              display: flex;
+              justify-content: space-between;
+              page-break-inside: avoid;
+            }
+            .sig-block {
+              text-align: center;
+              width: 240px;
+            }
+            .sig-line {
+              border-top: 1.5px dashed #64748b;
+              margin-top: 50px;
+              padding-top: 8px;
+              font-size: 11px;
+              font-weight: 700;
+              color: #334155;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+            }
+            @media print {
+              body { margin: 20px; }
+              .meta-table { background-color: #f8fafc !important; }
+              .award-table th { background-color: #f1f5f9 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              .award-table tr:nth-child(even) { background-color: #f8fafc !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="school-name">${schoolName}</div>
+            ${(schoolAddress || schoolContact || schoolPsra || schoolBise) ? `
+              <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 4px;">
+                ${schoolAddress ? `${schoolAddress}` : ''}
+                ${schoolContact ? ` &bull; Cell: ${schoolContact}` : ''}
+              </div>
+              ${(schoolPsra || schoolBise) ? `
+                <div style="font-size: 10px; color: #64748b; font-style: italic; margin-bottom: 8px;">
+                  ${schoolPsra ? `PSRA Reg No: ${schoolPsra}` : ''}
+                  ${schoolBise ? `${schoolPsra ? ' &bull; ' : ''}BISE No: ${schoolBise}` : ''}
+                </div>
+              ` : ''}
+            ` : ''}
+            <div class="subject-info">
+              SUBJECT: <span>${subjectName || 'All Subjects'}</span> &nbsp;&bull;&nbsp; TOTAL MARKS: <span>${totalMarks}</span>
+            </div>
+            <div class="sheet-title">STUDENT CLASS RESULT SHEET (WITH POSITIONS)</div>
+          </div>
+
+          <table class="meta-table">
+            <tr>
+              <td class="meta-label">Class:</td>
+              <td class="meta-value">${className}</td>
+              <td class="meta-label">Section:</td>
+              <td class="meta-value">${sectionName}</td>
+            </tr>
+            <tr>
+              <td class="meta-label">Exam:</td>
+              <td class="meta-value">${examName}</td>
+              <td class="meta-label">Date:</td>
+              <td class="meta-value">${new Date().toLocaleDateString()}</td>
+            </tr>
+          </table>
+
+          <table class="award-table">
+            <thead>
+              <tr>
+                <th>S.No</th>
+                <th>Roll No</th>
+                <th>Student Name</th>
+                ${classSubjects.map(sub => `<th>${sub.name}</th>`).join('')}
+                <th>Total Marks</th>
+                <th>%age</th>
+                <th>Class Position</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHTML || `<tr><td colspan="${4 + classSubjects.length + 2}" style="padding: 20px; color: #555;">No registered students found in the selected class and section.</td></tr>`}
+            </tbody>
+          </table>
+
+          <div class="footer">
+            <div class="sig-block">
+              <div class="sig-line">Teacher Sign</div>
+            </div>
+            <div class="sig-block">
+              <div class="sig-line">Principal Sign</div>
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   // Print Award List
   function handlePrintAwardList() {
     if (!awardClass || !awardExam) return
@@ -1614,6 +1950,9 @@ export default function CertificatesPage() {
             <button className={`nav-item ${activeDoc === 'award_list' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('award_list')}>
               <span style={{ marginRight: '0.5rem' }}>📊</span> Marks Award List
             </button>
+            <button className={`nav-item ${activeDoc === 'result_form' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('result_form')}>
+              <span style={{ marginRight: '0.5rem' }}>🎓</span> Result Form
+            </button>
             <button className={`nav-item ${activeDoc === 'progress_report' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('progress_report')}>
               <span style={{ marginRight: '0.5rem' }}>📈</span> Progress Report Card
             </button>
@@ -1634,6 +1973,7 @@ export default function CertificatesPage() {
             {activeDoc === 'top_positions' && '🥇 Academic Top Positions Certificate'}
             {activeDoc === 'admission' && '📝 Student Admission Form'}
             {activeDoc === 'award_list' && '📊 Examination Award List Sheet'}
+            {activeDoc === 'result_form' && '🎓 Student Class Result Sheet'}
             {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -1644,6 +1984,7 @@ export default function CertificatesPage() {
             {activeDoc === 'top_positions' && 'Honor academic excellence in class final, mid or monthly tests.'}
             {activeDoc === 'admission' && 'Print blank or prefilled student registration templates.'}
             {activeDoc === 'award_list' && 'Create examiner grade tables with student indices for marking sheets.'}
+            {activeDoc === 'result_form' && 'Generate class-wide student result summaries containing all subject marks and calculated class positions.'}
             {activeDoc === 'progress_report' && 'Print blank student monthly progress reports to fill manually.'}
           </p>
         </div>
@@ -1655,7 +1996,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -1673,7 +2014,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 
                 {/* Inputs card */}
@@ -1873,7 +2214,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Body</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -2267,6 +2608,232 @@ export default function CertificatesPage() {
                 ) : (
                   <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
                     Select Class and Exam Type filters above to generate the examiner award list grade sheet.
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── RESULT FORM (WITH POSITIONS) VIEW ── */}
+            {activeDoc === 'result_form' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '1000px' }}>
+                
+                {/* Filters card */}
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>Result Form Selection</h3>
+                  <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'end', flexWrap: 'wrap' }}>
+                    
+                    <div className="form-group" style={{ flex: '1 1 180px' }}>
+                      <label className="form-label">Class *</label>
+                      <select className="form-select" value={awardClass} onChange={e => { setAwardClass(e.target.value); setAwardSection(''); setAwardSubject('') }}>
+                        <option value="">Select Class</option>
+                        {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ flex: '1 1 150px' }}>
+                      <label className="form-label">Section (Optional)</label>
+                      <select className="form-select" value={awardSection} onChange={e => setAwardSection(e.target.value)} disabled={!awardClass}>
+                        <option value="">All Sections</option>
+                        {sections.filter(s => s.class_id === awardClass).map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ flex: '1 1 150px' }}>
+                      <label className="form-label">Subject (Optional)</label>
+                      <select className="form-select" value={awardSubject} onChange={e => setAwardSubject(e.target.value)} disabled={!awardClass}>
+                        <option value="">All Subjects</option>
+                        {subjects.filter(s => s.class_id === awardClass).map(s => (
+                          <option key={s.id} value={s.id}>{s.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ flex: '1 1 180px' }}>
+                      <label className="form-label">Exam Type *</label>
+                      <select className="form-select" value={awardExam} onChange={e => setAwardExam(e.target.value)}>
+                        <option value="">Select Exam</option>
+                        {examTypes.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                      </select>
+                    </div>
+
+                    {awardClass && awardExam && (
+                      <div className="form-group animate-fade" style={{ flex: '1 1 120px' }}>
+                        <label className="form-label">Total Marks</label>
+                        <input 
+                          type="number" 
+                          className="form-input" 
+                          placeholder="100" 
+                          value={awardTotalMarks} 
+                          onChange={e => setAwardTotalMarks(e.target.value)} 
+                        />
+                      </div>
+                    )}
+
+                  </div>
+                </div>
+
+                {/* Grade Table card */}
+                {awardClass && awardExam ? (
+                  <div className="card animate-fade">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <div>
+                        <h3 style={{ fontWeight: 700 }}>Result Form Preview</h3>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                          Showing students in {classes.find(c => c.id === awardClass)?.name} &nbsp;•&nbsp; Exam: {examTypes.find(e => e.id === awardExam)?.name} &nbsp;•&nbsp; Total Marks: {awardTotalMarks}
+                        </p>
+                      </div>
+                      <button className="btn btn-primary" onClick={handlePrintResultForm}>
+                        🖨️ Print Result Form
+                      </button>
+                    </div>
+
+                    {awardLoading ? (
+                      <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        ⏳ Fetching student marks records...
+                      </div>
+                    ) : (
+                      <div className="table-wrap">
+                        <table>
+                          <thead>
+                            <tr>
+                              <th rowSpan={2} style={{ width: '80px' }}>S.No</th>
+                              <th rowSpan={2} style={{ width: '120px' }}>Roll No</th>
+                              <th rowSpan={2}>Student Name</th>
+                              {classSubjects.map(sub => (
+                                <th key={sub.id} colSpan={2} style={{ textAlign: 'center' }}>{sub.name}</th>
+                              ))}
+                              <th rowSpan={2} style={{ width: '120px' }}>Total Marks</th>
+                              <th rowSpan={2} style={{ width: '100px' }}>%age</th>
+                              <th rowSpan={2} style={{ width: '120px' }}>Class Position</th>
+                            </tr>
+                            <tr>
+                              {classSubjects.map(sub => (
+                                <Fragment key={sub.id}>
+                                  <th style={{ textAlign: 'center', fontSize: '0.8rem', background: 'var(--bg-base)' }}>Total</th>
+                                  <th style={{ textAlign: 'center', fontSize: '0.8rem', background: 'var(--bg-base)' }}>Obt</th>
+                                </Fragment>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(() => {
+                              const filtered = students.filter(s => s.class_id === awardClass && (!awardSection || s.section_id === awardSection));
+                              if (filtered.length === 0) {
+                                return (
+                                  <tr>
+                                    <td colSpan={6 + (classSubjects.length * 2)} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>
+                                      No registered student rows found for this filter selection.
+                                    </td>
+                                  </tr>
+                                );
+                              }
+
+                              // Compute totals and sort for positions
+                              const studentsWithTotals = filtered.map(s => {
+                                let totalObtained = 0;
+                                let totalMax = 0;
+                                let hasAnyMarks = false;
+
+                                classSubjects.forEach(sub => {
+                                  const res = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id);
+                                  if (res) {
+                                    totalObtained += Number(res.marks_obtained) || 0;
+                                    totalMax += Number(res.total_marks) || 100;
+                                    hasAnyMarks = true;
+                                  }
+                                });
+
+                                return {
+                                  student: s,
+                                  totalObtained,
+                                  totalMax,
+                                  hasAnyMarks
+                                };
+                              });
+
+                              studentsWithTotals.sort((a, b) => b.totalObtained - a.totalObtained);
+
+                              let currentRank = 0;
+                              let lastMarks = -1;
+                              let rankCounter = 0;
+
+                              const ranked = studentsWithTotals.map((item) => {
+                                if (!item.hasAnyMarks) {
+                                  return { ...item, positionText: '—', position: 9999 };
+                                }
+                                
+                                rankCounter++;
+                                if (item.totalObtained !== lastMarks) {
+                                  currentRank = rankCounter;
+                                  lastMarks = item.totalObtained;
+                                }
+
+                                let suffix = 'th';
+                                if (currentRank === 1) suffix = 'st';
+                                else if (currentRank === 2) suffix = 'nd';
+                                else if (currentRank === 3) suffix = 'rd';
+
+                                return {
+                                  ...item,
+                                  position: currentRank,
+                                  positionText: `${currentRank}${suffix}`
+                                };
+                              });
+
+                              // Sort back to roll no order to match Award List format
+                              ranked.sort((a, b) => {
+                                const aRoll = Number(a.student.roll_no) || 9999;
+                                const bRoll = Number(b.student.roll_no) || 9999;
+                                if (aRoll !== bRoll) return aRoll - bRoll;
+                                return a.student.name.localeCompare(b.student.name);
+                              });
+
+                              return ranked.map((item, idx) => {
+                                const s = item.student;
+                                const totalObtained = item.totalObtained;
+                                const totalMax = item.totalMax;
+                                const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—';
+                                const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—';
+                                
+                                const subjectCells = classSubjects.map(sub => {
+                                  const res = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id);
+                                  const obt = res ? res.marks_obtained : '—';
+                                  const total = res ? res.total_marks : '100';
+                                  return (
+                                    <Fragment key={sub.id}>
+                                      <td style={{ textAlign: 'center' }}>{total}</td>
+                                      <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{obt}</td>
+                                    </Fragment>
+                                  );
+                                });
+
+                                const isTop3 = item.position === 1 || item.position === 2 || item.position === 3;
+
+                                return (
+                                  <tr key={s.id}>
+                                    <td style={{ color: 'var(--text-muted)' }}>{idx + 1}</td>
+                                    <td style={{ fontWeight: 'bold' }}>{s.roll_no || '—'}</td>
+                                    <td style={{ fontWeight: 600 }}>{s.name}</td>
+                                    {subjectCells}
+                                    <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{totalDisplay}</td>
+                                    <td style={{ fontWeight: 'bold', textAlign: 'center' }}>{percentage}</td>
+                                    <td style={{ textAlign: 'center', color: 'var(--primary)', fontWeight: isTop3 ? '900' : 'normal', fontSize: isTop3 ? '1.05rem' : 'inherit' }}>
+                                      {isTop3 ? <strong>{item.positionText}</strong> : item.positionText}
+                                    </td>
+                                  </tr>
+                                );
+                              });
+                            })()}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    Select Class and Exam Type filters above to generate the class result positions sheet.
                   </div>
                 )}
               </div>
