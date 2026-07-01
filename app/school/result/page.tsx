@@ -536,7 +536,7 @@ export default function ResultPage() {
 
       {/* Exam Types Tab */}
       {tab === 'exam-types' && (
-        <div className="card" style={{ maxWidth: '600px' }}>
+        <div className="card">
           <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>📋 Step 1: Add Exam Types</h3>
           <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1.5rem' }}>
             <input className="form-input" placeholder="e.g. Mid-Term, Final Exam, Unit Test..." value={newExamType} onChange={e => setNewExamType(e.target.value)} onKeyDown={e => e.key === 'Enter' && addExamType()} />
@@ -594,7 +594,7 @@ export default function ResultPage() {
 
       {/* Exam Schedule Tab */}
       {tab === 'schedule' && (
-        <div className="card" style={{ maxWidth: '700px' }}>
+        <div className="card">
           <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📅 Step 2: Add Exam Schedule</h3>
           <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>Set date and time for each subject exam per class</p>
           <div className="grid-2" style={{ marginBottom: '1.5rem', gap: '1rem' }}>
