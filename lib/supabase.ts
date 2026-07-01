@@ -70,6 +70,7 @@ class MockQueryBuilder {
   filters: any[]
   orderBy: { column: string; ascending: boolean } | null
   isSingle: boolean
+  isMaybeSingle: boolean
   action: 'select' | 'insert' | 'update' | 'delete'
   actionData: any
   limitCount: number | null
@@ -81,6 +82,7 @@ class MockQueryBuilder {
     this.filters = []
     this.orderBy = null
     this.isSingle = false
+    this.isMaybeSingle = false
     this.action = 'select'
     this.limitCount = null
   }
@@ -121,6 +123,12 @@ class MockQueryBuilder {
 
   single() {
     this.isSingle = true
+    return this
+  }
+
+  maybeSingle() {
+    this.isSingle = true
+    this.isMaybeSingle = true
     return this
   }
 
@@ -316,6 +324,9 @@ class MockQueryBuilder {
     })
 
     if (this.isSingle) {
+      if (this.isMaybeSingle && results.length === 0) {
+        return { data: null, error: null }
+      }
       return { data: results[0] || null, error: results.length === 0 ? new Error('Not found') : null }
     }
 

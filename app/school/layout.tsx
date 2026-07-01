@@ -157,7 +157,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
         <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} style={{ width: isMobile ? '260px' : (collapsed ? '70px' : '260px'), zIndex: 99 }}>
           <div className="sidebar-logo" style={{ padding: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: (collapsed && !isMobile) ? 'center' : 'space-between', borderBottom: '1px solid var(--border)' }}>
             {(!collapsed || isMobile) && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+              <Link href="/school/settings" style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', textDecoration: 'none', color: 'inherit', minWidth: 0, flex: 1 }}>
                 {schoolLogo ? (
                   <img src={schoolLogo} alt="School Logo" style={{ width: '36px', height: '36px', borderRadius: '10px', objectFit: 'contain', background: '#ffffff', border: '1px solid var(--border)', padding: '2px', flexShrink: 0 }} />
                 ) : (
@@ -173,14 +173,16 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
                   </div>
                   <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>School Portal</div>
                 </div>
-              </div>
+              </Link>
             )}
             {collapsed && !isMobile && (
-              schoolLogo ? (
-                <img src={schoolLogo} alt="School Logo" style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'contain', background: '#ffffff', padding: '1px' }} />
-              ) : (
-                <div style={{ fontSize: '1.3rem' }}>🏫</div>
-              )
+              <Link href="/school/settings" title="User Settings" style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+                {schoolLogo ? (
+                  <img src={schoolLogo} alt="School Logo" style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'contain', background: '#ffffff', padding: '1px' }} />
+                ) : (
+                  <div style={{ fontSize: '1.3rem' }}>🏫</div>
+                )}
+              </Link>
             )}
             {!isMobile && (
               <button onClick={() => setCollapsed(!collapsed)} className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }}>
