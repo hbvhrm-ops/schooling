@@ -1543,7 +1543,7 @@ export default function ResultPage() {
                         flexDirection: 'column',
                         fontFamily: 'system-ui, sans-serif',
                         color: '#1e293b',
-                        padding: '20px',
+                        padding: '12px 20px',
                         boxSizing: 'border-box'
                       }}
                     >
@@ -1551,30 +1551,30 @@ export default function ResultPage() {
                       <div className="header-banner-print" style={{
                         background: '#006ac3',
                         color: 'white',
-                        padding: '20px',
+                        padding: '10px 15px',
                         display: 'grid',
-                        gridTemplateColumns: '80px 1fr 80px',
+                        gridTemplateColumns: '70px 1fr 70px',
                         alignItems: 'center',
                         textAlign: 'center'
                       }}>
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
                           {customLogoUrl ? (
-                            <img src={customLogoUrl} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
+                            <img src={customLogoUrl} alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
                           ) : (
-                            <div style={{ width: '60px', height: '60px' }} />
+                            <div style={{ width: '50px', height: '50px' }} />
                           )}
                         </div>
                         <div>
-                          <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
-                          <div style={{ fontSize: '11px', opacity: 0.95, marginTop: '3px', fontWeight: 500 }}>{customLocation}</div>
-                          <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>Ph: {customPhone}</div>
-                          <div style={{ fontSize: '13px', fontWeight: 700, textDecoration: 'underline', marginTop: '8px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
-                          <div style={{ fontSize: '12px', fontWeight: 600, marginTop: '3px' }}>{activeExamName} {customExamYear}</div>
+                          <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
+                          <div style={{ fontSize: '10px', opacity: 0.95, marginTop: '2px', fontWeight: 500 }}>{customLocation}</div>
+                          <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '1px' }}>Ph: {customPhone}</div>
+                          <div style={{ fontSize: '12px', fontWeight: 700, textDecoration: 'underline', marginTop: '5px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
+                          <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px' }}>{activeExamName} {customExamYear}</div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'center' }}>
                           <div style={{
-                            width: '60px',
-                            height: '60px',
+                            width: '50px',
+                            height: '50px',
                             borderRadius: '6px',
                             border: '2px solid white',
                             background: '#e2e8f0',
@@ -1594,37 +1594,37 @@ export default function ResultPage() {
                       </div>
 
                       {/* Student Info Box */}
-                      <div style={{ padding: '15px', borderBottom: '1.5px solid #cbd5e1' }}>
+                      <div style={{ padding: '8px 15px', borderBottom: '1.5px solid #cbd5e1' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                           <tbody>
-                            <tr style={{ height: '32px' }}>
-                              <td style={{ width: '15%', fontSize: '12px', color: '#475569' }}>Student&apos;s Name:</td>
+                            <tr style={{ height: '26px' }}>
+                              <td style={{ width: '15%', fontSize: '11px', color: '#475569' }}>Student&apos;s Name:</td>
                               <td style={{ width: '35%', paddingRight: '10px' }}>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{student.name}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{student.name}</span>
                               </td>
-                              <td style={{ width: '18%', fontSize: '12px', color: '#475569' }}>Roll No:</td>
+                              <td style={{ width: '18%', fontSize: '11px', color: '#475569' }}>Roll No:</td>
                               <td style={{ width: '32%' }}>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{student.roll_no || '—'}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{student.roll_no || '—'}</span>
                               </td>
                             </tr>
-                            <tr style={{ height: '32px' }}>
-                              <td style={{ fontSize: '12px', color: '#475569' }}>Father&apos;s Name:</td>
+                            <tr style={{ height: '26px' }}>
+                              <td style={{ fontSize: '11px', color: '#475569' }}>Father&apos;s Name:</td>
                               <td style={{ paddingRight: '10px' }}>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{student.father_name || '—'}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{student.father_name || '—'}</span>
                               </td>
-                              <td style={{ fontSize: '12px', color: '#475569' }}>Section:</td>
+                              <td style={{ fontSize: '11px', color: '#475569' }}>Section:</td>
                               <td>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{student.section_name || '—'}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{student.section_name || '—'}</span>
                               </td>
                             </tr>
-                            <tr style={{ height: '32px' }}>
-                              <td style={{ fontSize: '12px', color: '#475569' }}>Class:</td>
+                            <tr style={{ height: '26px' }}>
+                              <td style={{ fontSize: '11px', color: '#475569' }}>Class:</td>
                               <td style={{ paddingRight: '10px' }}>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                               </td>
-                              <td style={{ fontSize: '12px', color: '#475569' }}>Date Of Birth:</td>
+                              <td style={{ fontSize: '11px', color: '#475569' }}>Date Of Birth:</td>
                               <td>
-                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{student.dob ? formatDateNumeric(student.dob) : '—'}</span>
+                                <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{student.dob ? formatDateNumeric(student.dob) : '—'}</span>
                               </td>
                             </tr>
                           </tbody>
@@ -1632,40 +1632,40 @@ export default function ResultPage() {
                       </div>
 
                       {/* Table Section */}
-                      <div style={{ padding: '15px' }}>
+                      <div style={{ padding: '8px 15px' }}>
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                           <thead>
                             <tr>
-                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'left', width: '35%' }}>Subjects</th>
-                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '20%' }}>Maximum Marks</th>
-                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '45%' }} colSpan={2}>Obtained Marks</th>
+                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'left', width: '35%' }}>Subjects</th>
+                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center', width: '20%' }}>Maximum Marks</th>
+                              <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center', width: '45%' }} colSpan={2}>Obtained Marks</th>
                             </tr>
                             <tr style={{ backgroundColor: '#e2e8f0' }}>
-                              <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold' }}>Name</th>
-                              <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold' }}>Total</th>
-                              <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold', width: '15%' }}>Total</th>
-                              <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold', width: '30%' }}>In Words</th>
+                              <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold' }}>Name</th>
+                              <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold' }}>Total</th>
+                              <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold', width: '15%' }}>Total</th>
+                              <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold', width: '30%' }}>In Words</th>
                             </tr>
                           </thead>
                           <tbody>
                             {studentDmcRows.map(r => (
                               <tr key={r.id}>
-                                <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', fontWeight: 500 }}>{r.name}</td>
-                                <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center' }}>{r.max}</td>
-                                <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center', fontWeight: 600 }}>{r.obtStr !== '' ? r.obt : '—'}</td>
-                                <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', fontStyle: 'italic' }}>{r.words}</td>
+                                <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', fontWeight: 500 }}>{r.name}</td>
+                                <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'center' }}>{r.max}</td>
+                                <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'center', fontWeight: 600 }}>{r.obtStr !== '' ? r.obt : '—'}</td>
+                                <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', fontStyle: 'italic' }}>{r.words}</td>
                               </tr>
                             ))}
                             <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                              <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
-                              <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{studentTotalMax}</span>
+                              <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
+                              <td style={{ padding: '6px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{studentTotalMax}</span>
                               </td>
-                              <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{studentTotalObt}</span>
+                              <td style={{ padding: '6px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{studentTotalObt}</span>
                               </td>
-                              <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', color: '#1e3a8a' }}>
-                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{studentTotalObtWords}</span>
+                              <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', color: '#1e3a8a' }}>
+                                <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{studentTotalObtWords}</span>
                               </td>
                             </tr>
                           </tbody>
@@ -1673,24 +1673,24 @@ export default function ResultPage() {
                       </div>
 
                       {/* Performance Grid */}
-                      <div style={{ padding: '0 15px 15px' }}>
-                        <table style={{ width: '100%', fontSize: '11px', textAlign: 'center', borderCollapse: 'collapse' }}>
+                      <div style={{ padding: '0 15px 8px' }}>
+                        <table style={{ width: '100%', fontSize: '10px', textAlign: 'center', borderCollapse: 'collapse' }}>
                           <tbody>
                             <tr>
-                              <td style={{ padding: '4px', color: '#64748b' }}>Class Position</td>
-                              <td style={{ padding: '4px', color: '#64748b' }}>Section Position</td>
-                              <td style={{ padding: '4px', color: '#64748b' }}>%age</td>
-                              <td style={{ padding: '4px', color: '#64748b' }}>Grade</td>
-                              <td style={{ padding: '4px', color: '#64748b' }}>Remarks</td>
+                              <td style={{ padding: '3px', color: '#64748b' }}>Class Position</td>
+                              <td style={{ padding: '3px', color: '#64748b' }}>Section Position</td>
+                              <td style={{ padding: '3px', color: '#64748b' }}>%age</td>
+                              <td style={{ padding: '3px', color: '#64748b' }}>Grade</td>
+                              <td style={{ padding: '3px', color: '#64748b' }}>Remarks</td>
                             </tr>
                             <tr>
-                              <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{studentClassRankStr}</span></td>
-                              <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{studentSecRankStr}</span></td>
-                              <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{studentTotalPct}%</span></td>
-                              <td style={{ padding: '4px' }}>
-                                <span className="badge-green-print" style={{ background: '#10b981', color: 'white', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px' }}>{studentGrade}</span>
+                              <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{studentClassRankStr}</span></td>
+                              <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{studentSecRankStr}</span></td>
+                              <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{studentTotalPct}%</span></td>
+                              <td style={{ padding: '3px' }}>
+                                <span className="badge-green-print" style={{ background: '#10b981', color: 'white', padding: '1px 6px', borderRadius: '12px', fontWeight: 'bold', fontSize: '11px' }}>{studentGrade}</span>
                               </td>
-                              <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{studentRemarks}</span></td>
+                              <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{studentRemarks}</span></td>
                             </tr>
                           </tbody>
                         </table>
@@ -1698,14 +1698,14 @@ export default function ResultPage() {
 
                       {/* Passed Badge */}
                       {studentPassed !== null && (
-                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
                           <div className={studentPassed ? 'status-badge-passed-print' : 'status-badge-failed-print'} style={{
                             background: studentPassed ? '#10b981' : '#ef4444',
                             color: 'white',
-                            padding: '8px 24px',
+                            padding: '4px 16px',
                             borderRadius: '24px',
                             fontWeight: 800,
-                            fontSize: '15px'
+                            fontSize: '13px'
                           }}>
                             {studentPassed ? '✓ PASSED' : '✗ FAILED'}
                           </div>
@@ -1714,8 +1714,8 @@ export default function ResultPage() {
 
                       {/* Bar Chart Visual */}
                       {classSubs.length > 0 && studentTotalMax > 0 && (
-                        <div className="chart-bg-print" style={{ padding: '15px 30px', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '140px', maxWidth: '580px', margin: '0 auto', paddingBottom: '4px' }}>
+                        <div className="chart-bg-print" style={{ padding: '10px 20px', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '105px', maxWidth: '580px', margin: '0 auto', paddingBottom: '2px' }}>
                             {classSubs.map(sub => {
                               const entry = studentResults.find(r => String(r.subject_id) === String(sub.id))
                               const max = Number(entry?.total_marks || 100)
@@ -1745,14 +1745,14 @@ export default function ResultPage() {
 
                               return (
                                 <div key={sub.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', padding: '0 4px', maxWidth: '50px' }}>
-                                  <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#475569', marginBottom: '2px' }}>{entry?.marks_obtained !== undefined ? `${pct}%` : '—'}</span>
+                                  <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#475569', marginBottom: '1px' }}>{entry?.marks_obtained !== undefined ? `${pct}%` : '—'}</span>
                                   <div className="bar-color-print" style={{
-                                    width: '20px',
+                                    width: '18px',
                                     height: `${pct}%`,
                                     background: barColor,
                                     borderRadius: '3px 3px 0 0'
                                   }} />
-                                  <span style={{ fontSize: '9px', fontWeight: 600, color: '#64748b', marginTop: '4px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{sub.name}</span>
+                                  <span style={{ fontSize: '8px', fontWeight: 600, color: '#64748b', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{sub.name}</span>
                                 </div>
                               )
                             })}
@@ -1761,17 +1761,17 @@ export default function ResultPage() {
                       )}
 
                       {/* Footer Rules & Signatures */}
-                      <div style={{ padding: '20px 25px', display: 'grid', gridTemplateColumns: '2fr 1fr', alignItems: 'flex-end', marginTop: '10px' }}>
-                        <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+                      <div style={{ padding: '10px 15px', display: 'grid', gridTemplateColumns: '2fr 1fr', alignItems: 'flex-end', marginTop: '4px' }}>
+                        <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.5 }}>
                           1. Passing %age in any subject is 40.<br />
                           2. Failure in any two subjects will be considered as Failed
-                          <div style={{ marginTop: '40px', fontWeight: 700, color: '#1e293b', fontSize: '12px' }}>
-                            <span style={{ borderTop: '1px solid #64748b', paddingTop: '3px', display: 'inline-block', width: '160px' }}>Incharge Examination Cell</span>
+                          <div style={{ marginTop: '25px', fontWeight: 700, color: '#1e293b', fontSize: '11px' }}>
+                            <span style={{ borderTop: '1px solid #64748b', paddingTop: '3px', display: 'inline-block', width: '150px' }}>Incharge Examination Cell</span>
                           </div>
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                          <div style={{ width: '100px', height: '60px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', background: '#f8fafc' }} />
-                          <span style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
+                          <div style={{ width: '90px', height: '45px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '2px', background: '#f8fafc' }} />
+                          <span style={{ fontSize: '10px', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
                         </div>
                       </div>
 
@@ -1789,36 +1789,38 @@ export default function ResultPage() {
               display: 'flex',
               flexDirection: 'column',
               fontFamily: 'system-ui, sans-serif',
-              color: '#1e293b'
+              color: '#1e293b',
+              padding: '12px 20px',
+              boxSizing: 'border-box'
             }}>
               {/* Header Banner */}
               <div className="header-banner-print" style={{
                 background: '#006ac3',
                 color: 'white',
-                padding: '20px',
+                padding: '10px 15px',
                 display: 'grid',
-                gridTemplateColumns: '80px 1fr 80px',
+                gridTemplateColumns: '70px 1fr 70px',
                 alignItems: 'center',
                 textAlign: 'center'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                   {customLogoUrl ? (
-                    <img src={customLogoUrl} alt="Logo" style={{ width: '60px', height: '60px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
+                    <img src={customLogoUrl} alt="Logo" style={{ width: '50px', height: '50px', borderRadius: '50%', border: '2px solid white', objectFit: 'cover' }} />
                   ) : (
-                    <div style={{ width: '60px', height: '60px' }} />
+                    <div style={{ width: '50px', height: '50px' }} />
                   )}
                 </div>
                 <div>
-                  <h2 style={{ margin: 0, fontSize: '20px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
-                  <div style={{ fontSize: '11px', opacity: 0.95, marginTop: '3px', fontWeight: 500 }}>{customLocation}</div>
-                  <div style={{ fontSize: '11px', opacity: 0.9, marginTop: '2px' }}>Ph: ${customPhone}</div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, textDecoration: 'underline', marginTop: '8px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
-                  <div style={{ fontSize: '12px', fontWeight: 600, marginTop: '3px' }}>{activeExamName} {customExamYear}</div>
+                  <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{customSchoolName}</h2>
+                  <div style={{ fontSize: '10px', opacity: 0.95, marginTop: '2px', fontWeight: 500 }}>{customLocation}</div>
+                  <div style={{ fontSize: '10px', opacity: 0.9, marginTop: '1px' }}>Ph: ${customPhone}</div>
+                  <div style={{ fontSize: '12px', fontWeight: 700, textDecoration: 'underline', marginTop: '5px', textTransform: 'uppercase' }}>Detailed Marks Certificate</div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, marginTop: '2px' }}>{activeExamName} {customExamYear}</div>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'center' }}>
                   <div style={{
-                    width: '60px',
-                    height: '60px',
+                    width: '50px',
+                    height: '50px',
                     borderRadius: '6px',
                     border: '2px solid white',
                     background: '#e2e8f0',
@@ -1838,37 +1840,37 @@ export default function ResultPage() {
               </div>
 
               {/* Student Info Box */}
-              <div style={{ padding: '15px', borderBottom: '1.5px solid #cbd5e1' }}>
+              <div style={{ padding: '8px 15px', borderBottom: '1.5px solid #cbd5e1' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <tbody>
-                    <tr style={{ height: '32px' }}>
-                      <td style={{ width: '15%', fontSize: '12px', color: '#475569' }}>Student&apos;s Name:</td>
+                    <tr style={{ height: '26px' }}>
+                      <td style={{ width: '15%', fontSize: '11px', color: '#475569' }}>Student&apos;s Name:</td>
                       <td style={{ width: '35%', paddingRight: '10px' }}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeStudent.name}</span>
                       </td>
-                      <td style={{ width: '18%', fontSize: '12px', color: '#475569' }}>Roll No:</td>
+                      <td style={{ width: '18%', fontSize: '11px', color: '#475569' }}>Roll No:</td>
                       <td style={{ width: '32%' }}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeStudent.roll_no || '—'}</span>
                       </td>
                     </tr>
-                    <tr style={{ height: '32px' }}>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Father&apos;s Name:</td>
+                    <tr style={{ height: '26px' }}>
+                      <td style={{ fontSize: '11px', color: '#475569' }}>Father&apos;s Name:</td>
                       <td style={{ paddingRight: '10px' }}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeStudent.father_name || '—'}</span>
                       </td>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Section:</td>
+                      <td style={{ fontSize: '11px', color: '#475569' }}>Section:</td>
                       <td>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeStudent.section_name || '—'}</span>
                       </td>
                     </tr>
-                    <tr style={{ height: '32px' }}>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Class:</td>
+                    <tr style={{ height: '26px' }}>
+                      <td style={{ fontSize: '11px', color: '#475569' }}>Class:</td>
                       <td style={{ paddingRight: '10px' }}>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeClassName}</span>
                       </td>
-                      <td style={{ fontSize: '12px', color: '#475569' }}>Date Of Birth:</td>
+                      <td style={{ fontSize: '11px', color: '#475569' }}>Date Of Birth:</td>
                       <td>
-                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '13px', display: 'block', paddingBottom: '1px' }}>{activeStudent.dob ? formatDateNumeric(activeStudent.dob) : '—'}</span>
+                        <span style={{ borderBottom: '1.5px solid #1e293b', fontWeight: 700, fontSize: '12px', display: 'block', paddingBottom: '1px' }}>{activeStudent.dob ? formatDateNumeric(activeStudent.dob) : '—'}</span>
                       </td>
                     </tr>
                   </tbody>
@@ -1876,40 +1878,40 @@ export default function ResultPage() {
               </div>
 
               {/* Table Section */}
-              <div style={{ padding: '15px' }}>
+              <div style={{ padding: '8px 15px' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                   <thead>
                     <tr>
-                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'left', width: '35%' }}>Subjects</th>
-                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '20%' }}>Maximum Marks</th>
-                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '8px', fontSize: '12px', textTransform: 'uppercase', textAlign: 'center', width: '45%' }} colSpan={2}>Obtained Marks</th>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'left', width: '35%' }}>Subjects</th>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center', width: '20%' }}>Maximum Marks</th>
+                      <th className="blue-th-print" style={{ backgroundColor: '#006ac3', color: 'white', border: '1px solid #006ac3', padding: '5px', fontSize: '11px', textTransform: 'uppercase', textAlign: 'center', width: '45%' }} colSpan={2}>Obtained Marks</th>
                     </tr>
                     <tr style={{ backgroundColor: '#e2e8f0' }}>
-                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold' }}>Name</th>
-                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold' }}>Total</th>
-                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold', width: '15%' }}>Total</th>
-                      <th style={{ border: '1px solid #c5d2e0', padding: '4px', fontSize: '10px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold', width: '30%' }}>In Words</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold' }}>Name</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold' }}>Total</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'center', fontWeight: 'bold', width: '15%' }}>Total</th>
+                      <th style={{ border: '1px solid #c5d2e0', padding: '3px', fontSize: '9px', textTransform: 'uppercase', textAlign: 'left', fontWeight: 'bold', width: '30%' }}>In Words</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeDmcRows.map(r => (
                       <tr key={r.id}>
-                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', fontWeight: 500 }}>{r.name}</td>
-                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center' }}>{r.max}</td>
-                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '13px', textAlign: 'center', fontWeight: 600 }}>{r.obtStr !== '' ? r.obt : '—'}</td>
-                        <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', fontStyle: 'italic' }}>{r.words}</td>
+                        <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', fontWeight: 500 }}>{r.name}</td>
+                        <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'center' }}>{r.max}</td>
+                        <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'center', fontWeight: 600 }}>{r.obtStr !== '' ? r.obt : '—'}</td>
+                        <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', fontStyle: 'italic' }}>{r.words}</td>
                       </tr>
                     ))}
                     <tr style={{ backgroundColor: '#f8fafc', fontWeight: 'bold' }}>
-                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
-                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalMax}</span>
+                      <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', textAlign: 'right', textTransform: 'uppercase' }}>Total:</td>
+                      <td style={{ padding: '6px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{activeTotalMax}</span>
                       </td>
-                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
-                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalObt}</span>
+                      <td style={{ padding: '6px', border: '1px solid #c5d2e0', textAlign: 'center' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{activeTotalObt}</span>
                       </td>
-                      <td style={{ padding: '10px', border: '1px solid #c5d2e0', fontSize: '12px', color: '#1e3a8a' }}>
-                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{activeTotalObtWords}</span>
+                      <td style={{ padding: '6px', border: '1px solid #c5d2e0', fontSize: '11px', color: '#1e3a8a' }}>
+                        <span className="badge-pill-blue-print" style={{ background: '#006ac3', color: 'white', padding: '2px 8px', borderRadius: '12px', fontSize: '11px' }}>{activeTotalObtWords}</span>
                       </td>
                     </tr>
                   </tbody>
@@ -1917,24 +1919,24 @@ export default function ResultPage() {
               </div>
 
               {/* Performance Grid */}
-              <div style={{ padding: '0 15px 15px' }}>
-                <table style={{ width: '100%', fontSize: '11px', textAlign: 'center', borderCollapse: 'collapse' }}>
+              <div style={{ padding: '0 15px 8px' }}>
+                <table style={{ width: '100%', fontSize: '10px', textAlign: 'center', borderCollapse: 'collapse' }}>
                   <tbody>
                     <tr>
-                      <td style={{ padding: '4px', color: '#64748b' }}>Class Position</td>
-                      <td style={{ padding: '4px', color: '#64748b' }}>Section Position</td>
-                      <td style={{ padding: '4px', color: '#64748b' }}>%age</td>
-                      <td style={{ padding: '4px', color: '#64748b' }}>Grade</td>
-                      <td style={{ padding: '4px', color: '#64748b' }}>Remarks</td>
+                      <td style={{ padding: '3px', color: '#64748b' }}>Class Position</td>
+                      <td style={{ padding: '3px', color: '#64748b' }}>Section Position</td>
+                      <td style={{ padding: '3px', color: '#64748b' }}>%age</td>
+                      <td style={{ padding: '3px', color: '#64748b' }}>Grade</td>
+                      <td style={{ padding: '3px', color: '#64748b' }}>Remarks</td>
                     </tr>
                     <tr>
-                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeClassRankStr}</span></td>
-                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeSecRankStr}</span></td>
-                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeTotalPct}%</span></td>
-                      <td style={{ padding: '4px' }}>
-                        <span className="badge-green-print" style={{ background: '#10b981', color: 'white', padding: '2px 8px', borderRadius: '12px', fontWeight: 'bold', fontSize: '12px' }}>{activeGrade}</span>
+                      <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{activeClassRankStr}</span></td>
+                      <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{activeSecRankStr}</span></td>
+                      <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{activeTotalPct}%</span></td>
+                      <td style={{ padding: '3px' }}>
+                        <span className="badge-green-print" style={{ background: '#10b981', color: 'white', padding: '1px 6px', borderRadius: '12px', fontWeight: 'bold', fontSize: '11px' }}>{activeGrade}</span>
                       </td>
-                      <td style={{ padding: '4px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '12px', display: 'inline-block', width: '90%' }}>{activeRemarks}</span></td>
+                      <td style={{ padding: '3px' }}><span style={{ borderBottom: '1px solid #64748b', fontWeight: 700, fontSize: '11px', display: 'inline-block', width: '90%' }}>{activeRemarks}</span></td>
                     </tr>
                   </tbody>
                 </table>
@@ -1942,14 +1944,14 @@ export default function ResultPage() {
 
               {/* Passed Badge */}
               {activePassed !== null && (
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
                   <div className={activePassed ? 'status-badge-passed-print' : 'status-badge-failed-print'} style={{
                     background: activePassed ? '#10b981' : '#ef4444',
                     color: 'white',
-                    padding: '8px 24px',
+                    padding: '4px 16px',
                     borderRadius: '24px',
                     fontWeight: 800,
-                    fontSize: '15px'
+                    fontSize: '13px'
                   }}>
                     {activePassed ? '✓ PASSED' : '✗ FAILED'}
                   </div>
@@ -1958,8 +1960,8 @@ export default function ResultPage() {
 
               {/* Bar Chart Visual */}
               {classSubs.length > 0 && activeTotalMax > 0 && (
-                <div className="chart-bg-print" style={{ padding: '15px 30px', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '140px', maxWidth: '580px', margin: '0 auto', paddingBottom: '4px' }}>
+                <div className="chart-bg-print" style={{ padding: '10px 20px', borderTop: '1px solid #cbd5e1', borderBottom: '1px solid #cbd5e1', background: '#fafafa' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', height: '105px', maxWidth: '580px', margin: '0 auto', paddingBottom: '2px' }}>
                     {classSubs.map(sub => {
                       const entry = dmcResults.find(r => String(r.subject_id) === String(sub.id))
                       const max = Number(entry?.total_marks || 100)
@@ -1989,14 +1991,14 @@ export default function ResultPage() {
 
                       return (
                         <div key={sub.id} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', height: '100%', padding: '0 4px', maxWidth: '50px' }}>
-                          <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#475569', marginBottom: '2px' }}>{entry?.marks_obtained !== undefined ? `${pct}%` : '—'}</span>
+                          <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#475569', marginBottom: '1px' }}>{entry?.marks_obtained !== undefined ? `${pct}%` : '—'}</span>
                           <div className="bar-color-print" style={{
-                            width: '20px',
+                            width: '18px',
                             height: `${pct}%`,
                             background: barColor,
                             borderRadius: '3px 3px 0 0'
                           }} />
-                          <span style={{ fontSize: '9px', fontWeight: 600, color: '#64748b', marginTop: '4px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{sub.name}</span>
+                          <span style={{ fontSize: '8px', fontWeight: 600, color: '#64748b', marginTop: '2px', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', width: '100%', textAlign: 'center' }}>{sub.name}</span>
                         </div>
                       )
                     })}
@@ -2005,17 +2007,17 @@ export default function ResultPage() {
               )}
 
               {/* Footer Rules & Signatures */}
-              <div style={{ padding: '20px 25px', display: 'grid', gridTemplateColumns: '2fr 1fr', alignItems: 'flex-end', marginTop: '10px' }}>
-                <div style={{ fontSize: '11px', color: '#64748b', lineHeight: 1.6 }}>
+              <div style={{ padding: '10px 15px', display: 'grid', gridTemplateColumns: '2fr 1fr', alignItems: 'flex-end', marginTop: '4px' }}>
+                <div style={{ fontSize: '10px', color: '#64748b', lineHeight: 1.5 }}>
                   1. Passing %age in any subject is 40.<br />
                   2. Failure in any two subjects will be considered as Failed
-                  <div style={{ marginTop: '40px', fontWeight: 700, color: '#1e293b', fontSize: '12px' }}>
-                    <span style={{ borderTop: '1px solid #64748b', paddingTop: '3px', display: 'inline-block', width: '160px' }}>Incharge Examination Cell</span>
+                  <div style={{ marginTop: '25px', fontWeight: 700, color: '#1e293b', fontSize: '11px' }}>
+                    <span style={{ borderTop: '1px solid #64748b', paddingTop: '3px', display: 'inline-block', width: '150px' }}>Incharge Examination Cell</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                  <div style={{ width: '100px', height: '60px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '4px', background: '#f8fafc' }} />
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
+                  <div style={{ width: '90px', height: '45px', border: '1px solid #cbd5e1', borderRadius: '4px', marginBottom: '2px', background: '#f8fafc' }} />
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#1e293b' }}>Class Teacher</span>
                 </div>
               </div>
 

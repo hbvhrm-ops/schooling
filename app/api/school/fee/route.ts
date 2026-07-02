@@ -54,40 +54,62 @@ export async function POST(req: NextRequest) {
   }
 
   if (body.type === 'assign_fee') {
-    const { data: template, error: tErr } = await supabase
+    const templateIds = Array.isArray(body.fee_template_ids)
+      ? body.fee_template_ids
+      : body.fee_template_id
+        ? [body.fee_template_id]
+        : []
+
+    if (templateIds.length === 0) {
+      return NextResponse.json({ error: 'Fee template selection is required' }, { status: 400 })
+    }
+
+    const { data: templates, error: tErr } = await supabase
       .from('fee_templates')
       .select('*')
-      .eq('id', body.fee_template_id)
+      .in('id', templateIds)
       .eq('school_id', session.schoolId)
-      .single()
-    if (tErr || !template) return NextResponse.json({ error: 'Template not found' }, { status: 400 })
+
+    if (tErr || !templates || templates.length === 0) {
+      return NextResponse.json({ error: 'Templates not found' }, { status: 400 })
+    }
 
     const sessionYear = req.cookies.get('selected_session')?.value || new Date().getFullYear().toString()
     const targetYear = body.year || parseInt(sessionYear)
 
     const invoices = []
+    const criteriaToInsert = []
+
     if (body.student_id) {
-      let finalAmount = template.amount
       const discountType = body.discount_type || 'none'
       const discountValue = parseFloat(body.discount_value) || 0
+      let remainingDiscount = discountValue
 
-      if (discountType === 'percentage') {
-        finalAmount = template.amount - (template.amount * (discountValue / 100))
-      } else if (discountType === 'fixed') {
-        finalAmount = template.amount - discountValue
+      for (const template of templates) {
+        let finalAmount = template.amount
+        if (discountType === 'percentage') {
+          finalAmount = template.amount - (template.amount * (discountValue / 100))
+        } else if (discountType === 'fixed' && remainingDiscount > 0) {
+          if (remainingDiscount >= template.amount) {
+            remainingDiscount -= template.amount
+            finalAmount = 0
+          } else {
+            finalAmount = template.amount - remainingDiscount
+            remainingDiscount = 0
+          }
+        }
+        if (finalAmount < 0) finalAmount = 0
+
+        invoices.push({
+          school_id: session.schoolId,
+          student_id: body.student_id,
+          fee_template_id: template.id,
+          month: body.month,
+          year: targetYear,
+          amount: finalAmount,
+          status: 'pending'
+        })
       }
-
-      if (finalAmount < 0) finalAmount = 0
-
-      invoices.push({
-        school_id: session.schoolId,
-        student_id: body.student_id,
-        fee_template_id: body.fee_template_id,
-        month: body.month,
-        year: targetYear,
-        amount: finalAmount,
-        status: 'pending'
-      })
     } else {
       const { data: students } = await supabase
         .from('students')
@@ -96,30 +118,38 @@ export async function POST(req: NextRequest) {
         .eq('class_id', body.class_id)
         .eq('status', 'active')
         .eq('session', sessionYear)
-      
-      for (const student of (students || [])) {
-        invoices.push({
+
+      for (const template of templates) {
+        for (const student of (students || [])) {
+          invoices.push({
+            school_id: session.schoolId,
+            student_id: student.id,
+            fee_template_id: template.id,
+            month: body.month,
+            year: targetYear,
+            amount: template.amount,
+            status: 'pending'
+          })
+        }
+
+        criteriaToInsert.push({
           school_id: session.schoolId,
-          student_id: student.id,
-          fee_template_id: body.fee_template_id,
-          month: body.month,
-          year: targetYear,
-          amount: template.amount,
-          status: 'pending'
+          fee_template_id: template.id,
+          class_id: body.class_id
         })
       }
-      
-      await supabase.from('fee_criteria').insert({
-        school_id: session.schoolId,
-        fee_template_id: body.fee_template_id,
-        class_id: body.class_id
-      })
     }
 
     if (invoices.length > 0) {
       const { error: invErr } = await supabase.from('fee_invoices').insert(invoices)
       if (invErr) return NextResponse.json({ error: invErr.message }, { status: 400 })
     }
+
+    if (criteriaToInsert.length > 0) {
+      const { error: critErr } = await supabase.from('fee_criteria').insert(criteriaToInsert)
+      if (critErr) return NextResponse.json({ error: critErr.message }, { status: 400 })
+    }
+
     return NextResponse.json({ success: true, count: invoices.length })
   }
   return NextResponse.json({ error: 'Invalid type' }, { status: 400 })

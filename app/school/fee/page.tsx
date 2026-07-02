@@ -34,7 +34,7 @@ export default function FeePage() {
 
   const [assignClass, setAssignClass] = useState('')
   const [assignStudent, setAssignStudent] = useState('')
-  const [assignTemplate, setAssignTemplate] = useState('')
+  const [assignTemplates, setAssignTemplates] = useState<string[]>([])
   const [assignMonth, setAssignMonth] = useState(new Date().getMonth() + 1)
   const [assignYear, setAssignYear] = useState(new Date().getFullYear())
   const [discountType, setDiscountType] = useState<'none' | 'percentage' | 'fixed'>('none')
@@ -190,8 +190,8 @@ export default function FeePage() {
 
   async function handleAssignFee(e: React.FormEvent) {
     e.preventDefault()
-    if (!assignTemplate || (!assignClass && !assignStudent)) {
-      setMsg({ type: 'danger', text: 'Fee template and either Class or a specific Student are required.' })
+    if (assignTemplates.length === 0 || (!assignClass && !assignStudent)) {
+      setMsg({ type: 'danger', text: 'Please select at least one Fee template, and either Class or a specific Student.' })
       return
     }
     setLoading(true)
@@ -203,7 +203,7 @@ export default function FeePage() {
           type: 'assign_fee',
           class_id: assignClass,
           student_id: assignStudent || null,
-          fee_template_id: assignTemplate,
+          fee_template_ids: assignTemplates,
           month: assignMonth,
           year: assignYear,
           discount_type: assignStudent ? discountType : 'none',
@@ -215,7 +215,7 @@ export default function FeePage() {
         setMsg({ type: 'success', text: `Fee assigned successfully! Generated ${d.count} invoice(s).` })
         setAssignClass('')
         setAssignStudent('')
-        setAssignTemplate('')
+        setAssignTemplates([])
         setDiscountType('none')
         setDiscountValue('')
         load()
@@ -610,11 +610,39 @@ export default function FeePage() {
               </select>
             </div>
             <div className="form-group">
-              <label className="form-label">Fee Template / Fine *</label>
-              <select className="form-select" value={assignTemplate} onChange={e => setAssignTemplate(e.target.value)} required>
-                <option value="">Select Template</option>
-                {templates.map(t => <option key={t.id} value={t.id}>{t.name} — ₨{Number(t.amount).toLocaleString()}</option>)}
-              </select>
+              <label className="form-label">Fee Templates / Fines * (Select one or more)</label>
+              <div style={{
+                maxHeight: '180px',
+                overflowY: 'auto',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                padding: '0.5rem',
+                background: 'var(--bg-input)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '0.4rem'
+              }}>
+                {templates.map(t => {
+                  const checked = assignTemplates.includes(t.id)
+                  return (
+                    <label key={t.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', padding: '0.25rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => {
+                          if (checked) {
+                            setAssignTemplates(assignTemplates.filter(id => id !== t.id))
+                          } else {
+                            setAssignTemplates([...assignTemplates, t.id])
+                          }
+                        }}
+                      />
+                      <span>{t.name} — <strong style={{ color: 'var(--success)' }}>₨{Number(t.amount).toLocaleString()}</strong></span>
+                    </label>
+                  )
+                })}
+                {templates.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.5rem' }}>No templates found. Create one first!</div>}
+              </div>
             </div>
             {assignStudent && (
               <div style={{ background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
@@ -644,10 +672,9 @@ export default function FeePage() {
                   )}
                 </div>
 
-                {assignTemplate && (() => {
-                  const tmpl = templates.find(t => t.id === assignTemplate)
-                  if (!tmpl) return null
-                  const baseAmt = Number(tmpl.amount)
+                {assignTemplates.length > 0 && (() => {
+                  const selectedTmpls = templates.filter(t => assignTemplates.includes(t.id))
+                  const baseAmt = selectedTmpls.reduce((sum, t) => sum + Number(t.amount), 0)
                   let discountAmt = 0
                   const val = parseFloat(discountValue) || 0
                   if (discountType === 'percentage') {
@@ -661,7 +688,7 @@ export default function FeePage() {
                   return (
                     <div style={{ fontSize: '0.85rem', background: 'var(--bg-base)', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                        <span>Base Fee:</span>
+                        <span>Total Base Fee ({selectedTmpls.length} template(s)):</span>
                         <span>₨ {baseAmt.toLocaleString()}</span>
                       </div>
                       {discountType !== 'none' && (
