@@ -1229,24 +1229,42 @@ export default function StudentsPage() {
                 </div>
               </div>
               <div className="grid-2" style={{ gap: '0.75rem' }}>
-                {[['Father Name', viewStudent.father_name], ['Class', `${viewStudent.class_name} ${viewStudent.section_name ? `(${viewStudent.section_name})` : ''}`], ['Roll No', viewStudent.roll_no], ['Gender', viewStudent.gender], ['Contact', viewStudent.contact], ['Reg Date', formatDateToUI(viewStudent.reg_date)]].map(([k, v]) => (
-                  <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{v || '—'}</div>
-                  </div>
-                ))}
+                {(() => {
+                  const fields = [
+                    ['Father Name', viewStudent.father_name],
+                    ['Class', `${viewStudent.class_name} ${viewStudent.section_name ? `(${viewStudent.section_name})` : ''}`],
+                    ['Roll No', viewStudent.roll_no],
+                    ['Gender', viewStudent.gender],
+                    ['Contact', viewStudent.contact],
+                    ['Reg Date', formatDateToUI(viewStudent.reg_date)]
+                  ]
+                  if (viewStudent.status === 'discharged') {
+                    fields.push(['Discharge Date', viewStudent.additional_info?.discharge_date ? new Date(viewStudent.additional_info.discharge_date).toLocaleDateString() : '—'])
+                  }
+                  if (viewStudent.additional_info?.readmission_date) {
+                    fields.push(['Re-Admission Date', new Date(viewStudent.additional_info.readmission_date).toLocaleDateString()])
+                  }
+                  return fields.map(([k, v]) => (
+                    <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
+                      <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{v || '—'}</div>
+                    </div>
+                  ))
+                })()}
                 
                 {/* Custom Dynamic Fields */}
-                {viewStudent.additional_info && Object.entries(viewStudent.additional_info).length > 0 && (
+                {viewStudent.additional_info && Object.entries(viewStudent.additional_info).filter(([k]) => k !== 'discharge_date' && k !== 'readmission_date').length > 0 && (
                   <div style={{ gridColumn: 'span 2', marginTop: '0.75rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
                     <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem' }}>Additional Information</h4>
                     <div className="grid-2" style={{ gap: '0.75rem' }}>
-                      {Object.entries(viewStudent.additional_info).map(([k, v]) => (
-                        <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
-                          <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{String(v) || '—'}</div>
-                        </div>
-                      ))}
+                      {Object.entries(viewStudent.additional_info)
+                        .filter(([k]) => k !== 'discharge_date' && k !== 'readmission_date')
+                        .map(([k, v]) => (
+                          <div key={k} style={{ background: 'var(--bg-surface)', padding: '0.75rem', borderRadius: '10px' }}>
+                            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{k}</div>
+                            <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{String(v) || '—'}</div>
+                          </div>
+                        ))}
                     </div>
                   </div>
                 )}
