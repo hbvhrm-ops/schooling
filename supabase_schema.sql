@@ -279,6 +279,7 @@ ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sms_templates ENABLE ROW LEVEL SECURITY;
 ALTER TABLE budget ENABLE ROW LEVEL SECURITY;
 ALTER TABLE certificate_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE exam_schedules ENABLE ROW LEVEL SECURITY;
 
 -- Allow all operations via service role (used by Next.js API routes)
 -- Since we use anon key from server, we grant full access via policy
@@ -293,6 +294,7 @@ CREATE POLICY "Allow all via anon" ON registration_fields FOR ALL USING (true) W
 CREATE POLICY "Allow all via anon" ON slc_templates FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON attendance FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON exam_types FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Allow all via anon" ON exam_schedules FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON results FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON grading_policy FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Allow all via anon" ON fee_templates FOR ALL USING (true) WITH CHECK (true);
