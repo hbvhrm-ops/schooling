@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const year = searchParams.get('year') || sessionYear
     const classId = searchParams.get('class_id')
     const studentId = searchParams.get('student_id')
-    let query = supabase.from('fee_invoices').select('*, students(name, class_id)').eq('school_id', session.schoolId)
+    let query = supabase.from('fee_invoices').select('*, students(name, class_id), fee_templates(name)').eq('school_id', session.schoolId)
     if (studentId) query = query.eq('student_id', studentId)
     if (month) query = query.eq('month', month)
     if (year && !studentId) query = query.eq('year', year)
@@ -158,18 +158,29 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   const session = await getSession()
   if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  const { type, id, ...updates } = await req.json()
+  const body = await req.json()
   const supabase = createServerClient()
 
-  if (type === 'template') {
+  if (body.type === 'template') {
+    const { id, ...updates } = body
     const { error } = await supabase.from('fee_templates').update({
       name: updates.name,
       amount: parseFloat(updates.amount),
       frequency: updates.frequency,
     }).eq('id', id).eq('school_id', session.schoolId)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  } else if (body.type === 'batch_invoices') {
+    for (const item of (body.items || [])) {
+      await supabase.from('fee_invoices').update({
+        amount: parseFloat(item.amount),
+        status: item.status,
+        paid_date: item.paid_date || null
+      }).eq('id', item.id).eq('school_id', session.schoolId)
+    }
   } else {
-    const { error } = await supabase.from('fee_invoices').update(updates).eq('id', id).eq('school_id', session.schoolId)
+    const { id, ...updates } = body
+    const ids = Array.isArray(updates.ids) ? updates.ids : [id]
+    const { error } = await supabase.from('fee_invoices').update(updates).in('id', ids).eq('school_id', session.schoolId)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   }
   return NextResponse.json({ success: true })
@@ -188,7 +199,8 @@ export async function DELETE(req: NextRequest) {
     const { error } = await supabase.from('fee_templates').delete().eq('id', id).eq('school_id', session.schoolId)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   } else if (type === 'invoice') {
-    const { error } = await supabase.from('fee_invoices').delete().eq('id', id).eq('school_id', session.schoolId)
+    const ids = id.split(',')
+    const { error } = await supabase.from('fee_invoices').delete().in('id', ids).eq('school_id', session.schoolId)
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
   } else {
     return NextResponse.json({ error: 'Invalid type' }, { status: 400 })

@@ -4,6 +4,24 @@ import { useState, useEffect, useCallback } from 'react'
 interface FeeTemplate { id: string; name: string; amount: number; frequency: string }
 interface ClassItem { id: string; name: string }
 interface Invoice { id: string; student_name: string; amount: number; month: number; year: number; status: string; paid_date?: string }
+interface GroupedInvoice {
+  key: string;
+  student_id: string;
+  student_name: string;
+  month: number;
+  year: number;
+  amount: number;
+  status: 'paid' | 'pending' | 'partial';
+  paid_date?: string;
+  ids: string[];
+  items: {
+    invoice_id: string;
+    template_id: string | null;
+    template_name: string;
+    amount: number;
+    status: string;
+  }[];
+}
 
 type Tab = 'templates' | 'assign-fee' | 'fee-history'
 
@@ -29,8 +47,12 @@ export default function FeePage() {
   const [challanDueDate, setChallanDueDate] = useState('10th of the month')
   const [challanPenalty, setChallanPenalty] = useState('Late fee of ₨ 100 applies after the due date.')
   const [showChallanCustomizer, setShowChallanCustomizer] = useState(false)
-  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null)
-  const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', status: '', paid_date: '' })
+  const [editingGroup, setEditingGroup] = useState<GroupedInvoice | null>(null)
+  const [editGroupForm, setEditGroupForm] = useState<{
+    status: string;
+    paid_date: string;
+    items: { invoice_id: string; template_name: string; amount: string }[];
+  }>({ status: 'pending', paid_date: '', items: [] })
 
   const [assignClass, setAssignClass] = useState('')
   const [assignStudent, setAssignStudent] = useState('')
@@ -39,6 +61,61 @@ export default function FeePage() {
   const [assignYear, setAssignYear] = useState(new Date().getFullYear())
   const [discountType, setDiscountType] = useState<'none' | 'percentage' | 'fixed'>('none')
   const [discountValue, setDiscountValue] = useState<string>('')
+
+  const getGroupedInvoices = useCallback((): GroupedInvoice[] => {
+    const groups: Record<string, GroupedInvoice> = {}
+    
+    invoices.forEach(inv => {
+      const studentId = (inv as any).student_id || ''
+      const key = `${studentId}-${inv.month}-${inv.year}`
+      
+      const itemName = (inv as any).fee_templates?.name || 'Assigned Fee'
+      const item = {
+        invoice_id: inv.id,
+        template_id: (inv as any).fee_template_id || null,
+        template_name: itemName,
+        amount: Number(inv.amount),
+        status: inv.status
+      }
+
+      if (!groups[key]) {
+        groups[key] = {
+          key,
+          student_id: studentId,
+          student_name: inv.student_name || 'Unknown',
+          month: inv.month,
+          year: inv.year,
+          amount: 0,
+          status: 'pending',
+          paid_date: inv.paid_date || undefined,
+          ids: [],
+          items: []
+        }
+      }
+
+      const g = groups[key]
+      g.amount += Number(inv.amount)
+      g.ids.push(inv.id)
+      g.items.push(item)
+      
+      if (inv.paid_date && (!g.paid_date || new Date(inv.paid_date) > new Date(g.paid_date))) {
+        g.paid_date = inv.paid_date
+      }
+    })
+
+    Object.values(groups).forEach(g => {
+      const statuses = g.items.map(it => it.status)
+      if (statuses.every(s => s === 'paid')) {
+        g.status = 'paid'
+      } else if (statuses.every(s => s === 'pending')) {
+        g.status = 'pending'
+      } else {
+        g.status = 'partial'
+      }
+    })
+
+    return Object.values(groups)
+  }, [invoices])
 
   useEffect(() => {
     const getCookie = (name: string) => {
@@ -146,40 +223,52 @@ export default function FeePage() {
     setForm({ name: '', amount: '', frequency: 'Monthly' })
   }
 
-  function startEditInvoice(inv: Invoice) {
-    setEditingInvoice(inv)
-    setEditInvoiceForm({
-      amount: String(inv.amount),
-      status: inv.status,
-      paid_date: inv.paid_date || new Date().toISOString().split('T')[0]
+  function startEditGroup(g: GroupedInvoice) {
+    setEditingGroup(g)
+    setEditGroupForm({
+      status: g.status === 'paid' ? 'paid' : 'pending',
+      paid_date: g.paid_date || new Date().toISOString().split('T')[0],
+      items: g.items.map(it => ({
+        invoice_id: it.invoice_id,
+        template_name: it.template_name,
+        amount: String(it.amount)
+      }))
     })
   }
 
-  async function saveInvoiceEdit(e: React.FormEvent) {
+  async function saveGroupEdit(e: React.FormEvent) {
     e.preventDefault()
-    if (!editingInvoice) return
-    const updates = {
-      amount: parseFloat(editInvoiceForm.amount),
-      status: editInvoiceForm.status,
-      paid_date: editInvoiceForm.status === 'paid' ? editInvoiceForm.paid_date : null
-    }
+    if (!editingGroup) return
+    
+    const itemsToUpdate = editGroupForm.items.map(item => ({
+      id: item.invoice_id,
+      amount: parseFloat(item.amount) || 0,
+      status: editGroupForm.status,
+      paid_date: editGroupForm.status === 'paid' ? editGroupForm.paid_date : null
+    }))
+
     const r = await fetch('/api/school/fee', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: editingInvoice.id, ...updates })
+      body: JSON.stringify({
+        type: 'batch_invoices',
+        items: itemsToUpdate
+      })
     })
+
     if (r.ok) {
       setMsg({ type: 'success', text: 'Fee record updated!' })
-      setEditingInvoice(null)
+      setEditingGroup(null)
       load()
     } else {
       setMsg({ type: 'danger', text: 'Failed to update fee record' })
     }
   }
 
-  async function deleteInvoice(id: string) {
-    if (!confirm('Are you sure you want to delete this fee record?')) return
-    const r = await fetch(`/api/school/fee?type=invoice&id=${id}`, { method: 'DELETE' })
+  async function deleteInvoice(ids: string[]) {
+    if (!confirm('Are you sure you want to delete this fee record? (All items in this invoice will be removed)')) return
+    const idParam = ids.join(',')
+    const r = await fetch(`/api/school/fee?type=invoice&id=${idParam}`, { method: 'DELETE' })
     if (r.ok) {
       setMsg({ type: 'success', text: 'Fee record deleted!' })
       load()
@@ -230,18 +319,22 @@ export default function FeePage() {
     }
   }
 
-  async function markPaid(id: string) {
-    await fetch('/api/school/fee', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'paid', paid_date: new Date().toISOString().split('T')[0] }) })
+  async function markPaid(ids: string[]) {
+    await fetch('/api/school/fee', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids, status: 'paid', paid_date: new Date().toISOString().split('T')[0] })
+    })
     load()
   }
 
-  function printBulkChallans(invoicesToPrint: Invoice[]) {
+  function printBulkChallans(invoicesToPrint: GroupedInvoice[]) {
     if (invoicesToPrint.length === 0) return
     const win = window.open('', '_blank')
     if (!win) return
 
     // Group invoices into chunks of 3
-    const chunks: Invoice[][] = []
+    const chunks: GroupedInvoice[][] = []
     for (let i = 0; i < invoicesToPrint.length; i += 3) {
       chunks.push(invoicesToPrint.slice(i, i + 3))
     }
@@ -250,6 +343,14 @@ export default function FeePage() {
       const challansHTML = chunk.map((inv, idx) => {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
         const billingPeriod = `${months[inv.month - 1]} ${inv.year}`
+        const invNo = inv.items[0]?.invoice_id.substring(0, 8).toUpperCase() || 'N/A'
+
+        const feeRowsHTML = inv.items.map(item => `
+          <tr>
+            <td>${item.template_name}</td>
+            <td style="text-align: right;">₨ ${item.amount.toLocaleString()}</td>
+          </tr>
+        `).join('')
         
         return `
           <div class="challan">
@@ -265,7 +366,7 @@ export default function FeePage() {
                     <td><strong>Student Name:</strong></td>
                     <td>${inv.student_name}</td>
                     <td><strong>Invoice No:</strong></td>
-                    <td>#${inv.id.substring(0, 8).toUpperCase()}</td>
+                    <td>#${invNo}</td>
                   </tr>
                   <tr>
                     <td><strong>Billing Period:</strong></td>
@@ -289,14 +390,11 @@ export default function FeePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr>
-                      <td>Monthly Fee / Tuition Charges</td>
-                      <td style="text-align: right; font-weight: bold;">₨ ${Number(inv.amount).toLocaleString()}</td>
-                    </tr>
+                    ${feeRowsHTML}
                     <tr class="total-row">
                       <td><strong>NET PAYABLE AMOUNT:</strong></td>
                       <td style="text-align: right; font-weight: bold; color: #1e3a8a; font-size: 1.15rem;">
-                        ₨ ${Number(inv.amount).toLocaleString()}
+                        ₨ ${inv.amount.toLocaleString()}
                       </td>
                     </tr>
                   </tbody>
@@ -510,8 +608,8 @@ export default function FeePage() {
     win.document.close()
   }
 
-  function printChallan(inv: Invoice) {
-    printBulkChallans([inv])
+  function printChallan(g: GroupedInvoice) {
+    printBulkChallans([g])
   }
 
   const paidCount = invoices.filter(i => i.status === 'paid').length
@@ -774,7 +872,7 @@ export default function FeePage() {
                 </button>
                 <button 
                   onClick={() => {
-                    const selected = invoices.filter(inv => selectedInvoices.includes(inv.id))
+                    const selected = getGroupedInvoices().filter(g => selectedInvoices.includes(g.key))
                     printBulkChallans(selected)
                   }}
                   className="btn btn-primary"
@@ -784,7 +882,7 @@ export default function FeePage() {
                 </button>
               </div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
-                {selectedInvoices.length} of {invoices.length} invoices selected
+                {selectedInvoices.length} of {getGroupedInvoices().length} invoices selected
               </div>
             </div>
 
@@ -815,7 +913,7 @@ export default function FeePage() {
           </div>
 
           <div className="card" style={{ padding: 0 }}>
-            {invoices.length === 0 ? (
+            {getGroupedInvoices().length === 0 ? (
               <div className="empty-state" style={{ padding: '3rem' }}><div className="empty-icon">💳</div><p>No fee history records found for the selected filters.</p></div>
             ) : (
               <div className="table-wrap" style={{ borderRadius: 0, border: 'none' }}>
@@ -825,10 +923,11 @@ export default function FeePage() {
                       <th style={{ width: '40px' }}>
                         <input 
                           type="checkbox" 
-                          checked={invoices.length > 0 && selectedInvoices.length === invoices.length}
+                          checked={getGroupedInvoices().length > 0 && selectedInvoices.length === getGroupedInvoices().length}
                           onChange={e => {
+                            const grouped = getGroupedInvoices()
                             if (e.target.checked) {
-                              setSelectedInvoices(invoices.map(inv => inv.id))
+                              setSelectedInvoices(grouped.map(g => g.key))
                             } else {
                               setSelectedInvoices([])
                             }
@@ -845,33 +944,39 @@ export default function FeePage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {invoices.map((inv, i) => (
-                      <tr key={inv.id}>
+                    {getGroupedInvoices().map((g, i) => (
+                      <tr key={g.key}>
                         <td>
                           <input 
                             type="checkbox" 
-                            checked={selectedInvoices.includes(inv.id)}
+                            checked={selectedInvoices.includes(g.key)}
                             onChange={e => {
                               if (e.target.checked) {
-                                setSelectedInvoices(prev => [...prev, inv.id])
+                                setSelectedInvoices(prev => [...prev, g.key])
                               } else {
-                                setSelectedInvoices(prev => prev.filter(id => id !== inv.id))
+                                setSelectedInvoices(prev => prev.filter(key => key !== g.key))
                               }
                             }}
                           />
                         </td>
                         <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
-                        <td style={{ fontWeight: 600 }}>{inv.student_name}</td>
-                        <td style={{ fontWeight: 700, color: 'var(--success)' }}>₨ {Number(inv.amount).toLocaleString()}</td>
-                        <td style={{ color: 'var(--text-secondary)' }}>{inv.month}/{inv.year}</td>
-                        <td><span className={`badge ${inv.status === 'paid' ? 'badge-success' : 'badge-warning'}`}>{inv.status}</span></td>
-                        <td style={{ color: 'var(--text-secondary)' }}>{inv.paid_date ? new Date(inv.paid_date).toLocaleDateString() : '—'}</td>
+                        <td style={{ fontWeight: 600 }}>{g.student_name}</td>
+                        <td style={{ fontWeight: 700, color: 'var(--success)' }}>₨ {g.amount.toLocaleString()}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{g.month}/{g.year}</td>
+                        <td>
+                          <span className={`badge ${
+                            g.status === 'paid' ? 'badge-success' : g.status === 'pending' ? 'badge-warning' : 'badge-info'
+                          }`}>
+                            {g.status}
+                          </span>
+                        </td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{g.paid_date ? new Date(g.paid_date).toLocaleDateString() : '—'}</td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.3rem' }}>
-                            {inv.status !== 'paid' && <button onClick={() => markPaid(inv.id)} className="btn btn-success btn-sm">✅ Mark Paid</button>}
-                            <button onClick={() => printChallan(inv)} className="btn btn-secondary btn-sm" title="Print Challan">🖨️</button>
-                            <button onClick={() => startEditInvoice(inv)} className="btn btn-secondary btn-sm" title="Edit Record">✏️</button>
-                            <button onClick={() => deleteInvoice(inv.id)} className="btn btn-danger btn-sm" title="Delete Record">🗑️</button>
+                            {g.status !== 'paid' && <button onClick={() => markPaid(g.ids)} className="btn btn-success btn-sm">✅ Mark Paid</button>}
+                            <button onClick={() => printBulkChallans([g])} className="btn btn-secondary btn-sm" title="Print Challan">🖨️</button>
+                            <button onClick={() => startEditGroup(g)} className="btn btn-secondary btn-sm" title="Edit Record">✏️</button>
+                            <button onClick={() => deleteInvoice(g.ids)} className="btn btn-danger btn-sm" title="Delete Record">🗑️</button>
                           </div>
                         </td>
                       </tr>
@@ -884,58 +989,67 @@ export default function FeePage() {
         </>
       )}
 
-      {/* Edit Invoice Modal */}
-      {editingInvoice && (
+      {/* Edit Group Modal */}
+      {editingGroup && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
           justifyContent: 'center', zIndex: 1000, animation: 'fadeIn 0.2s ease'
         }}>
-          <div className="card animate-scale" style={{ width: '450px', margin: '1rem', position: 'relative', background: 'var(--bg-surface)' }}>
+          <div className="card animate-scale" style={{ width: '480px', margin: '1rem', position: 'relative', background: 'var(--bg-surface)' }}>
             <button 
-              onClick={() => setEditingInvoice(null)} 
+              onClick={() => setEditingGroup(null)} 
               style={{ position: 'absolute', top: '1rem', right: '1rem', border: 'none', background: 'none', fontSize: '1.25rem', cursor: 'pointer', color: 'var(--text-muted)' }}
             >✕</button>
             <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>✏️ Edit Student Fee Record</h3>
             <div style={{ marginBottom: '1rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
-              Student: <strong style={{ color: 'var(--text-primary)' }}>{editingInvoice.student_name}</strong><br/>
-              Month/Year: <strong>{editingInvoice.month}/{editingInvoice.year}</strong>
+              Student: <strong style={{ color: 'var(--text-primary)' }}>{editingGroup.student_name}</strong><br/>
+              Month/Year: <strong>{editingGroup.month}/{editingGroup.year}</strong>
             </div>
-            <form onSubmit={saveInvoiceEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div className="form-group">
-                <label className="form-label">Amount (₨) *</label>
-                <input 
-                  className="form-input" 
-                  type="number" 
-                  value={editInvoiceForm.amount} 
-                  onChange={e => setEditInvoiceForm(f => ({ ...f, amount: e.target.value }))} 
-                  required 
-                />
+            <form onSubmit={saveGroupEdit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div style={{ border: '1px solid var(--border)', borderRadius: '12px', padding: '1rem', background: 'var(--bg-base)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <h4 style={{ fontWeight: 700, fontSize: '0.95rem', margin: 0, borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Fee Items</h4>
+                {editGroupForm.items.map((item, idx) => (
+                  <div key={item.invoice_id} className="form-group" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.75rem', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.85rem', fontWeight: 500 }}>{item.template_name}</span>
+                    <input 
+                      className="form-input form-input-sm" 
+                      type="number" 
+                      value={item.amount} 
+                      onChange={e => {
+                        const updated = [...editGroupForm.items]
+                        updated[idx].amount = e.target.value
+                        setEditGroupForm(f => ({ ...f, items: updated }))
+                      }}
+                      required 
+                    />
+                  </div>
+                ))}
               </div>
               <div className="form-group">
                 <label className="form-label">Status</label>
                 <select 
                   className="form-select" 
-                  value={editInvoiceForm.status} 
-                  onChange={e => setEditInvoiceForm(f => ({ ...f, status: e.target.value }))}
+                  value={editGroupForm.status} 
+                  onChange={e => setEditGroupForm(f => ({ ...f, status: e.target.value }))}
                 >
                   <option value="pending">Pending</option>
                   <option value="paid">Paid</option>
                 </select>
               </div>
-              {editInvoiceForm.status === 'paid' && (
+              {editGroupForm.status === 'paid' && (
                 <div className="form-group">
                   <label className="form-label">Paid Date</label>
                   <input 
                     className="form-input" 
                     type="date" 
-                    value={editInvoiceForm.paid_date} 
-                    onChange={e => setEditInvoiceForm(f => ({ ...f, paid_date: e.target.value }))} 
+                    value={editGroupForm.paid_date} 
+                    onChange={e => setEditGroupForm(f => ({ ...f, paid_date: e.target.value }))} 
                   />
                 </div>
               )}
               <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
-                <button type="button" className="btn btn-secondary" onClick={() => setEditingInvoice(null)}>Cancel</button>
+                <button type="button" className="btn btn-secondary" onClick={() => setEditingGroup(null)}>Cancel</button>
                 <button type="submit" className="btn btn-primary">💾 Save Changes</button>
               </div>
             </form>
