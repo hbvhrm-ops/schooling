@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
     .from('students')
     .select('*, classes(name), sections(name)')
     .eq('school_id', session.schoolId)
-    .eq('session', sessionYear)
+    .or(`session.eq.${sessionYear},status.eq.discharged`)
     
   if (classId) {
     query = query.eq('class_id', classId)

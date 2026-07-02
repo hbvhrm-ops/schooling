@@ -87,6 +87,11 @@ export default function StudentsPage() {
   const [editCustomForm, setEditCustomForm] = useState<Record<string, string>>({})
   const [editingSubmitting, setEditingSubmitting] = useState(false)
 
+  // Re-enroll student states
+  const [currentSession, setCurrentSession] = useState('')
+  const [reEnrollStudent, setReEnrollStudent] = useState<Student | null>(null)
+  const [reEnrollForm, setReEnrollForm] = useState({ class_id: '', section_id: '', session: '', roll_no: '' })
+
   // Inline custom field creation states
   const [showAddFieldModal, setShowAddFieldModal] = useState(false)
   const [newFieldLabel, setNewFieldLabel] = useState('')
@@ -138,6 +143,7 @@ export default function StudentsPage() {
       return ''
     }
     const sess = getCookie('selected_session') || new Date().getFullYear().toString()
+    setCurrentSession(sess)
     setPromoteToSession((parseInt(sess) + 1).toString())
   }, [])
 
@@ -261,6 +267,7 @@ export default function StudentsPage() {
   }
 
   const filteredSections = sections.filter(s => !form.class_id || s.class_id === form.class_id)
+  const reEnrollSections = sections.filter(s => !reEnrollForm.class_id || s.class_id === reEnrollForm.class_id)
   const filtered = students.filter(s => {
     const matchSearch = !search || s.name.toLowerCase().includes(search.toLowerCase()) || s.roll_no?.includes(search) || s.father_name?.toLowerCase().includes(search.toLowerCase())
     const matchStatus = !statusFilter || s.status === statusFilter
@@ -341,10 +348,46 @@ export default function StudentsPage() {
     load()
   }
 
-  async function handleReEnroll(id: string) {
-    if (!confirm('Re-enroll this student?')) return
-    await fetch('/api/school/students', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'active' }) })
-    load()
+  function startReEnroll(student: Student) {
+    setReEnrollStudent(student)
+    setReEnrollForm({
+      class_id: student.class_id || '',
+      section_id: student.section_id || '',
+      session: currentSession || new Date().getFullYear().toString(),
+      roll_no: student.roll_no || ''
+    })
+  }
+
+  async function handleReEnrollSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!reEnrollStudent) return
+    setSubmitting(true)
+    try {
+      const r = await fetch('/api/school/students', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: reEnrollStudent.id,
+          class_id: reEnrollForm.class_id || null,
+          section_id: reEnrollForm.section_id || null,
+          session: reEnrollForm.session,
+          roll_no: reEnrollForm.roll_no || null,
+          status: 'active'
+        })
+      })
+      if (r.ok) {
+        setMsg({ type: 'success', text: `${reEnrollStudent.name} has been enrolled again successfully!` })
+        setReEnrollStudent(null)
+        load()
+      } else {
+        const data = await r.json()
+        setMsg({ type: 'danger', text: data.error || 'Failed to re-enroll student' })
+      }
+    } catch {
+      setMsg({ type: 'danger', text: 'Error connecting to the server' })
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   async function handleDelete(id: string) {
@@ -824,7 +867,7 @@ export default function StudentsPage() {
                             }} className="btn btn-secondary btn-sm" title="Edit Student">✏️</button>
                             <button onClick={() => printID(s)} className="btn btn-secondary btn-sm" title="Print ID Card">🪪</button>
                             {s.status === 'active' && <button onClick={() => handleDischarge(s.id)} className="btn btn-warning btn-sm">📤 Discharge</button>}
-                            {s.status === 'discharged' && <button onClick={() => handleReEnroll(s.id)} className="btn btn-success btn-sm">📥 Enroll Again</button>}
+                            {s.status === 'discharged' && <button onClick={() => startReEnroll(s)} className="btn btn-success btn-sm">📥 Enroll Again</button>}
                             <button onClick={() => handleDelete(s.id)} className="btn btn-danger btn-sm">🗑️</button>
                           </div>
                         </td>
@@ -1894,6 +1937,73 @@ export default function StudentsPage() {
               >
                 {submitting ? '⏳ Deleting...' : 'Delete All Records'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Re-Enroll Modal */}
+      {reEnrollStudent && (
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setReEnrollStudent(null)}>
+          <div className="modal animate-slide" style={{ maxWidth: '450px' }}>
+            <div className="modal-header" style={{ borderBottom: '1px solid var(--border)' }}>
+              <h3 style={{ fontWeight: 700 }}>📥 Enroll Again</h3>
+              <button onClick={() => setReEnrollStudent(null)} className="btn btn-secondary btn-icon">✕</button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <div style={{ marginBottom: '1.25rem', fontSize: '0.9rem', color: 'var(--text-secondary)' }}>
+                Re-enrolling: <strong style={{ color: 'var(--text-primary)' }}>{reEnrollStudent.name}</strong>
+              </div>
+              <form onSubmit={handleReEnrollSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Class *</label>
+                  <select 
+                    className="form-select" 
+                    value={reEnrollForm.class_id} 
+                    onChange={e => setReEnrollForm(f => ({ ...f, class_id: e.target.value, section_id: '' }))} 
+                    required
+                  >
+                    <option value="">Select Class</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Section</label>
+                  <select 
+                    className="form-select" 
+                    value={reEnrollForm.section_id} 
+                    onChange={e => setReEnrollForm(f => ({ ...f, section_id: e.target.value }))}
+                  >
+                    <option value="">Select Section</option>
+                    {reEnrollSections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Academic Session *</label>
+                  <input 
+                    className="form-input" 
+                    value={reEnrollForm.session} 
+                    onChange={e => setReEnrollForm(f => ({ ...f, session: e.target.value }))} 
+                    required 
+                    placeholder="e.g. 2026"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Roll Number</label>
+                  <input 
+                    className="form-input" 
+                    value={reEnrollForm.roll_no} 
+                    onChange={e => setReEnrollForm(f => ({ ...f, roll_no: e.target.value }))} 
+                    placeholder="e.g. 101"
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
+                  <button type="button" className="btn btn-secondary" onClick={() => setReEnrollStudent(null)}>Cancel</button>
+                  <button type="submit" className="btn btn-success" disabled={submitting}>
+                    {submitting ? '⏳ Enrolling...' : '📥 Enroll Student'}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         </div>
