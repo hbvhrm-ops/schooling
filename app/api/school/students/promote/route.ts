@@ -24,14 +24,32 @@ export async function POST(req: NextRequest) {
 
     // Handle Discharge / Graduation of highest class
     if (toClassId === 'discharge') {
-      const { error } = await supabase
+      const { data: studentsToDischarge } = await supabase
         .from('students')
-        .update({ status: 'discharged', session: targetSession })
+        .select('id, additional_info')
         .eq('school_id', session.schoolId)
         .eq('class_id', fromClassId)
         .eq('status', 'active')
 
-      if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+      if (studentsToDischarge && studentsToDischarge.length > 0) {
+        const dischargeDate = new Date().toISOString().split('T')[0]
+        for (const student of studentsToDischarge) {
+          const additional_info = {
+            ...(student.additional_info || {}),
+            discharge_date: dischargeDate
+          }
+          delete (additional_info as any).readmission_date
+
+          await supabase
+            .from('students')
+            .update({
+              status: 'discharged',
+              session: targetSession,
+              additional_info
+            })
+            .eq('id', student.id)
+        }
+      }
       return NextResponse.json({ success: true })
     }
 

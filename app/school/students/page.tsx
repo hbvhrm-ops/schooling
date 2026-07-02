@@ -90,7 +90,7 @@ export default function StudentsPage() {
   // Re-enroll student states
   const [currentSession, setCurrentSession] = useState('')
   const [reEnrollStudent, setReEnrollStudent] = useState<Student | null>(null)
-  const [reEnrollForm, setReEnrollForm] = useState({ class_id: '', section_id: '', session: '', roll_no: '' })
+  const [reEnrollForm, setReEnrollForm] = useState({ class_id: '', section_id: '', session: '', roll_no: '', readmission_date: '' })
 
   // Inline custom field creation states
   const [showAddFieldModal, setShowAddFieldModal] = useState(false)
@@ -344,7 +344,18 @@ export default function StudentsPage() {
 
   async function handleDischarge(id: string) {
     if (!confirm('Discharge this student?')) return
-    await fetch('/api/school/students', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status: 'discharged' }) })
+    const student = students.find(s => s.id === id)
+    const additional_info = {
+      ...(student?.additional_info || {}),
+      discharge_date: new Date().toISOString().split('T')[0]
+    }
+    delete (additional_info as any).readmission_date
+
+    await fetch('/api/school/students', { 
+      method: 'PUT', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify({ id, status: 'discharged', additional_info }) 
+    })
     load()
   }
 
@@ -354,7 +365,8 @@ export default function StudentsPage() {
       class_id: student.class_id || '',
       section_id: student.section_id || '',
       session: currentSession || new Date().getFullYear().toString(),
-      roll_no: student.roll_no || ''
+      roll_no: student.roll_no || '',
+      readmission_date: new Date().toISOString().split('T')[0]
     })
   }
 
@@ -363,6 +375,12 @@ export default function StudentsPage() {
     if (!reEnrollStudent) return
     setSubmitting(true)
     try {
+      const additional_info = {
+        ...(reEnrollStudent.additional_info || {}),
+        readmission_date: reEnrollForm.readmission_date
+      }
+      delete (additional_info as any).discharge_date
+
       const r = await fetch('/api/school/students', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -372,7 +390,8 @@ export default function StudentsPage() {
           section_id: reEnrollForm.section_id || null,
           session: reEnrollForm.session,
           roll_no: reEnrollForm.roll_no || null,
-          status: 'active'
+          status: 'active',
+          additional_info
         })
       })
       if (r.ok) {
@@ -536,18 +555,30 @@ export default function StudentsPage() {
       search ? `Search: "${search}"` : ''
     ].filter(Boolean).join(' | ') || 'All Students'
 
-    const rows = filtered.map((s, i) => `
-      <tr>
-        <td>${i + 1}</td>
-        <td><strong>${s.name}</strong></td>
-        <td>${s.father_name || '—'}</td>
-        <td>${s.class_name || '—'} ${s.section_name ? `(${s.section_name})` : ''}</td>
-        <td>${s.roll_no || '—'}</td>
-        <td>${s.gender || '—'}</td>
-        <td>${s.contact || '—'}</td>
-        <td>${s.status}</td>
-      </tr>
-    `).join('')
+    const rows = filtered.map((s, i) => {
+      let dateLabel = '—'
+      if (s.status === 'discharged') {
+        dateLabel = `Discharged: ${s.additional_info?.discharge_date ? new Date(s.additional_info.discharge_date).toLocaleDateString() : '—'}`
+      } else if (s.additional_info?.readmission_date) {
+        dateLabel = `Re-Admitted: ${new Date(s.additional_info.readmission_date).toLocaleDateString()}`
+      } else {
+        dateLabel = `Admitted: ${s.reg_date ? new Date(s.reg_date).toLocaleDateString() : '—'}`
+      }
+
+      return `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${s.name}</strong></td>
+          <td>${s.father_name || '—'}</td>
+          <td>${s.class_name || '—'} ${s.section_name ? `(${s.section_name})` : ''}</td>
+          <td>${s.roll_no || '—'}</td>
+          <td>${s.gender || '—'}</td>
+          <td>${s.contact || '—'}</td>
+          <td>${dateLabel}</td>
+          <td>${s.status}</td>
+        </tr>
+      `
+    }).join('')
 
     win.document.write(`
       <html>
@@ -596,6 +627,7 @@ export default function StudentsPage() {
               <th>Roll No</th>
               <th>Gender</th>
               <th>Contact</th>
+              <th>Date</th>
               <th>Status</th>
             </tr>
           </thead>
@@ -814,7 +846,7 @@ export default function StudentsPage() {
             ) : (
               <div className="table-wrap" style={{ borderRadius: 0, border: 'none' }}>
                 <table>
-                  <thead><tr><th>#</th><th>Name</th><th>Father Name</th><th>Class</th><th>Roll No</th><th>Gender</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead>
+                  <thead><tr><th>#</th><th>Name</th><th>Father Name</th><th>Class</th><th>Roll No</th><th>Gender</th><th>Contact</th><th>Date</th><th>Status</th><th>Actions</th></tr></thead>
                   <tbody>
                     {filtered.map((s, i) => (
                       <tr key={s.id}>
@@ -831,9 +863,25 @@ export default function StudentsPage() {
                         </td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.father_name || '—'}</td>
                         <td><span className="badge badge-primary">{s.class_name || '—'} {s.section_name && `(${s.section_name})`}</span></td>
-                        <td>{s.roll_no || '—'}</td>
-                        <td>{s.gender || '—'}</td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.contact || '—'}</td>
+                        <td>
+                           {s.status === 'discharged' ? (
+                             <div>
+                               <span style={{ fontSize: '0.7rem', color: 'var(--danger)', display: 'block', fontWeight: 600 }}>Discharged</span>
+                               <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{s.additional_info?.discharge_date ? new Date(s.additional_info.discharge_date).toLocaleDateString() : '—'}</span>
+                             </div>
+                           ) : s.additional_info?.readmission_date ? (
+                             <div>
+                               <span style={{ fontSize: '0.7rem', color: 'var(--success)', display: 'block', fontWeight: 600 }}>Re-Admitted</span>
+                               <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{new Date(s.additional_info.readmission_date).toLocaleDateString()}</span>
+                             </div>
+                           ) : (
+                             <div>
+                               <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'block', fontWeight: 600 }}>Admitted</span>
+                               <span style={{ fontSize: '0.8rem', fontWeight: 500 }}>{s.reg_date ? new Date(s.reg_date).toLocaleDateString() : '—'}</span>
+                             </div>
+                           )}
+                        </td>
                         <td>
                           <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                             <span className={`badge ${s.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{s.status}</span>
@@ -1986,6 +2034,16 @@ export default function StudentsPage() {
                     onChange={e => setReEnrollForm(f => ({ ...f, session: e.target.value }))} 
                     required 
                     placeholder="e.g. 2026"
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Re-admission Date *</label>
+                  <input 
+                    type="date"
+                    className="form-input" 
+                    value={reEnrollForm.readmission_date} 
+                    onChange={e => setReEnrollForm(f => ({ ...f, readmission_date: e.target.value }))} 
+                    required
                   />
                 </div>
                 <div className="form-group">
