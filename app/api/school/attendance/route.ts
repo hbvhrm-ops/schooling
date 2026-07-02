@@ -6,6 +6,7 @@ interface DBStudent {
   id: string
   name: string
   roll_no: string | null
+  contact: string | null
   section_id: string | null
   sections: { name: string } | null
 }
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
     
     let studentQuery = supabase
       .from('students')
-      .select('id, name, roll_no, section_id, sections(name)')
+      .select('id, name, roll_no, contact, section_id, sections(name)')
       .eq('school_id', session.schoolId)
       .eq('class_id', classId)
       .neq('status', 'discharged')
@@ -81,6 +82,7 @@ export async function GET(req: NextRequest) {
       id: s.id,
       name: s.name,
       roll_no: s.roll_no || '',
+      contact: s.contact || '',
       section_id: s.section_id,
       section_name: s.sections?.name || ''
     }))

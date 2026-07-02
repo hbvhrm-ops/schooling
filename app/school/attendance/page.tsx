@@ -17,6 +17,7 @@ interface DailyRecord {
   id: string
   name: string
   roll_no: string
+  contact?: string
   section_id: string | null
   section_name: string
   status: 'present' | 'absent' | 'leave' | 'unmarked'
@@ -87,17 +88,6 @@ export default function AttendancePage() {
       setSections(d.sections || [])
     })
 
-    // Pre-fill school name from dashboard/session
-    fetch('/api/school/dashboard')
-      .then(r => r.json())
-      .then(d => {
-        if (d.schoolName) {
-          setSchoolName(d.schoolName)
-        }
-      })
-      .catch(() => {})
-
-    // Automatically load logo from certificate templates
     const loadSchoolLogo = async () => {
       let fallbackLogo = ''
       const types = ['slc', 'birth', 'character', 'sports', 'top_positions']
@@ -120,7 +110,25 @@ export default function AttendancePage() {
         setSchoolLogoUrl(fallbackLogo)
       }
     }
-    loadSchoolLogo()
+
+    // Load school profile (name & logo) as source of truth
+    fetch('/api/school/profile')
+      .then(r => r.json())
+      .then(d => {
+        if (d.school) {
+          if (d.school.name) setSchoolName(d.school.name)
+          if (d.school.logo_url) {
+            setSchoolLogoUrl(d.school.logo_url)
+          } else {
+            loadSchoolLogo()
+          }
+        } else {
+          loadSchoolLogo()
+        }
+      })
+      .catch(() => {
+        loadSchoolLogo()
+      })
   }, [])
 
   const filteredSections = sections.filter(s => !selClass || s.class_id === selClass)
@@ -739,6 +747,7 @@ export default function AttendancePage() {
                       <th>Student Name</th>
                       <th>Section</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -759,11 +768,34 @@ export default function AttendancePage() {
                             <span className="badge" style={{ background: 'rgba(107, 114, 128, 0.1)', color: '#6b7280', border: '1px solid rgba(107, 114, 128, 0.2)' }}>❓ Unmarked</span>
                           )}
                         </td>
+                        <td>
+                          {r.status === 'absent' && (
+                            <button
+                              onClick={() => {
+                                let cleanPhone = (r.contact || '').replace(/[^0-9]/g, '')
+                                if (cleanPhone.startsWith('0')) {
+                                  cleanPhone = '92' + cleanPhone.slice(1)
+                                }
+                                if (!cleanPhone) {
+                                  alert('No contact number registered for this student.')
+                                  return
+                                }
+                                const message = `Dear Parent,\nYour child *${r.name}* (Roll No: ${r.roll_no || '—'}) is *absent* today (${date}) from *${schoolName}*. Please contact the school office for details.`
+                                window.open(`https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`, '_blank')
+                              }}
+                              className="btn"
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: '#25D366', color: '#fff', border: 'none', padding: '0.3rem 0.6rem', fontSize: '0.8rem', borderRadius: '6px', fontWeight: 600, cursor: 'pointer' }}
+                              title="Send Absent Alert via WhatsApp"
+                            >
+                              <span style={{ fontSize: '0.9rem' }}>💬</span> WhatsApp Alert
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                     {filteredDailyRecords.length === 0 && (
                       <tr>
-                        <td colSpan={5} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+                        <td colSpan={6} style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
                           No students matched your search criteria.
                         </td>
                       </tr>

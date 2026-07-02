@@ -146,27 +146,7 @@ export default function ResultPage() {
     fetch('/api/school/results').then(r => r.json()).then(d => setExamTypes(d.examTypes || []))
     fetch('/api/school/subjects').then(r => r.json()).then(d => setSubjects(d.subjects || []))
     
-    // Pre-fill school details from profile settings, fallback to dashboard session
-    fetch('/api/school/profile')
-      .then(r => r.json())
-      .then(d => {
-        if (d.name) setCustomSchoolName(d.name)
-        if (d.logo_url) setCustomLogoUrl(d.logo_url)
-        if (d.address) setCustomLocation(d.address)
-        if (d.contact) setCustomPhone(d.contact)
-      })
-      .catch(() => {
-        fetch('/api/school/dashboard')
-          .then(r => r.json())
-          .then(d => {
-            if (d.schoolName) {
-              setCustomSchoolName(d.schoolName)
-            }
-          })
-          .catch(() => {})
-      })
-
-    // Automatically load logo from certificate templates
+    // Automatically load logo from certificate templates as fallback
     const loadSchoolLogo = async () => {
       let fallbackLogo = ''
       const types = ['slc', 'birth', 'character', 'sports', 'top_positions']
@@ -189,7 +169,35 @@ export default function ResultPage() {
         setCustomLogoUrl(fallbackLogo)
       }
     }
-    loadSchoolLogo()
+
+    // Pre-fill school details from profile settings, fallback to dashboard session or certificate templates
+    fetch('/api/school/profile')
+      .then(r => r.json())
+      .then(d => {
+        if (d.school) {
+          if (d.school.name) setCustomSchoolName(d.school.name)
+          if (d.school.logo_url) {
+            setCustomLogoUrl(d.school.logo_url)
+          } else {
+            loadSchoolLogo()
+          }
+          if (d.school.address) setCustomLocation(d.school.address)
+          if (d.school.contact) setCustomPhone(d.school.contact)
+        } else {
+          loadSchoolLogo()
+        }
+      })
+      .catch(() => {
+        fetch('/api/school/dashboard')
+          .then(r => r.json())
+          .then(d => {
+            if (d.schoolName) {
+              setCustomSchoolName(d.schoolName)
+            }
+          })
+          .catch(() => {})
+        loadSchoolLogo()
+      })
   }, [])
 
   // Listen to afterprint event to reset printing state
