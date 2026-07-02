@@ -74,6 +74,8 @@ export default function CertificatesPage() {
 
   // Certificate Variables States
   const [selectedStudentId, setSelectedStudentId] = useState('')
+  const [certClassFilter, setCertClassFilter] = useState('')
+  const [certSectionFilter, setCertSectionFilter] = useState('')
   
   // SLC specific states
   const [leavingDate, setLeavingDate] = useState(new Date().toISOString().split('T')[0])
@@ -215,7 +217,23 @@ export default function CertificatesPage() {
     loadTemplate(activeDoc)
     setTab('generate')
     setMsg(null)
+    setCertClassFilter('')
+    setCertSectionFilter('')
   }, [activeDoc, loadTemplate])
+
+  const filteredCertStudents = students.filter(s => {
+    const matchClass = !certClassFilter || s.class_id === certClassFilter
+    const matchSection = !certSectionFilter || s.section_id === certSectionFilter
+    return matchClass && matchSection
+  })
+
+  useEffect(() => {
+    if (filteredCertStudents.length > 0 && !filteredCertStudents.some(s => s.id === selectedStudentId)) {
+      setSelectedStudentId(filteredCertStudents[0].id)
+    } else if (filteredCertStudents.length === 0) {
+      setSelectedStudentId('')
+    }
+  }, [certClassFilter, certSectionFilter, filteredCertStudents, selectedStudentId])
 
   // Fetch results for Award List
   const loadAwardResults = useCallback(async () => {
@@ -2022,13 +2040,33 @@ export default function CertificatesPage() {
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Variables & Details</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Filter Class</label>
+                        <select className="form-select" value={certClassFilter} onChange={e => { setCertClassFilter(e.target.value); setCertSectionFilter('') }}>
+                          <option value="">All Classes</option>
+                          {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Filter Section</label>
+                        <select className="form-select" value={certSectionFilter} onChange={e => setCertSectionFilter(e.target.value)}>
+                          <option value="">All Sections</option>
+                          {sections.filter(s => !certClassFilter || s.class_id === certClassFilter).map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="form-group">
                       <label className="form-label">Select Student *</label>
-                      {students.length === 0 ? (
-                        <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>⚠️ No active students registered in database.</p>
+                      {filteredCertStudents.length === 0 ? (
+                        <p style={{ color: 'var(--danger)', fontSize: '0.85rem' }}>⚠️ No students match the active filters.</p>
                       ) : (
                         <select className="form-select" value={selectedStudentId} onChange={e => setSelectedStudentId(e.target.value)}>
-                          {students.map(s => (
+                          <option value="">Select Student</option>
+                          {filteredCertStudents.map(s => (
                             <option key={s.id} value={s.id}>
                               {s.name} (Roll: {s.roll_no || '—'}) - {s.class_name || '—'}
                             </option>
