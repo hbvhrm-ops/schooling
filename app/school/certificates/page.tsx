@@ -57,6 +57,9 @@ export default function CertificatesPage() {
   const [schoolPsra, setSchoolPsra] = useState('')
   const [schoolBise, setSchoolBise] = useState('')
 
+  // Cache of all customizable certificate templates to make switching instantaneous
+  const [templatesCache, setTemplatesCache] = useState<Record<string, CertificateTemplate>>({})
+
   // Certificate template state (for currently active type)
   const [template, setTemplate] = useState<CertificateTemplate>({
     logo_url: '',
@@ -124,12 +127,26 @@ export default function CertificatesPage() {
   const loadData = useCallback(async () => {
     setLoading(true)
     try {
-      const [studentsRes, classesRes, subjectsRes, examsRes, templateRes] = await Promise.all([
+      const [
+        studentsRes,
+        classesRes,
+        subjectsRes,
+        examsRes,
+        slcRes,
+        birthRes,
+        charRes,
+        sportsRes,
+        topRes
+      ] = await Promise.all([
         fetch('/api/school/students').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/classes').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/subjects').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/results').then(r => r.json()).catch(() => ({})),
         fetch('/api/school/certificate-templates?type=slc').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/certificate-templates?type=birth').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/certificate-templates?type=character').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/certificate-templates?type=sports').then(r => r.json()).catch(() => ({})),
+        fetch('/api/school/certificate-templates?type=top_positions').then(r => r.json()).catch(() => ({})),
       ])
 
       const fetchedStudents = studentsRes.students || []
@@ -143,28 +160,39 @@ export default function CertificatesPage() {
         setSelectedStudentId(fetchedStudents[0].id)
       }
 
-      if (templateRes.schoolLogo) {
-        setDefaultSchoolLogo(templateRes.schoolLogo)
+      // Populate templates cache
+      const cache: Record<string, CertificateTemplate> = {
+        slc: slcRes.template || { logo_url: '', title: '', body_text: '', signature_title: '' },
+        birth: birthRes.template || { logo_url: '', title: '', body_text: '', signature_title: '' },
+        character: charRes.template || { logo_url: '', title: '', body_text: '', signature_title: '' },
+        sports: sportsRes.template || { logo_url: '', title: '', body_text: '', signature_title: '' },
+        top_positions: topRes.template || { logo_url: '', title: '', body_text: '', signature_title: '' },
       }
-      if (templateRes.template?.logo_url) {
-        setSchoolLogoUrl(templateRes.template.logo_url)
-      } else if (templateRes.schoolLogo) {
-        setSchoolLogoUrl(templateRes.schoolLogo)
+      setTemplatesCache(cache)
+
+      const meta = slcRes
+      if (meta.schoolLogo) {
+        setDefaultSchoolLogo(meta.schoolLogo)
       }
-      if (templateRes.schoolName) {
-        setSchoolName(templateRes.schoolName)
+      if (meta.template?.logo_url) {
+        setSchoolLogoUrl(meta.template.logo_url)
+      } else if (meta.schoolLogo) {
+        setSchoolLogoUrl(meta.schoolLogo)
       }
-      if (templateRes.schoolContact) {
-        setSchoolContact(templateRes.schoolContact)
+      if (meta.schoolName) {
+        setSchoolName(meta.schoolName)
       }
-      if (templateRes.schoolAddress) {
-        setSchoolAddress(templateRes.schoolAddress)
+      if (meta.schoolContact) {
+        setSchoolContact(meta.schoolContact)
       }
-      if (templateRes.schoolPsra) {
-        setSchoolPsra(templateRes.schoolPsra)
+      if (meta.schoolAddress) {
+        setSchoolAddress(meta.schoolAddress)
       }
-      if (templateRes.schoolBise) {
-        setSchoolBise(templateRes.schoolBise)
+      if (meta.schoolPsra) {
+        setSchoolPsra(meta.schoolPsra)
+      }
+      if (meta.schoolBise) {
+        setSchoolBise(meta.schoolBise)
       }
     } catch {
       setMsg({ type: 'danger', text: 'Error loading workspace metadata' })
@@ -173,48 +201,25 @@ export default function CertificatesPage() {
     }
   }, [])
 
-  // Load certificate template when activeDoc changes
-  const loadTemplate = useCallback(async (type: string) => {
+  // Load certificate template from client-side cache when activeDoc changes
+  const loadTemplate = useCallback((type: string) => {
     if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary') return
-    try {
-      const res = await fetch(`/api/school/certificate-templates?type=${type}`)
-      const data = await res.json()
-      if (res.ok && data.template) {
-        setTemplate(data.template)
-        setLogoUrlForm(data.template.logo_url || '')
-        setTitleForm(data.template.title || '')
-        setBodyTextForm(data.template.body_text || '')
-        setSignatureTitleForm(data.template.signature_title || 'Principal')
-        if (data.schoolName) {
-          setSchoolName(data.schoolName)
-        }
-        if (data.schoolLogo) {
-          setDefaultSchoolLogo(data.schoolLogo)
-        }
-        if (data.schoolContact) {
-          setSchoolContact(data.schoolContact)
-        }
-        if (data.schoolAddress) {
-          setSchoolAddress(data.schoolAddress)
-        }
-        if (data.schoolPsra) {
-          setSchoolPsra(data.schoolPsra)
-        }
-        if (data.schoolBise) {
-          setSchoolBise(data.schoolBise)
-        }
-        if (data.template.logo_url) {
-          setSchoolLogoUrl(data.template.logo_url)
-        } else if (data.schoolLogo) {
-          setSchoolLogoUrl(data.schoolLogo)
-        } else {
-          setSchoolLogoUrl('')
-        }
+    const t = templatesCache[type]
+    if (t) {
+      setTemplate(t)
+      setLogoUrlForm(t.logo_url || '')
+      setTitleForm(t.title || '')
+      setBodyTextForm(t.body_text || '')
+      setSignatureTitleForm(t.signature_title || 'Principal')
+      if (t.logo_url) {
+        setSchoolLogoUrl(t.logo_url)
+      } else if (defaultSchoolLogo) {
+        setSchoolLogoUrl(defaultSchoolLogo)
+      } else {
+        setSchoolLogoUrl('')
       }
-    } catch {
-      console.error('Error fetching template configuration')
     }
-  }, [])
+  }, [templatesCache, defaultSchoolLogo])
 
   useEffect(() => {
     loadData()
@@ -543,6 +548,10 @@ export default function CertificatesPage() {
         if (data.template) {
           setTemplate(data.template)
           setSchoolLogoUrl(data.template.logo_url || data.schoolLogo || defaultSchoolLogo || '')
+          setTemplatesCache(prev => ({
+            ...prev,
+            [activeDoc]: data.template
+          }))
         }
       } else {
         setMsg({ type: 'danger', text: data.error || 'Failed to save template' })
