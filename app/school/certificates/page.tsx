@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -113,6 +113,13 @@ export default function CertificatesPage() {
   const [awardLoading, setAwardLoading] = useState(false)
   const [awardResults, setAwardResults] = useState<any[]>([])
 
+  // Diary specific states
+  const [diaryClassFilter, setDiaryClassFilter] = useState('')
+  const [diaryGrade, setDiaryGrade] = useState('')
+  const [diarySubjects, setDiarySubjects] = useState<string[]>([
+    'English', 'Urdu', 'Science', 'Maths', 'G.Knowledge', 'S.Studies', 'Islamiyat', 'Presentation', 'Total Students', 'Name of Absent Students'
+  ])
+
   // Load basic lists
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -168,7 +175,7 @@ export default function CertificatesPage() {
 
   // Load certificate template when activeDoc changes
   const loadTemplate = useCallback(async (type: string) => {
-    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary') return
     try {
       const res = await fetch(`/api/school/certificate-templates?type=${type}`)
       const data = await res.json()
@@ -234,6 +241,24 @@ export default function CertificatesPage() {
       setSelectedStudentId('')
     }
   }, [certClassFilter, certSectionFilter, filteredCertStudents, selectedStudentId])
+
+  useEffect(() => {
+    if (diaryClassFilter) {
+      const cls = classes.find(c => c.id === diaryClassFilter)
+      setDiaryGrade(cls ? cls.name : '')
+      const classSubs = subjects.filter(s => s.class_id === diaryClassFilter)
+      setDiarySubjects([
+        ...classSubs.map(s => s.name),
+        'Total Students',
+        'Name Of Absent Students'
+      ])
+    } else {
+      setDiaryGrade('')
+      setDiarySubjects([
+        'English', 'Urdu', 'Science', 'Maths', 'G.Knowledge', 'S.Studies', 'Islamiyat', 'Presentation', 'Total Students', 'Name Of Absent Students'
+      ])
+    }
+  }, [diaryClassFilter, classes, subjects])
 
   // Fetch results for Award List
   const loadAwardResults = useCallback(async () => {
@@ -1066,6 +1091,229 @@ export default function CertificatesPage() {
         </body>
       </html>
     `)
+    win.document.close()
+  }
+
+  function getDiaryPreviewHtml() {
+    return `
+      <div style="font-family: sans-serif; color: #000; padding: 10px; box-sizing: border-box; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; font-size: 11px;">
+        <div>
+          <div style="text-align: center; font-size: 14px; font-weight: bold; margin-bottom: 8px; text-transform: uppercase;">
+            ${schoolName}
+            <div style="font-size: 9px; font-weight: normal; margin-top: 2px; text-transform: none; color: #666;">
+              Daily Class Diary Sheet
+            </div>
+          </div>
+          <div style="font-size: 11px; font-weight: bold; margin-bottom: 12px; text-align: center;">
+            Grade: <span style="display: inline-block; border-bottom: 1px solid #000; width: 120px; text-align: center;">${diaryGrade || '___________________'}</span>
+          </div>
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10px;">
+            <thead>
+              <tr style="background-color: #f3f4f6;">
+                <th style="border: 1px solid #000; padding: 5px; font-weight: bold; width: 130px; text-align: center;">Subjects</th>
+                <th style="border: 1px solid #000; padding: 5px; font-weight: bold; text-align: center;">Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${diarySubjects.map((sub, idx) => {
+                const isAbsent = sub === 'Name Of Absent Students' || sub === 'Name of Absent Students';
+                const isTotal = sub === 'Total Students';
+                const height = isAbsent ? '38px' : isTotal ? '20px' : '15px';
+                return `
+                  <tr>
+                    <td style="border: 1px solid #000; padding: 4px 6px; font-weight: bold; width: 130px; background-color: #fafafa;">${sub}</td>
+                    <td style="border: 1px solid #000; padding: 4px 6px; height: ${height};"></td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: bold; margin-top: 10px;">
+          <div>Class Incharge: <span style="border-bottom: 1px solid #000; width: 120px; display: inline-block; margin-left: 3px;"></span></div>
+          <div>V.P Sign: <span style="border-bottom: 1px solid #000; width: 120px; display: inline-block; margin-left: 3px;"></span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  function handlePrintDiary() {
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const diarySingleHtml = `
+      <div class="diary-header">
+        ${schoolName}
+        <div class="diary-title">Daily Class Diary Sheet</div>
+      </div>
+      <div class="grade-line">
+        Grade: <span class="grade-underline">${diaryGrade || '___________________'}</span>
+      </div>
+      <table class="diary-table">
+        <thead>
+          <tr>
+            <th style="width: 180px;">Subjects</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${diarySubjects.map((sub) => {
+            const isAbsent = sub === 'Name Of Absent Students' || sub === 'Name of Absent Students';
+            const isTotal = sub === 'Total Students';
+            const rowClass = isAbsent ? 'absent-row' : isTotal ? 'total-row' : '';
+            return `
+              <tr class="${rowClass}">
+                <td class="subject-cell">${sub}</td>
+                <td class="desc-cell"></td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+      <div class="diary-footer">
+        <div>Class Incharge: <span class="footer-line"></span></div>
+        <div>V.P Sign: <span class="footer-line"></span></div>
+      </div>
+    `;
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Daily Class Diary - ${diaryGrade || 'Blank'}</title>
+          <style>
+            @page {
+              size: portrait;
+              margin: 8mm 12mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background-color: #fff;
+              color: #000;
+              font-family: 'Segoe UI', Arial, sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .print-page {
+              width: 100%;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              height: 275mm;
+              justify-content: space-between;
+            }
+            .diary-item {
+              height: 85mm;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              box-sizing: border-box;
+              padding: 2mm 0;
+            }
+            .diary-divider {
+              text-align: center;
+              font-size: 7pt;
+              color: #555;
+              margin: 1mm 0;
+              border-top: 1px dashed #000;
+              padding-top: 1mm;
+              font-family: monospace;
+              letter-spacing: 2px;
+            }
+            .diary-header {
+              text-align: center;
+              font-size: 11pt;
+              font-weight: bold;
+              text-transform: uppercase;
+            }
+            .diary-title {
+              font-size: 8pt;
+              font-weight: normal;
+              text-transform: none;
+              color: #444;
+              margin-top: 1px;
+            }
+            .grade-line {
+              font-size: 9pt;
+              font-weight: bold;
+              text-align: center;
+              margin: 1mm 0 2mm 0;
+            }
+            .grade-underline {
+              display: inline-block;
+              border-bottom: 1px solid #000;
+              width: 150px;
+              text-align: center;
+            }
+            .diary-table {
+              width: 100%;
+              border-collapse: collapse;
+            }
+            .diary-table th, .diary-table td {
+              border: 1px solid #000;
+              padding: 4px 6px;
+              font-size: 8pt;
+              line-height: 1.1;
+            }
+            .diary-table th {
+              font-weight: bold;
+              background-color: #f3f4f6;
+              text-align: center;
+            }
+            .diary-table td.subject-cell {
+              font-weight: bold;
+              width: 180px;
+              background-color: #fafafa;
+            }
+            .diary-table td.desc-cell {
+              height: 14px;
+            }
+            .diary-table tr.total-row td.desc-cell {
+              height: 18px;
+            }
+            .diary-table tr.absent-row td.desc-cell {
+              height: 38px;
+            }
+            .diary-footer {
+              display: flex;
+              justify-content: space-between;
+              font-size: 8pt;
+              font-weight: bold;
+              margin-top: 2mm;
+            }
+            .footer-line {
+              border-bottom: 1px solid #000;
+              width: 150px;
+              display: inline-block;
+              margin-left: 3px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="print-page">
+            <div class="diary-item">
+              ${diarySingleHtml}
+            </div>
+            <div class="diary-divider">✂️ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+            <div class="diary-item">
+              ${diarySingleHtml}
+            </div>
+            <div class="diary-divider">✂️ - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+            <div class="diary-item">
+              ${diarySingleHtml}
+            </div>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `);
     win.document.close()
   }
 
@@ -1974,6 +2222,9 @@ export default function CertificatesPage() {
             <button className={`nav-item ${activeDoc === 'progress_report' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('progress_report')}>
               <span style={{ marginRight: '0.5rem' }}>📈</span> Progress Report Card
             </button>
+            <button className={`nav-item ${activeDoc === 'diary' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('diary')}>
+              <span style={{ marginRight: '0.5rem' }}>📔</span> Class Diary Sheet
+            </button>
           </div>
         </nav>
       </aside>
@@ -1993,6 +2244,7 @@ export default function CertificatesPage() {
             {activeDoc === 'award_list' && '📊 Examination Award List Sheet'}
             {activeDoc === 'result_form' && '🎓 Student Class Result Sheet'}
             {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
+            {activeDoc === 'diary' && '📔 Daily Class Diary Sheet'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
@@ -2004,6 +2256,7 @@ export default function CertificatesPage() {
             {activeDoc === 'award_list' && 'Create examiner grade tables with student indices for marking sheets.'}
             {activeDoc === 'result_form' && 'Generate class-wide student result summaries containing all subject marks and calculated class positions.'}
             {activeDoc === 'progress_report' && 'Print blank student monthly progress reports to fill manually.'}
+            {activeDoc === 'diary' && 'Print blank daily class diary sheets containing class subjects.'}
           </p>
         </div>
 
@@ -2014,7 +2267,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -2032,7 +2285,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 
                 {/* Inputs card */}
@@ -2252,7 +2505,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Body</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -2432,6 +2685,89 @@ export default function CertificatesPage() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
                   }}>
                     <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── CLASS DIARY VIEW ── */}
+            {activeDoc === 'diary' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Class Diary Settings</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    
+                    <div className="form-group">
+                      <label className="form-label">Prefill from Class</label>
+                      <select className="form-select" value={diaryClassFilter} onChange={e => setDiaryClassFilter(e.target.value)}>
+                        <option value="">Custom (Standard Subjects)</option>
+                        {classes.map(c => <option key={c.id} value={c.id}>Grade {c.name}</option>)}
+                      </select>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Grade/Class Text</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. 10th Class" 
+                        value={diaryGrade} 
+                        onChange={e => setDiaryGrade(e.target.value)} 
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Edit Table Subjects (One per line)</label>
+                      <textarea
+                        className="form-textarea"
+                        rows={10}
+                        style={{ fontFamily: 'monospace', fontSize: '0.85rem' }}
+                        value={diarySubjects.join('\n')}
+                        onChange={e => setDiarySubjects(e.target.value.split('\n'))}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        Customize subjects. Note: This sheet prints 3 diaries stacked vertically on a single A4 page.
+                      </span>
+                    </div>
+
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintDiary}>
+                      🖨️ Print Diary Sheet
+                    </button>
+                  </div>
+                </div>
+
+                {/* Diary Sheet Preview */}
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
+                    Form Sheet Preview
+                  </h3>
+
+                  <div style={{ 
+                    border: '1px solid #777', 
+                    padding: '8mm 12mm', 
+                    background: '#fff', 
+                    boxSizing: 'border-box', 
+                    width: '210mm', 
+                    height: '297mm',
+                    minWidth: '210mm',
+                    minHeight: '297mm',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    position: 'relative'
+                  }}>
+                    {/* Render all 3 stacked in preview to show exact layout */}
+                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                      </div>
+                      <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
+                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                      </div>
+                      <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
+                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
