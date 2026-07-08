@@ -30,6 +30,7 @@ const navGroups: NavGroup[] = [
       { href: '/school/result', label: 'Results', icon: '📝' },
       { href: '/school/classes', label: 'Classes & Sections', icon: '🏛️' },
       { href: '/school/subjects', label: 'Subjects', icon: '📚' },
+      { href: '/school/timetable', label: 'Timetable', icon: '📅' },
       { href: '/school/certificates', label: 'Certificates & Forms', icon: '📜' },
     ]
   },

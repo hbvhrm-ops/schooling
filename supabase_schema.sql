@@ -327,3 +327,17 @@ CREATE TABLE IF NOT EXISTS admin_settings (
 ALTER TABLE admin_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow all via anon" ON admin_settings FOR ALL USING (true) WITH CHECK (true);
 
+-- ── Timetables ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS timetables (
+  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  school_id  UUID REFERENCES schools(id) ON DELETE CASCADE,
+  class_id   UUID REFERENCES classes(id) ON DELETE CASCADE,
+  schedule   JSONB NOT NULL DEFAULT '{"periods": [], "grid": {}}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(school_id, class_id)
+);
+
+ALTER TABLE timetables ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all via anon" ON timetables FOR ALL USING (true) WITH CHECK (true);
+
+
