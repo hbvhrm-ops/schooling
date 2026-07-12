@@ -879,7 +879,7 @@ export default function CertificatesPage() {
                 </div>
                 
                 <div class="cert-body">
-                  ${compiledBody}
+                  <p style="margin: 0; width: 100%;">${compiledBody}</p>
                 </div>
                 
                 <div class="footer">
@@ -2865,17 +2865,15 @@ export default function CertificatesPage() {
 
                         <div style={{ 
                           margin: '2px 0', 
-                          textAlign: 'justify', 
-                          textIndent: '15px',
                           fontSize: '0.54rem',
                           lineHeight: '1.8',
-                          whiteSpace: 'pre-line', 
                           flex: '1 1 auto', 
                           minHeight: 0, 
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center'
-                        }} dangerouslySetInnerHTML={{ __html: compiledPreviewBody }}>
+                        }}>
+                          <p style={{ margin: 0, textAlign: 'justify', textIndent: '15px', whiteSpace: 'pre-line', width: '100%' }} dangerouslySetInnerHTML={{ __html: compiledPreviewBody }} />
                         </div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
