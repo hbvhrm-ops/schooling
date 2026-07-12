@@ -432,7 +432,7 @@ export default function SlcPage() {
           📜 Generate Certificate
         </button>
         <button className={`tab-btn ${tab === 'template' ? 'active' : ''}`} onClick={() => setTab('template')}>
-          ⚙️ Customize Template
+          ⚙️ Customize Paragraph
         </button>
       </div>
 
@@ -556,7 +556,7 @@ export default function SlcPage() {
                       </div>
                     </div>
 
-                    <div style={{ margin: '1.5rem 0', textAlign: 'justify', whiteSpace: 'pre-line' }}>
+                    <div style={{ margin: '1.5rem 0', textAlign: 'justify', textIndent: '15px', whiteSpace: 'pre-line' }}>
                       {previewText}
                     </div>
 
@@ -582,7 +582,7 @@ export default function SlcPage() {
           {/* Template Configuration Tab */}
           {tab === 'template' && (
             <div className="card" style={{ maxWidth: '800px' }}>
-              <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Template</h3>
+              <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Paragraph</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
                 Define default layouts, headings, and certificate text. Use variables inside curly brackets to inject student data dynamically.
               </p>
@@ -656,7 +656,7 @@ export default function SlcPage() {
                 </div>
 
                 <div className="form-group">
-                  <label className="form-label">Customizable Certificate Body Text *</label>
+                  <label className="form-label">Customizable Certificate Paragraph Text *</label>
                   <textarea
                     className="form-input"
                     style={{ minHeight: '200px', fontFamily: 'monospace', fontSize: '0.9rem', lineHeight: '1.5', padding: '0.75rem' }}

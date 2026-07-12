@@ -733,7 +733,8 @@ export default function CertificatesPage() {
               font-family: 'Playfair Display', Georgia, serif;
               font-size: 19px;
               line-height: 1.8;
-              text-align: center;
+              text-align: justify;
+              text-indent: 30px;
               margin: 10px 45px;
               white-space: pre-line;
               flex: 1 1 auto;
@@ -2639,7 +2640,7 @@ export default function CertificatesPage() {
               ⚡ Generate Document
             </button>
             <button className={`tab-btn ${tab === 'template' ? 'active' : ''}`} onClick={() => setTab('template')}>
-              ⚙️ Customize Template
+              ⚙️ Customize Paragraph
             </button>
           </div>
         )}
@@ -2864,7 +2865,8 @@ export default function CertificatesPage() {
 
                         <div style={{ 
                           margin: '2px 0', 
-                          textAlign: 'center', 
+                          textAlign: 'justify', 
+                          textIndent: '15px',
                           fontSize: '0.54rem',
                           lineHeight: '1.8',
                           whiteSpace: 'pre-line', 
@@ -2906,7 +2908,7 @@ export default function CertificatesPage() {
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
             {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
               <div className="card" style={{ maxWidth: '800px' }}>
-                <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Body</h3>
+                <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Paragraph</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
                   Define headings and rich text certificate variables inside curly brackets to merge student details dynamically on generation.
                 </p>
@@ -2962,7 +2964,7 @@ export default function CertificatesPage() {
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Certificate Customizable Body Text *</label>
+                    <label className="form-label">Certificate Customizable Paragraph Text *</label>
                     <textarea 
                       className="form-input" 
                       style={{ minHeight: '220px', fontFamily: 'monospace', fontSize: '0.9rem', lineHeight: '1.6', padding: '0.75rem' }} 
