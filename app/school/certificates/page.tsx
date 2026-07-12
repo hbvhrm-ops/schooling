@@ -1449,7 +1449,7 @@ export default function CertificatesPage() {
           ${schoolName}
         </div>
         <div style="text-align: center; font-size: 11pt; font-weight: 800; margin-bottom: 12px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
-          One-Page Lesson Plan Structure
+          Lesson plan
         </div>
         <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; font-size: 8.5pt;">
           <tbody>
@@ -1537,7 +1537,7 @@ export default function CertificatesPage() {
     win.document.write(`
       <html>
         <head>
-          <title>One-Page Lesson Plan Structure</title>
+          <title>Lesson plan</title>
           <style>
             @page {
               size: portrait;
@@ -1621,7 +1621,7 @@ export default function CertificatesPage() {
             <div class="header">
               <div class="school-name">${schoolName}</div>
               ${schoolAddress ? `<div class="school-details">${schoolAddress}</div>` : ''}
-              <div class="form-title">One-Page Lesson Plan Structure</div>
+              <div class="form-title">Lesson plan</div>
             </div>
             
             <table class="lesson-plan-table">
@@ -2610,7 +2610,7 @@ export default function CertificatesPage() {
             {activeDoc === 'result_form' && '🎓 Student Class Result Sheet'}
             {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
             {activeDoc === 'diary' && '📔 Daily Class Diary Sheet'}
-            {activeDoc === 'lesson_plan' && '📋 One-Page Lesson Plan Structure'}
+            {activeDoc === 'lesson_plan' && '📋 Lesson plan'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
