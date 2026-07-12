@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary' | 'lesson_plan'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -123,6 +123,14 @@ export default function CertificatesPage() {
     'English', 'Urdu', 'Science', 'Maths', 'G.Knowledge', 'S.Studies', 'Islamiyat', 'Presentation', 'Total Students', 'Name of Absent Students'
   ])
 
+  // Lesson Plan specific states
+  const [lessonPlanClassFilter, setLessonPlanClassFilter] = useState('')
+  const [lessonPlanSubjectFilter, setLessonPlanSubjectFilter] = useState('')
+  const [lessonPlanGrade, setLessonPlanGrade] = useState('')
+  const [lessonPlanSubject, setLessonPlanSubject] = useState('')
+  const [lessonPlanTeacher, setLessonPlanTeacher] = useState('')
+  const [lessonPlanDate, setLessonPlanDate] = useState('')
+
   // Load basic lists
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -203,7 +211,7 @@ export default function CertificatesPage() {
 
   // Load certificate template from client-side cache when activeDoc changes
   const loadTemplate = useCallback((type: string) => {
-    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary' || type === 'lesson_plan') return
     const t = templatesCache[type]
     if (t) {
       setTemplate(t)
@@ -480,38 +488,40 @@ export default function CertificatesPage() {
   // Template compiler logic
   function compileTemplate(body: string, student: Student) {
     if (!body) return ''
+    const wrap = (val: string) => `<span class="cert-underline">${val}</span>`
     return body
-      .replace(/{name}/g, student.name || '')
-      .replace(/{father_name}/g, student.father_name || '—')
-      .replace(/{class_name}/g, student.class_name || '—')
-      .replace(/{roll_no}/g, student.roll_no || '—')
-      .replace(/{gender}/g, student.gender || '—')
-      .replace(/{address}/g, student.address || '—')
-      .replace(/{dob}/g, student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
-      .replace(/{dob_words}/g, student.dob ? convertDateToWords(student.dob) : '—')
-      .replace(/{reg_date}/g, student.reg_date ? new Date(student.reg_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
+      .replace(/{name}/g, wrap(student.name || ''))
+      .replace(/{father_name}/g, wrap(student.father_name || '—'))
+      .replace(/{class_name}/g, wrap(student.class_name || '—'))
+      .replace(/{roll_no}/g, wrap(student.roll_no || '—'))
+      .replace(/{gender}/g, wrap(student.gender || '—'))
+      .replace(/{address}/g, wrap(student.address || '—'))
+      .replace(/{dob}/g, wrap(student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
+      .replace(/{dob_words}/g, wrap(student.dob ? convertDateToWords(student.dob) : '—'))
+      .replace(/{reg_date}/g, wrap(student.reg_date ? new Date(student.reg_date).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
       
       // SLC specific
-      .replace(/{leaving_date}/g, leavingDate ? new Date(leavingDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
-      .replace(/{leaving_reason}/g, leavingReason || '—')
-      .replace(/{conduct}/g, conduct || '—')
+      .replace(/{leaving_date}/g, wrap(leavingDate ? new Date(leavingDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
+      .replace(/{leaving_reason}/g, wrap(leavingReason || '—'))
+      .replace(/{conduct}/g, wrap(conduct || '—'))
       
       // Birth specific
-      .replace(/{birth_place}/g, birthPlace || '—')
-      .replace(/{register_no}/g, birthRegisterNo || '—')
+      .replace(/{birth_place}/g, wrap(birthPlace || '—'))
+      .replace(/{register_no}/g, wrap(birthRegisterNo || '—'))
       
       // Sports specific
-      .replace(/{sport_name}/g, sportName || '—')
-      .replace(/{achievement}/g, sportAchievement || '—')
-      .replace(/{event_name}/g, sportEventName || '—')
-      .replace(/{date}/g, sportDate ? new Date(sportDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
+      .replace(/{sport_name}/g, wrap(sportName || '—'))
+      .replace(/{achievement}/g, wrap(sportAchievement || '—'))
+      .replace(/{event_name}/g, wrap(sportEventName || '—'))
+      .replace(/{date}/g, wrap(sportDate ? new Date(sportDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
       
       // Top Positions specific
-      .replace(/{position}/g, topPosition || '—')
-      .replace(/{exam_name}/g, topExamName || '—')
-      .replace(/{marks_obtained}/g, topMarksObtained || '—')
-      .replace(/{total_marks}/g, topTotalMarks || '—')
-      .replace(/{percentage}/g, topMarksObtained && topTotalMarks ? String(Math.round((Number(topMarksObtained) / Number(topTotalMarks)) * 100)) : '0')
+      .replace(/{position}/g, wrap(topPosition || '—'))
+      .replace(/{exam_name}/g, wrap(topExamName || '—'))
+      .replace(/{marks_obtained}/g, wrap(topMarksObtained || '—'))
+      .replace(/{total_marks}/g, wrap(topTotalMarks || '—'))
+      .replace(/{percentage}/g, wrap((topMarksObtained && topTotalMarks ? String(Math.round((Number(topMarksObtained) / Number(topTotalMarks)) * 100)) : '0') + '%'))
+      .replace(/{year}/g, wrap(new Date().getFullYear() + '-' + String(new Date().getFullYear() + 1).slice(-2)))
   }
 
   // Update Template configs
@@ -609,107 +619,135 @@ export default function CertificatesPage() {
               position: relative;
             }
             .border-outer {
-              border: 12px double #4a3e28;
-              padding: 6px;
+              border: 1px solid #1c1c1c;
               height: 100%;
               box-sizing: border-box;
               display: flex;
               flex-direction: column;
-              min-height: 0;
-            }
-            .border-inner {
-              border: 2px solid #6e5a3c;
-              padding: 4vh 6vw;
               position: relative;
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              box-sizing: border-box;
-              min-height: 0;
+              background: #fdfbf7;
             }
-            .badge-watermark {
+            .border-frame {
               position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%);
-              font-size: 260px;
-              opacity: 0.03;
+              top: 5px;
+              left: 5px;
+              right: 5px;
+              bottom: 5px;
+              border: 10px solid #c5a85c;
               pointer-events: none;
-              user-select: none;
-              z-index: 0;
+            }
+            .border-frame-inner-line {
+              position: absolute;
+              top: 15px;
+              left: 15px;
+              right: 15px;
+              bottom: 15px;
+              border: 1.5px solid #1c1c1c;
+              pointer-events: none;
+            }
+            .border-inner-double {
+              position: absolute;
+              top: 25px;
+              left: 25px;
+              right: 25px;
+              bottom: 25px;
+              border: 2px double #b19343;
+              pointer-events: none;
+            }
+            .border-inner-line {
+              position: absolute;
+              top: 31px;
+              left: 31px;
+              right: 31px;
+              bottom: 31px;
+              border: 1px solid #1c1c1c;
+              pointer-events: none;
             }
             .content-wrapper {
               position: relative;
-              z-index: 1;
+              z-index: 10;
               display: flex;
               flex-direction: column;
               justify-content: space-between;
               height: 100%;
+              padding: 28mm 18mm 12mm 18mm;
+              box-sizing: border-box;
               min-height: 0;
             }
             .header {
               text-align: center;
-              margin-bottom: 15px;
-              flex-shrink: 0;
-            }
-            .logo {
-              max-height: 80px;
-              margin-bottom: 12px;
-              object-fit: contain;
-            }
-            .logo-placeholder {
-              font-size: 45px;
               margin-bottom: 10px;
-              color: #4a3e28;
+              flex-shrink: 0;
             }
             .school-title {
               font-family: 'Cinzel', serif;
-              font-size: 24px;
+              font-size: 26px;
               font-weight: 800;
-              color: #4a3e28;
+              color: #4e3620;
               letter-spacing: 2px;
-              margin-bottom: 5px;
+              margin-bottom: 2px;
               text-transform: uppercase;
+            }
+            .school-address {
+              font-family: sans-serif;
+              font-size: 11px;
+              font-weight: bold;
+              color: #4e3620;
+              letter-spacing: 1px;
+              text-transform: uppercase;
+              margin-bottom: 12px;
+            }
+            .certificate-title-wrap {
+              text-align: center;
+              margin: 20px 0 10px 0;
             }
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 32px;
+              font-size: 34pt;
               font-weight: 800;
+              color: #c5a85c;
               letter-spacing: 4px;
-              margin: 15px 0 5px;
-              color: #6e5a3c;
               text-transform: uppercase;
-              border-bottom: 3px double #6e5a3c;
-              display: inline-block;
-              padding-bottom: 4px;
+              line-height: 1.1;
             }
-            .cert-subtitle {
-              font-size: 11px;
-              color: #777;
-              letter-spacing: 3px;
-              text-transform: uppercase;
-              margin-bottom: 25px;
+            .cert-subtitle-wrap {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              gap: 15px;
+              margin-top: 5px;
+            }
+            .gold-line {
+              border-bottom: 1.5px solid #c5a85c;
+              width: 80px;
+              display: inline-block;
+            }
+            .cert-subtitle-text {
+              font-family: 'Playfair Display', Georgia, serif;
+              font-size: 14pt;
+              font-style: italic;
+              color: #4e3620;
+              font-weight: 600;
             }
             .cert-body {
-              font-size: 20px;
-              line-height: 2.0;
-              text-align: justify;
-              margin: 20px 0;
+              font-family: 'Playfair Display', Georgia, serif;
+              font-size: 19px;
+              line-height: 1.8;
+              text-align: center;
+              margin: 10px 45px;
               white-space: pre-line;
-              text-indent: 40px;
               flex: 1 1 auto;
               min-height: 0;
-              overflow: hidden;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
             }
-            /* Robust handles for name or academic inline-block scaling */
-            .cert-body span.highlight, .cert-body strong.highlight {
-              display: inline-block;
-              max-width: 100%;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-              vertical-align: bottom;
+            .cert-underline {
+              font-weight: 800;
+              color: #1a1a1a;
+              border-bottom: none;
+              padding: 0 4px;
+              display: inline;
             }
             .footer {
               display: flex;
@@ -723,13 +761,13 @@ export default function CertificatesPage() {
               width: 240px;
             }
             .sig-line {
-              border-top: 1.5px solid #777;
+              border-top: 1.5px solid #000;
               margin-top: 50px;
               padding-top: 8px;
               font-family: 'Cinzel', serif;
               font-size: 13px;
               font-weight: 800;
-              color: #4a3e28;
+              color: #4e3620;
               text-transform: uppercase;
               letter-spacing: 1px;
             }
@@ -751,38 +789,115 @@ export default function CertificatesPage() {
         <body>
           <div class="certificate-container">
             <div class="border-outer">
-              <div class="border-inner">
-                <div class="badge-watermark">🎓</div>
-                <div class="content-wrapper">
-                  <div class="header">
-                    ${(template.logo_url || defaultSchoolLogo) ? `<img class="logo" src="${template.logo_url || defaultSchoolLogo}" alt="School Logo" />` : '<div class="logo-placeholder">🎓</div>'}
-                    <div class="school-title">${schoolName}</div>
-                    ${(schoolAddress || schoolContact) ? `
-                      <div style="font-size: 11px; color: #555; text-align: center; margin-bottom: 5px; font-family: sans-serif; font-weight: bold;">
-                        ${schoolAddress ? `${schoolAddress}` : ''}
-                        ${schoolContact ? ` &nbsp;|&nbsp; Cell: ${schoolContact}` : ''}
-                      </div>
-                    ` : ''}
-                    ${(schoolPsra || schoolBise) ? `
-                      <div style="font-size: 10px; color: #666; text-align: center; margin-bottom: 8px; font-family: sans-serif; font-style: italic;">
-                        ${schoolPsra ? `PSRA Reg No: ${schoolPsra}` : ''}
-                        ${schoolBise ? `${schoolPsra ? ' &nbsp;|&nbsp; ' : ''}BISE No: ${schoolBise}` : ''}
-                      </div>
-                    ` : ''}
+              <div class="border-frame"></div>
+              <div class="border-frame-inner-line"></div>
+              <div class="border-inner-double"></div>
+              <div class="border-inner-line"></div>
+
+              <!-- Corner triangles -->
+              <div style="position: absolute; top: 15px; left: 15px; width: 45px; height: 45px; background: #4e3620; clip-path: polygon(0 0, 100% 0, 0 100%); pointer-events: none; z-index: 20;"></div>
+              <div style="position: absolute; top: 15px; right: 15px; width: 45px; height: 45px; background: #4e3620; clip-path: polygon(0 0, 100% 0, 100% 100%); pointer-events: none; z-index: 20;"></div>
+              <div style="position: absolute; bottom: 15px; right: 15px; width: 45px; height: 45px; background: #4e3620; clip-path: polygon(100% 0, 100% 100%, 0 100%); pointer-events: none; z-index: 20;"></div>
+              <div style="position: absolute; bottom: 15px; left: 15px; width: 45px; height: 45px; background: #4e3620; clip-path: polygon(0 0, 100% 100%, 0 100%); pointer-events: none; z-index: 20;"></div>
+
+              <!-- Corner flourishes -->
+              <!-- Top Left Flourish -->
+              <svg style="position: absolute; top: 15px; left: 15px; width: 95px; height: 95px; fill: none; stroke: #b19343; stroke-width: 1.5; pointer-events: none; z-index: 21;" viewBox="0 0 100 100">
+                <path d="M 12 85 C 12 40, 40 12, 85 12" stroke-width="0.75" />
+                <path d="M 0 100 C 0 30, 30 0, 100 0" stroke-width="0.5" />
+                <path d="M 22 22 C 32 32, 32 42, 22 52 C 12 42, 12 32, 22 22 Z" fill="#b19343" opacity="0.1" />
+                <path d="M 22 40 C 25 30, 35 25, 40 30 C 45 35, 40 45, 30 40 C 25 35, 30 20, 45 20 C 55 20, 60 30, 55 40 C 50 50, 35 50, 35 35" />
+                <path d="M 40 22 C 30 27, 25 37, 30 42 C 35 47, 45 42, 40 32 C 35 27, 20 32, 20 47 C 20 57, 30 62, 40 57 C 50 52, 50 37, 35 37" />
+              </svg>
+              <!-- Top Right Flourish -->
+              <svg style="position: absolute; top: 15px; right: 15px; width: 95px; height: 95px; fill: none; stroke: #b19343; stroke-width: 1.5; pointer-events: none; z-index: 21; transform: rotate(90deg);" viewBox="0 0 100 100">
+                <path d="M 12 85 C 12 40, 40 12, 85 12" stroke-width="0.75" />
+                <path d="M 0 100 C 0 30, 30 0, 100 0" stroke-width="0.5" />
+                <path d="M 22 22 C 32 32, 32 42, 22 52 C 12 42, 12 32, 22 22 Z" fill="#b19343" opacity="0.1" />
+                <path d="M 22 40 C 25 30, 35 25, 40 30 C 45 35, 40 45, 30 40 C 25 35, 30 20, 45 20 C 55 20, 60 30, 55 40 C 50 50, 35 50, 35 35" />
+                <path d="M 40 22 C 30 27, 25 37, 30 42 C 35 47, 45 42, 40 32 C 35 27, 20 32, 20 47 C 20 57, 30 62, 40 57 C 50 52, 50 37, 35 37" />
+              </svg>
+              <!-- Bottom Right Flourish -->
+              <svg style="position: absolute; bottom: 15px; right: 15px; width: 95px; height: 95px; fill: none; stroke: #b19343; stroke-width: 1.5; pointer-events: none; z-index: 21; transform: rotate(180deg);" viewBox="0 0 100 100">
+                <path d="M 12 85 C 12 40, 40 12, 85 12" stroke-width="0.75" />
+                <path d="M 0 100 C 0 30, 30 0, 100 0" stroke-width="0.5" />
+                <path d="M 22 22 C 32 32, 32 42, 22 52 C 12 42, 12 32, 22 22 Z" fill="#b19343" opacity="0.1" />
+                <path d="M 22 40 C 25 30, 35 25, 40 30 C 45 35, 40 45, 30 40 C 25 35, 30 20, 45 20 C 55 20, 60 30, 55 40 C 50 50, 35 50, 35 35" />
+                <path d="M 40 22 C 30 27, 25 37, 30 42 C 35 47, 45 42, 40 32 C 35 27, 20 32, 20 47 C 20 57, 30 62, 40 57 C 50 52, 50 37, 35 37" />
+              </svg>
+              <!-- Bottom Left Flourish -->
+              <svg style="position: absolute; bottom: 15px; left: 15px; width: 95px; height: 95px; fill: none; stroke: #b19343; stroke-width: 1.5; pointer-events: none; z-index: 21; transform: rotate(270deg);" viewBox="0 0 100 100">
+                <path d="M 12 85 C 12 40, 40 12, 85 12" stroke-width="0.75" />
+                <path d="M 0 100 C 0 30, 30 0, 100 0" stroke-width="0.5" />
+                <path d="M 22 22 C 32 32, 32 42, 22 52 C 12 42, 12 32, 22 22 Z" fill="#b19343" opacity="0.1" />
+                <path d="M 22 40 C 25 30, 35 25, 40 30 C 45 35, 40 45, 30 40 C 25 35, 30 20, 45 20 C 55 20, 60 30, 55 40 C 50 50, 35 50, 35 35" />
+                <path d="M 40 22 C 30 27, 25 37, 30 42 C 35 47, 45 42, 40 32 C 35 27, 20 32, 20 47 C 20 57, 30 62, 40 57 C 50 52, 50 37, 35 37" />
+              </svg>
+
+              <!-- Watermark backgrounds -->
+              <svg style="position: absolute; bottom: 35px; left: 35px; width: 250px; height: 250px; opacity: 0.04; fill: none; stroke: #8a7344; stroke-width: 1; pointer-events: none; z-index: 0;" viewBox="0 0 100 100">
+                <path d="M 0 100 C 30 100, 60 80, 70 50 C 80 20, 60 0, 40 10 C 20 20, 30 50, 50 40 C 60 30, 50 15, 35 25 C 20 35, 30 65, 55 55 C 75 45, 80 20, 70 10 C 65 5, 50 10, 60 25 C 65 30, 75 25, 70 15" />
+                <path d="M 0 100 C 50 90, 80 60, 90 20" />
+                <path d="M 20 100 C 40 85, 60 70, 70 45" />
+              </svg>
+              <svg style="position: absolute; top: 35px; right: 35px; width: 250px; height: 250px; opacity: 0.04; fill: none; stroke: #8a7344; stroke-width: 1; pointer-events: none; z-index: 0; transform: rotate(180deg);" viewBox="0 0 100 100">
+                <path d="M 0 100 C 30 100, 60 80, 70 50 C 80 20, 60 0, 40 10 C 20 20, 30 50, 50 40 C 60 30, 50 15, 35 25 C 20 35, 30 65, 55 55 C 75 45, 80 20, 70 10 C 65 5, 50 10, 60 25 C 65 30, 75 25, 70 15" />
+                <path d="M 0 100 C 50 90, 80 60, 90 20" />
+                <path d="M 20 100 C 40 85, 60 70, 70 45" />
+              </svg>
+
+              <!-- Gold Ribbon Seal -->
+              <div class="gold-seal" style="position: absolute; top: 35px; left: 55px; z-index: 12; width: 90px; height: 130px; display: flex; flex-direction: column; align-items: center; pointer-events: none;">
+                <div style="position: absolute; top: 40px; display: flex; justify-content: space-between; width: 55px; height: 80px; z-index: 1;">
+                  <div style="width: 20px; height: 100%; background: #c5a85c; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); transform: rotate(-8deg); box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
+                  <div style="width: 20px; height: 100%; background: #b19343; clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%); transform: rotate(8deg); box-shadow: 0 4px 6px rgba(0,0,0,0.15);"></div>
+                </div>
+                <div style="position: relative; width: 70px; height: 70px; border-radius: 50%; background: radial-gradient(circle, #f3e5ab 0%, #d4af37 60%, #aa7c11 100%); border: 3px double #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 6px 12px rgba(0,0,0,0.25); z-index: 2;">
+                  ${(template.logo_url || defaultSchoolLogo) ? `
+                    <img src="${template.logo_url || defaultSchoolLogo}" style="width: 42px; height: 42px; object-fit: contain; border-radius: 50%; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.3));" />
+                  ` : `
+                    <span style="font-size: 26px; filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.3));">🎓</span>
+                  `}
+                </div>
+              </div>
+
+              <!-- Content wrapper -->
+              <div class="content-wrapper">
+                <div class="header">
+                  <div class="school-title">${schoolName}</div>
+                  ${schoolAddress ? `<div class="school-address">${schoolAddress}</div>` : ''}
+                  
+                  <div class="certificate-title-wrap">
                     <div class="cert-title">${template.title}</div>
-                    <div class="cert-subtitle">Official Institution Release Document</div>
+                    <div class="cert-subtitle-wrap">
+                      <span class="gold-line"></span>
+                      <span class="cert-subtitle-text">Of Achievement</span>
+                      <span class="gold-line"></span>
+                    </div>
                   </div>
-                  <div class="cert-body">
-                    ${compiledBody}
+                </div>
+                
+                <div class="cert-body">
+                  ${compiledBody}
+                </div>
+                
+                <div class="footer">
+                  <div class="sig-block" style="text-align: left; padding-left: 20px;">
+                    <strong>Date:</strong> <span class="cert-underline" style="min-width: 140px; font-weight: bold; border-bottom: 1.5px solid #000;">${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
                   </div>
-                  <div class="footer">
-                    <div class="sig-block">
-                      <div style="font-size: 13px; color: #555; text-align: left;">
-                        <strong>Date:</strong> ${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+                  
+                  <div class="sig-block" style="position: relative;">
+                    <!-- Blue seal stamp -->
+                    <div style="position: absolute; bottom: 35px; right: 50px; width: 75px; height: 75px; border: 1.5px solid rgba(28, 70, 160, 0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); z-index: 10; pointer-events: none;">
+                      <div style="width: 67px; height: 67px; border: 0.75px dashed rgba(28, 70, 160, 0.7); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <span style="font-size: 5px; font-weight: bold; color: rgba(28, 70, 160, 0.7); text-transform: uppercase;">ISLAMIA MODEL</span>
+                        <span style="font-size: 8px; font-weight: 900; color: rgba(28, 70, 160, 0.7); border-top: 1px solid rgba(28, 70, 160, 0.7); border-bottom: 1px solid rgba(28, 70, 160, 0.7); padding: 1px 2px; margin: 1px 0;">APPROVED</span>
+                        <span style="font-size: 5px; font-weight: bold; color: rgba(28, 70, 160, 0.7); text-transform: uppercase;">OFFICE SEAL</span>
                       </div>
                     </div>
-                    <div class="sig-block">
-                      <div class="sig-line">${template.signature_title}</div>
+                    <!-- Signature Line -->
+                    <div class="sig-line" style="border-top: 1.5px solid #000; padding-top: 6px; font-weight: bold;">
+                      ${template.signature_title}
                     </div>
                   </div>
                 </div>
@@ -1323,6 +1438,234 @@ export default function CertificatesPage() {
         </body>
       </html>
     `);
+    win.document.close()
+  }
+
+  function getLessonPlanPreviewHtml() {
+    return `
+      <div style="font-family: sans-serif; padding: 15px; color: #000; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+        <div style="text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; color: #1e3a8a;">
+          ${schoolName}
+        </div>
+        <div style="text-align: center; font-size: 11pt; font-weight: 800; margin-bottom: 12px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+          One-Page Lesson Plan Structure
+        </div>
+        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; font-size: 8.5pt;">
+          <tbody>
+            <tr style="height: 25px;">
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; width: 18%; color: #1e3a8a;">Subject:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; width: 32%; font-weight: 600;">
+                ${lessonPlanSubject ? lessonPlanSubject : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
+              </td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; width: 18%; color: #1e3a8a;">Class/Grade:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; width: 32%; font-weight: 600;">
+                ${lessonPlanGrade ? lessonPlanGrade : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
+              </td>
+            </tr>
+            <tr style="height: 25px;">
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Topic:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px;">
+                <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>
+              </td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Date:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: 600;">
+                ${lessonPlanDate ? new Date(lessonPlanDate).toLocaleDateString('en-GB') : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
+              </td>
+            </tr>
+            <tr style="height: 25px;">
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Duration:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px;">
+                <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>
+              </td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Teacher:</td>
+              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: 600;">
+                ${lessonPlanTeacher ? lessonPlanTeacher : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
+              </td>
+            </tr>
+            ${[
+              'Learning Objectives',
+              'Teaching Materials',
+              'Introduction',
+              'Lesson Development',
+              'Activities',
+              'Assessment',
+              'Conclusion',
+              'Homework',
+              'Teacher Reflection'
+            ].map(label => `
+              <tr style="height: 24px;">
+                <td style="border: 1px solid #1e3a8a; padding: 5px 8px; font-weight: bold; color: #1e3a8a;">${label}:</td>
+                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;">
+                  <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 95%; height: 12px;"></span>
+                </td>
+                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;">
+                  <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 95%; height: 12px;"></span>
+                </td>
+                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;"></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+
+  function handlePrintLessonPlan() {
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    const tableRowsHTML = [
+      'Learning Objectives',
+      'Teaching Materials',
+      'Introduction',
+      'Lesson Development',
+      'Activities',
+      'Assessment',
+      'Conclusion',
+      'Homework',
+      'Teacher Reflection'
+    ].map(label => `
+      <tr style="height: 17mm;">
+        <td class="label-cell"><strong>${label}:</strong></td>
+        <td class="line-cell"><span class="write-line"></span></td>
+        <td class="line-cell"><span class="write-line"></span></td>
+        <td class="blank-cell"></td>
+      </tr>
+    `).join('')
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>One-Page Lesson Plan Structure</title>
+          <style>
+            @page {
+              size: portrait;
+              margin: 12mm 15mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background-color: #fff;
+              color: #000;
+              font-family: 'Arial', sans-serif;
+              -webkit-print-color-adjust: exact;
+              print-color-adjust: exact;
+            }
+            .lesson-plan-container {
+              width: 100%;
+              box-sizing: border-box;
+              display: flex;
+              flex-direction: column;
+              height: 100%;
+            }
+            .header {
+              text-align: center;
+              margin-bottom: 6mm;
+            }
+            .school-name {
+              font-size: 20pt;
+              font-weight: bold;
+              text-transform: uppercase;
+              color: #1e3a8a;
+              margin-bottom: 2px;
+            }
+            .school-details {
+              font-size: 9pt;
+              color: #475569;
+              font-weight: 600;
+            }
+            .form-title {
+              font-size: 15pt;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.5px;
+              color: #334155;
+              margin: 4mm 0 6mm 0;
+              border-bottom: 2px solid #1e3a8a;
+              padding-bottom: 2mm;
+            }
+            .lesson-plan-table {
+              width: 100%;
+              border-collapse: collapse;
+              border: 2px solid #1e3a8a;
+            }
+            .lesson-plan-table td {
+              border: 1px solid #1e3a8a;
+              padding: 4mm 5mm;
+              font-size: 10pt;
+              vertical-align: middle;
+              box-sizing: border-box;
+            }
+            .label-cell {
+              width: 18%;
+              font-weight: bold;
+              color: #1e3a8a;
+            }
+            .line-cell {
+              width: 32%;
+            }
+            .blank-cell {
+              width: 18%;
+            }
+            .write-line {
+              display: inline-block;
+              border-bottom: 1.2px solid #cbd5e1;
+              width: 95%;
+              height: 16px;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="lesson-plan-container">
+            <div class="header">
+              <div class="school-name">${schoolName}</div>
+              ${schoolAddress ? `<div class="school-details">${schoolAddress}</div>` : ''}
+              <div class="form-title">One-Page Lesson Plan Structure</div>
+            </div>
+            
+            <table class="lesson-plan-table">
+              <tbody>
+                <tr style="height: 15mm;">
+                  <td class="label-cell"><strong>Subject:</strong></td>
+                  <td style="width: 32%; font-weight: bold;">
+                    ${lessonPlanSubject ? lessonPlanSubject : '<span class="write-line"></span>'}
+                  </td>
+                  <td class="label-cell"><strong>Class/Grade:</strong></td>
+                  <td style="width: 32%; font-weight: bold;">
+                    ${lessonPlanGrade ? lessonPlanGrade : '<span class="write-line"></span>'}
+                  </td>
+                </tr>
+                <tr style="height: 15mm;">
+                  <td class="label-cell"><strong>Topic:</strong></td>
+                  <td><span class="write-line"></span></td>
+                  <td class="label-cell"><strong>Date:</strong></td>
+                  <td style="font-weight: bold;">
+                    ${lessonPlanDate ? new Date(lessonPlanDate).toLocaleDateString('en-GB') : '<span class="write-line"></span>'}
+                  </td>
+                </tr>
+                <tr style="height: 15mm;">
+                  <td class="label-cell"><strong>Duration:</strong></td>
+                  <td><span class="write-line"></span></td>
+                  <td class="label-cell"><strong>Teacher:</strong></td>
+                  <td style="font-weight: bold;">
+                    ${lessonPlanTeacher ? lessonPlanTeacher : '<span class="write-line"></span>'}
+                  </td>
+                </tr>
+                ${tableRowsHTML}
+              </tbody>
+            </table>
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
     win.document.close()
   }
 
@@ -2188,6 +2531,15 @@ export default function CertificatesPage() {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)', animation: 'fadeIn 0.3s ease' }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        .cert-underline {
+          font-weight: 800;
+          color: #1a1a1a;
+          border-bottom: none;
+          padding: 0 4px;
+          display: inline;
+        }
+      `}} />
       
       {/* Workspace Sub-sidebar */}
       <aside style={{ width: '240px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
@@ -2234,6 +2586,9 @@ export default function CertificatesPage() {
             <button className={`nav-item ${activeDoc === 'diary' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('diary')}>
               <span style={{ marginRight: '0.5rem' }}>📔</span> Class Diary Sheet
             </button>
+            <button className={`nav-item ${activeDoc === 'lesson_plan' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('lesson_plan')}>
+              <span style={{ marginRight: '0.5rem' }}>📋</span> Lesson Plan Structure
+            </button>
           </div>
         </nav>
       </aside>
@@ -2254,6 +2609,7 @@ export default function CertificatesPage() {
             {activeDoc === 'result_form' && '🎓 Student Class Result Sheet'}
             {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
             {activeDoc === 'diary' && '📔 Daily Class Diary Sheet'}
+            {activeDoc === 'lesson_plan' && '📋 One-Page Lesson Plan Structure'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
@@ -2266,6 +2622,7 @@ export default function CertificatesPage() {
             {activeDoc === 'result_form' && 'Generate class-wide student result summaries containing all subject marks and calculated class positions.'}
             {activeDoc === 'progress_report' && 'Print blank student monthly progress reports to fill manually.'}
             {activeDoc === 'diary' && 'Print blank daily class diary sheets containing class subjects.'}
+            {activeDoc === 'lesson_plan' && 'Print blank or prefilled teacher lesson planning forms.'}
           </p>
         </div>
 
@@ -2276,7 +2633,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -2294,7 +2651,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 
                 {/* Inputs card */}
@@ -2447,13 +2804,12 @@ export default function CertificatesPage() {
                   
                   {selectedStudent ? (
                     <div style={{ 
-                      border: '4px double #6e5a3c', 
-                      padding: '1.5rem 2rem', 
-                      background: '#fff', 
-                      color: '#2c2c2c', 
-                      fontFamily: 'Georgia, serif', 
-                      lineHeight: '1.7', 
-                      fontSize: '0.9rem',
+                      position: 'relative',
+                      border: '1px solid #1c1c1c',
+                      padding: '1.25rem',
+                      background: '#fdfbf7',
+                      color: '#2c2c2c',
+                      fontFamily: "'Playfair Display', Georgia, serif",
                       aspectRatio: '1.414 / 1',
                       display: 'flex',
                       flexDirection: 'column',
@@ -2462,44 +2818,78 @@ export default function CertificatesPage() {
                       boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
                       overflow: 'hidden'
                     }}>
-                      <div style={{ textAlign: 'center', marginBottom: '0.2rem', flexShrink: 0 }}>
-                        {(template.logo_url || defaultSchoolLogo) ? (
-                          <img src={template.logo_url || defaultSchoolLogo} alt="Logo" style={{ maxHeight: '30px', marginBottom: '2px', objectFit: 'contain' }} />
-                        ) : (
-                          <div style={{ fontSize: '1.4rem', marginBottom: '2px' }}>🎓</div>
-                        )}
-                        <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#4a3e28', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          {schoolName}
+                      {/* Nested border layout */}
+                      <div style={{ position: 'absolute', top: '3px', left: '3px', right: '3px', bottom: '3px', border: '5px solid #c5a85c', pointerEvents: 'none', zIndex: 10 }}></div>
+                      <div style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', bottom: '8px', border: '0.75px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
+                      <div style={{ position: 'absolute', top: '13px', left: '13px', right: '13px', bottom: '13px', border: '1px double #b19343', pointerEvents: 'none', zIndex: 10 }}></div>
+                      <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', bottom: '16px', border: '0.5px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
+
+                      {/* Corner triangles */}
+                      <div style={{ position: 'absolute', top: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                      <div style={{ position: 'absolute', top: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 100% 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                      <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(100% 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                      <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+
+                      {/* Gold Ribbon Seal */}
+                      <div style={{ position: 'absolute', top: '18px', left: '26px', zIndex: 12, width: '30px', height: '45px', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none' }}>
+                        <div style={{ position: 'absolute', top: '15px', display: 'flex', justifyContent: 'space-between', width: '20px', height: '26px', zIndex: 1 }}>
+                          <div style={{ width: '7px', height: '100%', background: '#c5a85c', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(-8deg)' }}></div>
+                          <div style={{ width: '7px', height: '100%', background: '#b19343', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(8deg)' }}></div>
                         </div>
-                        <div style={{ fontSize: '0.88rem', fontWeight: 'bold', letterSpacing: '1px', color: '#6e5a3c', margin: '2px 0 1px', textTransform: 'uppercase', borderBottom: '1px solid #eaeaea', display: 'inline-block', paddingBottom: '2px' }}>
-                          {template.title || 'CERTIFICATE'}
-                        </div>
-                        <div style={{ fontSize: '0.48rem', color: '#777', letterSpacing: '1px', textTransform: 'uppercase' }}>
-                          Official Institution Release Document
+                        <div style={{ position: 'relative', width: '24px', height: '24px', borderRadius: '50%', background: 'radial-gradient(circle, #f3e5ab 0%, #d4af37 60%, #aa7c11 100%)', border: '1px double #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.15)', zIndex: 2 }}>
+                          <span style={{ fontSize: '10px' }}>🎓</span>
                         </div>
                       </div>
 
-                      <div style={{ 
-                        margin: '0.5rem 0 1.25rem 0', 
-                        textAlign: 'justify', 
-                        whiteSpace: 'pre-line', 
-                        flex: '1 1 auto', 
-                        minHeight: 0, 
-                        overflow: 'hidden',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 5,
-                        WebkitBoxOrient: 'vertical',
-                        textOverflow: 'ellipsis'
-                      }}>
-                        {compiledPreviewBody}
-                      </div>
-
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
-                        <div style={{ fontSize: '0.78rem', color: '#555' }}>
-                          <strong>Date:</strong> {new Date().toLocaleDateString()}
+                      {/* Content wrapper */}
+                      <div style={{ position: 'relative', zIndex: 11, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', minHeight: 0, padding: '36px 14px 10px 14px' }}>
+                        <div style={{ textAlign: 'center', marginBottom: '4px', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: "'Cinzel', serif", color: '#4e3620', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {schoolName}
+                          </div>
+                          
+                          <div style={{ textAlign: 'center', margin: '14px 0 2px 0' }}>
+                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.95rem', fontWeight: 800, color: '#c5a85c', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '1.1' }}>
+                              {template.title || 'CERTIFICATE'}
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
+                              <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                              <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '0.55rem', fontStyle: 'italic', color: '#4e3620', fontWeight: 600 }}>
+                                Of Achievement
+                              </span>
+                              <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                            </div>
+                          </div>
                         </div>
-                        <div style={{ textAlign: 'center', borderTop: '1px solid #777', width: '140px', paddingTop: '4px', fontSize: '0.78rem', fontWeight: 'bold', color: '#4a3e28' }}>
-                          {template.signature_title}
+
+                        <div style={{ 
+                          margin: '2px 0', 
+                          textAlign: 'center', 
+                          fontSize: '0.54rem',
+                          lineHeight: '1.8',
+                          whiteSpace: 'pre-line', 
+                          flex: '1 1 auto', 
+                          minHeight: 0, 
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center'
+                        }} dangerouslySetInnerHTML={{ __html: compiledPreviewBody }}>
+                        </div>
+
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
+                          <div style={{ fontSize: '0.55rem', color: '#555' }}>
+                            <strong>Date:</strong> <span style={{ borderBottom: '0.75px solid #000', display: 'inline-block', minWidth: '40px', fontWeight: 'bold' }}>{new Date().toLocaleDateString()}</span>
+                          </div>
+                          
+                          <div style={{ position: 'relative' }}>
+                            {/* Signature stamp seal */}
+                            <div style={{ position: 'absolute', bottom: '6px', right: '15px', width: '22px', height: '22px', border: '0.5px solid rgba(28, 70, 160, 0.6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-8deg)', zIndex: 10 }}>
+                              <span style={{ fontSize: '2px', color: 'rgba(28, 70, 160, 0.6)', fontWeight: 'bold' }}>APPROVED</span>
+                            </div>
+                            <div style={{ textAlign: 'center', borderTop: '0.75px solid #000', width: '70px', paddingTop: '2px', fontSize: '0.5rem', fontWeight: 'bold', color: '#4a3e28', fontFamily: "'Cinzel', serif" }}>
+                              {template.signature_title}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -2514,7 +2904,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Body</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -3219,6 +3609,113 @@ export default function CertificatesPage() {
                     Select Class and Exam Type filters above to generate the class result positions sheet.
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── LESSON PLAN VIEW ── */}
+            {activeDoc === 'lesson_plan' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Lesson Plan Prefill Settings</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Class</label>
+                        <select className="form-select" value={lessonPlanClassFilter} onChange={e => {
+                          setLessonPlanClassFilter(e.target.value)
+                          const className = classes.find(c => c.id === e.target.value)?.name || ''
+                          setLessonPlanGrade(className ? `${className} Grade` : '')
+                          setLessonPlanSubjectFilter('')
+                        }}>
+                          <option value="">Blank (No prefill)</option>
+                          {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Subject</label>
+                        <select className="form-select" value={lessonPlanSubjectFilter} onChange={e => {
+                          setLessonPlanSubjectFilter(e.target.value)
+                          const subName = subjects.find(s => s.id === e.target.value)?.name || ''
+                          setLessonPlanSubject(subName)
+                        }} disabled={!lessonPlanClassFilter}>
+                          <option value="">Blank (No prefill)</option>
+                          {subjects.filter(s => s.class_id === lessonPlanClassFilter).map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Class/Grade Label</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. 10th Class" 
+                        value={lessonPlanGrade} 
+                        onChange={e => setLessonPlanGrade(e.target.value)} 
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Subject Label</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. Chemistry" 
+                        value={lessonPlanSubject} 
+                        onChange={e => setLessonPlanSubject(e.target.value)} 
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Teacher Label</label>
+                      <input 
+                        type="text" 
+                        className="form-input" 
+                        placeholder="e.g. Mr. John Doe" 
+                        value={lessonPlanTeacher} 
+                        onChange={e => setLessonPlanTeacher(e.target.value)} 
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Date Label</label>
+                      <input 
+                        type="date" 
+                        className="form-input" 
+                        value={lessonPlanDate} 
+                        onChange={e => setLessonPlanDate(e.target.value)} 
+                      />
+                    </div>
+
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintLessonPlan}>
+                      🖨️ Print Lesson Plan Form
+                    </button>
+                  </div>
+                </div>
+
+                {/* Lesson Plan Preview */}
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
+                    Form Sheet Preview
+                  </h3>
+
+                  <div style={{ 
+                    border: '1px solid #777', 
+                    background: '#fff', 
+                    boxSizing: 'border-box', 
+                    width: '210mm', 
+                    height: '297mm',
+                    minWidth: '210mm',
+                    minHeight: '297mm',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    position: 'relative'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: getLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                  </div>
+                </div>
               </div>
             )}
           </>

@@ -5,34 +5,27 @@ import { getSession } from '@/lib/auth'
 const DEFAULT_TEMPLATES: Record<string, { title: string; body_text: string; signature_title: string }> = {
   slc: {
     title: 'School Leaving Certificate',
-    body_text: `It is to certify that Mr./Mrs. {name} S/O {father_name} is a brilliant student of this institution. The student with DOB of {dob} has passed {class_name} and is leaving this school on {leaving_date}. I wish him/her all the best.`,
+    body_text: `This is to certify that Mr./Mrs. {name} S/O {father_name} is a student of this institution. The student has passed class {class_name} and is leaving this school on {leaving_date} due to {leaving_reason}. His/Her conduct and character during stay at this institution has been {conduct}. We wish him/her all the best for future endeavors.`,
     signature_title: 'Principal'
   },
   birth: {
     title: 'BIRTH CERTIFICATE',
-    body_text: `This is to certify that {name} son/daughter of {father_name} was born on {dob}.
-This certificate is issued on request of the parents/guardian 
-of the student.
-
-`,
+    body_text: `This is to certify that {name} son/daughter of {father_name} was born on {dob} (in words: {dob_words}). The place of birth was {birth_place} and is recorded under entry number {register_no} in the birth register of this institution. This certificate is issued on request of the parents/guardian of the student.`,
     signature_title: 'Principal'
   },
   character: {
-    title: 'CHARACTER  CERTIFICATE',
-    body_text: `This is to certify that {name}, son/daughter of {father_name} was a brilliant student of this institution.We wish him/her all the best for his future.`,
+    title: 'CHARACTER CERTIFICATE',
+    body_text: `This is to certify that {name} son/daughter of {father_name} has been a student of this institution. During stay, his/her character and conduct has been found to be {conduct}. We wish him/her continued success in future academic endeavors.`,
     signature_title: 'Principal'
   },
   sports: {
     title: 'CERTIFICATE OF SPORTS ACHIEVEMENT',
-    body_text: `This is to certify that {name} , son/daughter of {father_name} ,has actively participated in the {sport_name} tournament.
-They achieved the position of {achievement} at the {event_name}.
-
-`,
+    body_text: `This is to certify that {name} son/daughter of {father_name} has actively participated in the {sport_name} tournament. They achieved the position of {achievement} at the {event_name} held on {date}.`,
     signature_title: 'Principal'
   },
   top_positions: {
-    title: 'CERTIFICATE OF ACADEMIC EXCELLENCE',
-    body_text: `This certificate is awarded to {name}, son/daughter of {father_name}, student of class {class_name} (Roll No: {roll_no}), in recognition of securing the {position} position in the {exam_name} examinations.`,
+    title: 'CERTIFICATE',
+    body_text: `This certificate is awarded to {name} Son of / Daughter of {father_name} has achieved outstanding academic performance and secured the {position} Position in Class {class_name} during the {exam_name} Examination of {year}. Your dedication, hard work, and excellence are truly commendable. We wish you continued success in your future academic endeavors.`,
     signature_title: 'Principal'
   }
 }

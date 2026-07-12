@@ -25,6 +25,168 @@ interface GroupedInvoice {
 
 type Tab = 'templates' | 'assign-fee' | 'fee-history'
 
+const CHALLAN_PRINT_STYLES = `
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      color: #1e293b;
+    }
+    .page-container {
+      width: 210mm;
+      height: 297mm;
+      page-break-after: always;
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .challan {
+      height: 96mm;
+      width: 210mm;
+      box-sizing: border-box;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 4mm 12mm;
+    }
+    .challan-inner {
+      border: 1.5px solid #0f172a;
+      border-radius: 8px;
+      padding: 4mm 8mm;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #f8fafc;
+    }
+    .challan-header {
+      text-align: center;
+      border-bottom: 2.2px solid #0f172a;
+      padding-bottom: 2mm;
+      margin-bottom: 2mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .school-name {
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #0f172a;
+      letter-spacing: 0.5px;
+    }
+    .challan-title {
+      font-size: 0.95rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #eaeaea;
+      background-color: #0f172a;
+      padding: 1.2mm 3.5mm;
+      border-radius: 4px;
+    }
+    .details-table {
+      width: 100%;
+      font-size: 0.8rem;
+      border-collapse: collapse;
+      margin-bottom: 2mm;
+    }
+    .details-table td {
+      padding: 0.8mm 1.5mm;
+      color: #334155;
+    }
+    .details-table td strong {
+      color: #0f172a;
+    }
+    .highlight {
+      color: #b91c1c;
+      font-weight: 700;
+    }
+    .fee-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      margin-bottom: 2mm;
+    }
+    .fee-table th {
+      background-color: #0f172a;
+      color: #fff;
+      padding: 1.2mm 2.5mm;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+    }
+    .fee-table td {
+      padding: 1.5mm 2.5mm;
+      border-bottom: 1px solid #cbd5e1;
+      color: #334155;
+    }
+    .total-row td {
+      border-top: 1.5px solid #0f172a;
+      border-bottom: none;
+      padding-top: 2mm;
+    }
+    .challan-footer {
+      display: flex;
+      flex-direction: column;
+      gap: 3mm;
+    }
+    .instructions {
+      font-size: 0.72rem;
+      color: #475569;
+      font-style: italic;
+      border-left: 2.5px solid #cbd5e1;
+      padding-left: 3mm;
+      line-height: 1.4;
+    }
+    .signatures {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2mm;
+    }
+    .sig-col {
+      text-align: center;
+      width: 45mm;
+    }
+    .sig-line {
+      border-top: 1px dashed #475569;
+      padding-top: 1.5mm;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #475569;
+      text-transform: uppercase;
+    }
+    .dashed-divider {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 0.68rem;
+      color: #94a3b8;
+      letter-spacing: 1px;
+      height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    @media print {
+      body { background: #fff; }
+      .challan-inner { background-color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+`
+
 export default function FeePage() {
   const [tab, setTab] = useState<Tab>('templates')
   const [templates, setTemplates] = useState<FeeTemplate[]>([])
@@ -47,6 +209,7 @@ export default function FeePage() {
   const [challanDueDate, setChallanDueDate] = useState('10th of the month')
   const [challanPenalty, setChallanPenalty] = useState('Late fee of ₨ 100 applies after the due date.')
   const [showChallanCustomizer, setShowChallanCustomizer] = useState(false)
+  const [emptyChallanCopies, setEmptyChallanCopies] = useState(3)
   const [editingGroup, setEditingGroup] = useState<GroupedInvoice | null>(null)
   const [editGroupForm, setEditGroupForm] = useState<{
     status: string;
@@ -432,165 +595,135 @@ export default function FeePage() {
       <html>
         <head>
           <title>Fee Challans - A4 Print</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-            @page {
-              size: A4 portrait;
-              margin: 0;
+          ${CHALLAN_PRINT_STYLES}
+        </head>
+        <body>
+          ${pagesHTML}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
             }
-            html, body {
-              margin: 0;
-              padding: 0;
-              width: 100%;
-              height: 100%;
-              background: #fff;
-              font-family: 'Inter', sans-serif;
-              color: #1e293b;
-            }
-            .page-container {
-              width: 210mm;
-              height: 297mm;
-              page-break-after: always;
-              display: flex;
-              flex-direction: column;
-              box-sizing: border-box;
-              background: #fff;
-            }
-            .challan {
-              height: 96mm;
-              width: 210mm;
-              box-sizing: border-box;
-              position: relative;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              padding: 4mm 12mm;
-            }
-            .challan-inner {
-              border: 1.5px solid #0f172a;
-              border-radius: 8px;
-              padding: 4mm 8mm;
-              flex-grow: 1;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-              background-color: #f8fafc;
-            }
-            .challan-header {
-              text-align: center;
-              border-bottom: 2.2px solid #0f172a;
-              padding-bottom: 2mm;
-              margin-bottom: 2mm;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            }
-            .school-name {
-              font-size: 1.1rem;
-              font-weight: 800;
-              text-transform: uppercase;
-              color: #0f172a;
-              letter-spacing: 0.5px;
-            }
-            .challan-title {
-              font-size: 0.95rem;
-              font-weight: 800;
-              letter-spacing: 1.5px;
-              color: #eaeaea;
-              background-color: #0f172a;
-              padding: 1.2mm 3.5mm;
-              border-radius: 4px;
-            }
-            .details-table {
-              width: 100%;
-              font-size: 0.8rem;
-              border-collapse: collapse;
-              margin-bottom: 2mm;
-            }
-            .details-table td {
-              padding: 0.8mm 1.5mm;
-              color: #334155;
-            }
-            .details-table td strong {
-              color: #0f172a;
-            }
-            .highlight {
-              color: #b91c1c;
-              font-weight: 700;
-            }
-            .fee-table {
-              width: 100%;
-              border-collapse: collapse;
-              font-size: 0.8rem;
-              margin-bottom: 2mm;
-            }
-            .fee-table th {
-              background-color: #0f172a;
-              color: #fff;
-              padding: 1.2mm 2.5mm;
-              font-weight: 600;
-              font-size: 0.75rem;
-              text-transform: uppercase;
-            }
-            .fee-table td {
-              padding: 1.5mm 2.5mm;
-              border-bottom: 1px solid #cbd5e1;
-              color: #334155;
-            }
-            .total-row td {
-              border-top: 1.5px solid #0f172a;
-              border-bottom: none;
-              padding-top: 2mm;
-            }
-            .challan-footer {
-              display: flex;
-              flex-direction: column;
-              gap: 3mm;
-            }
-            .instructions {
-              font-size: 0.72rem;
-              color: #475569;
-              font-style: italic;
-              border-left: 2.5px solid #cbd5e1;
-              padding-left: 3mm;
-              line-height: 1.4;
-            }
-            .signatures {
-              display: flex;
-              justify-content: space-between;
-              margin-top: 2mm;
-            }
-            .sig-col {
-              text-align: center;
-              width: 45mm;
-            }
-            .sig-line {
-              border-top: 1px dashed #475569;
-              padding-top: 1.5mm;
-              font-size: 0.72rem;
-              font-weight: 600;
-              color: #475569;
-              text-transform: uppercase;
-            }
-            .dashed-divider {
-              position: absolute;
-              bottom: 0;
-              left: 0;
-              right: 0;
-              text-align: center;
-              font-size: 0.68rem;
-              color: #94a3b8;
-              letter-spacing: 1px;
-              height: 0;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-            }
-            @media print {
-              body { background: #fff; }
-              .challan-inner { background-color: #fff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            }
-          </style>
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
+  function printEmptyChallans(copies: number) {
+    if (copies <= 0) return
+    const win = window.open('', '_blank')
+    if (!win) return
+
+    // Group into chunks of 3 for A4 print layout
+    const chunks: number[] = []
+    for (let i = 0; i < copies; i += 3) {
+      chunks.push(Math.min(3, copies - i))
+    }
+
+    const pagesHTML = chunks.map(chunkSize => {
+      const challansHTML = Array.from({ length: chunkSize }).map((_, idx) => {
+        return `
+          <div class="challan">
+            <div class="challan-inner">
+              <div class="challan-header">
+                <div class="school-name">${challanSchoolName || 'EduManage School System'}</div>
+                <div class="challan-title">FEE CHALLAN</div>
+              </div>
+              
+              <div class="challan-body">
+                <table class="details-table">
+                  <tr>
+                    <td style="width: 18%;"><strong>Student Name:</strong></td>
+                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px; width: 32%;"></td>
+                    <td style="width: 15%;"><strong>Invoice No:</strong></td>
+                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px; width: 35%;"></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Billing Period:</strong></td>
+                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px;"></td>
+                    <td><strong>Due Date:</strong></td>
+                    <td><span class="highlight">${challanDueDate || '___________________'}</span></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Bank Name:</strong></td>
+                    <td>${challanBankName || '___________________'}</td>
+                    <td><strong>Account No:</strong></td>
+                    <td><strong>${challanAccountNo || '___________________'}</strong></td>
+                  </tr>
+                </table>
+
+                <table class="fee-table">
+                  <thead>
+                    <tr>
+                      <th style="text-align: left;">Fee Description</th>
+                      <th style="text-align: right; width: 30%;">Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                    </tr>
+                    <tr>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                    </tr>
+                    <tr>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                    </tr>
+                    <tr>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                    </tr>
+                    <tr>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
+                    </tr>
+                    <tr class="total-row">
+                      <td><strong>NET PAYABLE AMOUNT:</strong></td>
+                      <td style="text-align: right; border-bottom: 1.5px dashed #0f172a; height: 32px;"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="challan-footer">
+                <div class="instructions">${challanPenalty}</div>
+                <div class="signatures">
+                  <div class="sig-col">
+                    <div class="sig-line">Parent Sign</div>
+                  </div>
+                  <div class="sig-col">
+                    <div class="sig-line">Cashier Sign</div>
+                  </div>
+                  <div class="sig-col">
+                    <div class="sig-line">Principal Sign</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            ${idx < chunkSize - 1 ? '<div class="dashed-divider">✂------------------ CUT HERE ------------------✂</div>' : ''}
+          </div>
+        `
+      }).join('')
+
+      return `
+        <div class="page-container">
+          ${challansHTML}
+        </div>
+      `
+    }).join('')
+
+    win.document.write(`
+      <html>
+        <head>
+          <title>Empty Fee Challans - A4 Print</title>
+          ${CHALLAN_PRINT_STYLES}
         </head>
         <body>
           ${pagesHTML}
@@ -863,7 +996,7 @@ export default function FeePage() {
           {/* Challan Print Customizer Panel */}
           <div className="card" style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                 <button 
                   onClick={() => setShowChallanCustomizer(!showChallanCustomizer)}
                   className="btn btn-secondary"
@@ -878,7 +1011,13 @@ export default function FeePage() {
                   className="btn btn-primary"
                   disabled={selectedInvoices.length === 0}
                 >
-                  🖨️ Print Selected Challans (${selectedInvoices.length})
+                  🖨️ Print Selected Challans ({selectedInvoices.length})
+                </button>
+                <button 
+                  onClick={() => printEmptyChallans(emptyChallanCopies)}
+                  className="btn btn-secondary"
+                >
+                  📝 Print Empty Challan ({emptyChallanCopies})
                 </button>
               </div>
               <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
@@ -903,6 +1042,17 @@ export default function FeePage() {
                 <div className="form-group">
                   <label className="form-label">Due Date</label>
                   <input className="form-input" value={challanDueDate} onChange={e => setChallanDueDate(e.target.value)} />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Empty Challan Copies</label>
+                  <input 
+                    type="number" 
+                    min="1" 
+                    max="99" 
+                    className="form-input" 
+                    value={emptyChallanCopies} 
+                    onChange={e => setEmptyChallanCopies(Math.max(1, Math.min(99, Number(e.target.value) || 1)))} 
+                  />
                 </div>
                 <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                   <label className="form-label">Instructions / Penalty Terms</label>
