@@ -111,15 +111,45 @@ export default function SlcPage() {
 
   function compileTemplate(body: string, student: Student) {
     if (!body) return ''
-    return body
-      .replace(/{name}/g, student.name || '')
-      .replace(/{father_name}/g, student.father_name || '—')
-      .replace(/{class_name}/g, student.class_name || '—')
-      .replace(/{roll_no}/g, student.roll_no || '—')
-      .replace(/{dob}/g, student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
-      .replace(/{leaving_date}/g, leavingDate ? new Date(leavingDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—')
-      .replace(/{leaving_reason}/g, leavingReason || '—')
-      .replace(/{conduct}/g, conduct || '—')
+    const wrap = (val: string) => `<strong style="font-weight: 700; color: #000; border-bottom: 1px dashed #666; padding: 0 3px; display: inline;">${val}</strong>`
+    const normalizedBody = body.replace(/\s+/g, ' ').trim()
+    return normalizedBody
+      .replace(/{name}/g, wrap(student.name || ''))
+      .replace(/{father_name}/g, wrap(student.father_name || '—'))
+      .replace(/{class_name}/g, wrap(student.class_name || '—'))
+      .replace(/{roll_no}/g, wrap(student.roll_no || '—'))
+      .replace(/{dob}/g, wrap(student.dob ? new Date(student.dob).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
+      .replace(/{leaving_date}/g, wrap(leavingDate ? new Date(leavingDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }) : '—'))
+      .replace(/{leaving_reason}/g, wrap(leavingReason || '—'))
+      .replace(/{conduct}/g, wrap(conduct || '—'))
+  }
+
+  // Dynamic font sizing & line-height helper based on text character count
+  function getDynamicCertBodyStyles(text: string, isPreview: boolean = false) {
+    const cleanText = (text || '').replace(/<[^>]*>/g, '').trim()
+    const len = cleanText.length
+
+    if (isPreview) {
+      if (len <= 150) {
+        return { fontSize: '1.1rem', lineHeight: '2.2' }
+      } else if (len <= 250) {
+        return { fontSize: '0.95rem', lineHeight: '1.9' }
+      } else if (len <= 380) {
+        return { fontSize: '0.82rem', lineHeight: '1.7' }
+      } else {
+        return { fontSize: '0.72rem', lineHeight: '1.5' }
+      }
+    } else {
+      if (len <= 150) {
+        return { fontSize: '22px', lineHeight: '2.3' }
+      } else if (len <= 250) {
+        return { fontSize: '18px', lineHeight: '2.1' }
+      } else if (len <= 380) {
+        return { fontSize: '16px', lineHeight: '1.8' }
+      } else {
+        return { fontSize: '13.5px', lineHeight: '1.6' }
+      }
+    }
   }
 
   async function handleSaveTemplate(e: React.FormEvent) {
@@ -185,6 +215,7 @@ export default function SlcPage() {
   function handlePrint() {
     if (!selectedStudent) return
     const compiledBody = compileTemplate(template.body_text, selectedStudent)
+    const printBodyStyles = getDynamicCertBodyStyles(compiledBody, false)
     const win = window.open('', '_blank')
     if (!win) return
 
@@ -301,19 +332,19 @@ export default function SlcPage() {
               margin-bottom: 25px;
             }
             .cert-body {
-              font-size: 18px;
-              line-height: 2.1;
+              font-size: ${printBodyStyles.fontSize};
+              line-height: ${printBodyStyles.lineHeight};
               text-align: justify;
               margin: 20px 0;
-              white-space: pre-line;
-              text-indent: 30px;
+              text-indent: 40px;
               flex: 1;
             }
             .cert-body strong {
-              font-weight: 600;
+              font-weight: 700;
               color: #000;
               border-bottom: 1px dashed #666;
-              padding: 0 4px;
+              padding: 0 3px;
+              display: inline;
             }
             .footer {
               display: flex;
@@ -379,10 +410,7 @@ export default function SlcPage() {
                     <div class="cert-subtitle">Official Academic Release Certificate</div>
                   </div>
                   <div class="cert-body">
-                    ${compiledBody.replace(/([^{}\n]+)/g, (match) => {
-                      // We wrap dynamic variables values inside <strong> for custom styling on printouts
-                      return match
-                    })}
+                    <p style="margin: 0; text-indent: 40px; line-height: 2.1; text-align: justify;">${compiledBody}</p>
                   </div>
                   <div class="footer">
                     <div class="sig-block">
@@ -414,6 +442,7 @@ export default function SlcPage() {
 
   // Pre-compiled preview helper
   const previewText = selectedStudent ? compileTemplate(template.body_text, selectedStudent) : ''
+  const previewBodyStyles = getDynamicCertBodyStyles(previewText, true)
 
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
@@ -556,9 +585,7 @@ export default function SlcPage() {
                       </div>
                     </div>
 
-                    <div style={{ margin: '1.5rem 0', textAlign: 'justify', textIndent: '15px', whiteSpace: 'pre-line' }}>
-                      {previewText}
-                    </div>
+                    <div style={{ margin: '1.5rem 0', textAlign: 'justify', textIndent: '30px', fontSize: previewBodyStyles.fontSize, lineHeight: previewBodyStyles.lineHeight, wordBreak: 'break-word' }} dangerouslySetInnerHTML={{ __html: previewText }} />
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '3rem' }}>
                       <div style={{ fontSize: '0.8rem', color: '#555' }}>

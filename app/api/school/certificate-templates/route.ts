@@ -5,27 +5,27 @@ import { getSession } from '@/lib/auth'
 const DEFAULT_TEMPLATES: Record<string, { title: string; body_text: string; signature_title: string }> = {
   slc: {
     title: 'School Leaving Certificate',
-    body_text: `This is to certify that Mr./Mrs. {name} S/O {father_name} is a student of this institution. The student has passed class {class_name} and is leaving this school on {leaving_date} due to {leaving_reason}. His/Her conduct and character during stay at this institution has been {conduct}. We wish him/her all the best for future endeavors.`,
+    body_text: `This is to certify that {name}, Son/Daughter of {father_name}, bearing Roll No. {roll_no}, was a bonafide student of Class {class_name} at this institution. As per official records, their date of birth is {dob}. The student is leaving this school on {leaving_date} due to {leaving_reason}. Throughout their period of study at this institution, their academic performance and general conduct have been evaluated as {conduct}. We wish them every success in all their future academic and personal endeavors.`,
     signature_title: 'Principal'
   },
   birth: {
     title: 'BIRTH CERTIFICATE',
-    body_text: `This is to certify that {name} son/daughter of {father_name} was born on {dob} (in words: {dob_words}). The place of birth was {birth_place} and is recorded under entry number {register_no} in the birth register of this institution. This certificate is issued on request of the parents/guardian of the student.`,
+    body_text: `This is to certify that {name}, Son/Daughter of {father_name}, was born on {dob} (in words: {dob_words}) at {birth_place}. The birth record is officially registered under entry number {register_no} in the register of this institution. This certificate is officially issued upon the formal request of the parent or legal guardian for all official records.`,
     signature_title: 'Principal'
   },
   character: {
     title: 'CHARACTER CERTIFICATE',
-    body_text: `This is to certify that {name} son/daughter of {father_name} has been a student of this institution. During stay, his/her character and conduct has been found to be {conduct}. We wish him/her continued success in future academic endeavors.`,
+    body_text: `This is to certify that {name}, Son/Daughter of {father_name}, was a student of Class {class_name} at this institution. Throughout their tenure at this school, their conduct, moral character, and overall behavior have been consistently observed to be {conduct}. They have shown commendable discipline and sense of responsibility. We wish them continued success in all future academic endeavors.`,
     signature_title: 'Principal'
   },
   sports: {
     title: 'CERTIFICATE OF SPORTS ACHIEVEMENT',
-    body_text: `This is to certify that {name} son/daughter of {father_name} has actively participated in the {sport_name} tournament. They achieved the position of {achievement} at the {event_name} held on {date}.`,
+    body_text: `This is to certify that {name}, Son/Daughter of {father_name}, actively participated in the {sport_name} tournament representing this institution. They demonstrated exemplary athletic dedication and achieved the position of {achievement} at the {event_name} organized on {date}. We commend their athletic spirit and wish them continued success in future sporting events.`,
     signature_title: 'Principal'
   },
   top_positions: {
-    title: 'CERTIFICATE',
-    body_text: `This certificate is awarded to {name} Son of / Daughter of {father_name} has achieved outstanding academic performance and secured the {position} Position in Class {class_name} during the {exam_name} Examination of {year}. Your dedication, hard work, and excellence are truly commendable. We wish you continued success in your future academic endeavors.`,
+    title: 'CERTIFICATE OF ACADEMIC EXCELLENCE',
+    body_text: `This certificate of academic excellence is proudly awarded to {name}, Son/Daughter of {father_name}, in recognition of outstanding scholastic performance by securing the {position} Position in Class {class_name} during the {exam_name} Examination of {year}. Obtaining {marks_obtained} out of {total_marks} marks ({percentage}), their perseverance, diligence, and academic brilliance are truly commendable. We extend our heartiest congratulations and wish them a highly successful future ahead.`,
     signature_title: 'Principal'
   }
 }

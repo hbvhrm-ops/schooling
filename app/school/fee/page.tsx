@@ -8,6 +8,9 @@ interface GroupedInvoice {
   key: string;
   student_id: string;
   student_name: string;
+  father_name?: string;
+  roll_no?: string;
+  class_name?: string;
   month: number;
   year: number;
   amount: number;
@@ -27,7 +30,7 @@ type Tab = 'templates' | 'assign-fee' | 'fee-history'
 
 const CHALLAN_PRINT_STYLES = `
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
     @page {
       size: A4 portrait;
       margin: 0;
@@ -38,8 +41,8 @@ const CHALLAN_PRINT_STYLES = `
       width: 100%;
       height: 100%;
       background: #fff;
-      font-family: 'Inter', sans-serif;
-      color: #1e293b;
+      font-family: 'Inter', Arial, sans-serif;
+      color: #0f172a;
     }
     .page-container {
       width: 210mm;
@@ -58,113 +61,86 @@ const CHALLAN_PRINT_STYLES = `
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 4mm 12mm;
+      padding: 3mm 10mm;
     }
     .challan-inner {
-      border: 1.5px solid #0f172a;
-      border-radius: 8px;
-      padding: 4mm 8mm;
+      border: 1.5px solid #2563eb;
+      border-radius: 6px;
+      padding: 3mm 6mm;
       flex-grow: 1;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      background-color: #f8fafc;
+      background-color: #fff;
     }
     .challan-header {
       text-align: center;
-      border-bottom: 2.2px solid #0f172a;
-      padding-bottom: 2mm;
       margin-bottom: 2mm;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
     }
     .school-name {
-      font-size: 1.1rem;
+      font-size: 1.15rem;
       font-weight: 800;
+      color: #1e3a8a;
       text-transform: uppercase;
-      color: #0f172a;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.3px;
+      margin-bottom: 3px;
     }
-    .challan-title {
-      font-size: 0.95rem;
-      font-weight: 800;
-      letter-spacing: 1.5px;
-      color: #eaeaea;
-      background-color: #0f172a;
-      padding: 1.2mm 3.5mm;
-      border-radius: 4px;
-    }
-    .details-table {
-      width: 100%;
-      font-size: 0.8rem;
-      border-collapse: collapse;
-      margin-bottom: 2mm;
-    }
-    .details-table td {
-      padding: 0.8mm 1.5mm;
-      color: #334155;
-    }
-    .details-table td strong {
-      color: #0f172a;
-    }
-    .highlight {
-      color: #b91c1c;
+    .sub-banner {
+      background-color: #2563eb;
+      color: #ffffff;
+      font-size: 0.82rem;
       font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 3px;
+      text-align: center;
+      letter-spacing: 0.3px;
+      display: block;
+      margin: 0 auto;
+      width: 96%;
     }
-    .fee-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8rem;
-      margin-bottom: 2mm;
-    }
-    .fee-table th {
-      background-color: #0f172a;
-      color: #fff;
-      padding: 1.2mm 2.5mm;
-      font-weight: 600;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-    }
-    .fee-table td {
-      padding: 1.5mm 2.5mm;
-      border-bottom: 1px solid #cbd5e1;
-      color: #334155;
-    }
-    .total-row td {
-      border-top: 1.5px solid #0f172a;
-      border-bottom: none;
-      padding-top: 2mm;
-    }
-    .challan-footer {
-      display: flex;
-      flex-direction: column;
-      gap: 3mm;
-    }
-    .instructions {
-      font-size: 0.72rem;
-      color: #475569;
-      font-style: italic;
-      border-left: 2.5px solid #cbd5e1;
-      padding-left: 3mm;
-      line-height: 1.4;
-    }
-    .signatures {
+    .field-row {
       display: flex;
       justify-content: space-between;
-      margin-top: 2mm;
+      align-items: flex-end;
+      margin-top: 2.5mm;
+      font-size: 0.84rem;
     }
-    .sig-col {
-      text-align: center;
-      width: 45mm;
+    .field-group {
+      display: flex;
+      align-items: flex-end;
+      flex: 1;
     }
-    .sig-line {
-      border-top: 1px dashed #475569;
-      padding-top: 1.5mm;
-      font-size: 0.72rem;
+    .field-label {
+      font-weight: 700;
+      color: #1e3a8a;
+      white-space: nowrap;
+      margin-right: 4px;
+      font-size: 0.84rem;
+    }
+    .field-value-line {
+      flex: 1;
+      border-bottom: 1.5px solid #2563eb;
+      padding-bottom: 1px;
+      padding-left: 6px;
       font-weight: 600;
-      color: #475569;
-      text-transform: uppercase;
+      color: #0f172a;
+      min-height: 16px;
+    }
+    .grid-2-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 2.5mm;
+    }
+    .signature-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 4mm;
+    }
+    .signature-box {
+      display: flex;
+      align-items: flex-end;
+      width: 220px;
     }
     .dashed-divider {
       position: absolute;
@@ -172,7 +148,7 @@ const CHALLAN_PRINT_STYLES = `
       left: 0;
       right: 0;
       text-align: center;
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: #94a3b8;
       letter-spacing: 1px;
       height: 0;
@@ -246,6 +222,9 @@ export default function FeePage() {
           key,
           student_id: studentId,
           student_name: inv.student_name || 'Unknown',
+          father_name: (inv as any).father_name || '',
+          roll_no: (inv as any).roll_no || '',
+          class_name: (inv as any).class_name || '',
           month: inv.month,
           year: inv.year,
           amount: 0,
@@ -507,74 +486,117 @@ export default function FeePage() {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
         const billingPeriod = `${months[inv.month - 1]} ${inv.year}`
         const invNo = inv.items[0]?.invoice_id.substring(0, 8).toUpperCase() || 'N/A'
+        const enrollNo = inv.roll_no || invNo
 
-        const feeRowsHTML = inv.items.map(item => `
-          <tr>
-            <td>${item.template_name}</td>
-            <td style="text-align: right;">₨ ${item.amount.toLocaleString()}</td>
-          </tr>
-        `).join('')
+        let tuitionFee = 0
+        let booksFee = 0
+        let admissionFee = 0
+        let promotionFee = 0
+        let hasSpecific = false
+
+        inv.items.forEach(item => {
+          const name = item.template_name.toLowerCase()
+          if (name.includes('tuition') || name.includes('monthly') || name.includes('fee')) {
+            tuitionFee += item.amount
+            hasSpecific = true
+          } else if (name.includes('book')) {
+            booksFee += item.amount
+            hasSpecific = true
+          } else if (name.includes('admission')) {
+            admissionFee += item.amount
+            hasSpecific = true
+          } else if (name.includes('promotion')) {
+            promotionFee += item.amount
+            hasSpecific = true
+          }
+        })
+
+        if (!hasSpecific && inv.items.length > 0) {
+          tuitionFee = inv.amount
+        }
+
+        const totalFee = inv.amount
+        const remainFee = 0
         
         return `
           <div class="challan">
             <div class="challan-inner">
               <div class="challan-header">
-                <div class="school-name">${challanSchoolName}</div>
-                <div class="challan-title">FEE CHALLAN</div>
+                <div class="school-name">${challanSchoolName || 'THE ABU OBAIDA ISLAMIC MODEL SCHOOL (THE AIMS)'}</div>
+                <div class="sub-banner">Al Haj Bahri Karam Colony Amankot Swat</div>
               </div>
               
               <div class="challan-body">
-                <table class="details-table">
-                  <tr>
-                    <td><strong>Student Name:</strong></td>
-                    <td>${inv.student_name}</td>
-                    <td><strong>Invoice No:</strong></td>
-                    <td>#${invNo}</td>
-                  </tr>
-                  <tr>
-                    <td><strong>Billing Period:</strong></td>
-                    <td>${billingPeriod}</td>
-                    <td><strong>Due Date:</strong></td>
-                    <td><span class="highlight">${challanDueDate}</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Bank Name:</strong></td>
-                    <td>${challanBankName}</td>
-                    <td><strong>Account No:</strong></td>
-                    <td><strong>${challanAccountNo}</strong></td>
-                  </tr>
-                </table>
-
-                <table class="fee-table">
-                  <thead>
-                    <tr>
-                      <th style="text-align: left;">Fee Description</th>
-                      <th style="text-align: right;">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    ${feeRowsHTML}
-                    <tr class="total-row">
-                      <td><strong>NET PAYABLE AMOUNT:</strong></td>
-                      <td style="text-align: right; font-weight: bold; color: #1e3a8a; font-size: 1.15rem;">
-                        ₨ ${inv.amount.toLocaleString()}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="challan-footer">
-                <div class="instructions">${challanPenalty}</div>
-                <div class="signatures">
-                  <div class="sig-col">
-                    <div class="sig-line">Parent Sign</div>
+                <div class="field-row">
+                  <div class="field-group">
+                    <span class="field-label">Date:</span>
+                    <span class="field-value-line">${new Date().toLocaleDateString()}</span>
                   </div>
-                  <div class="sig-col">
-                    <div class="sig-line">Cashier Sign</div>
+                  <div class="field-group" style="margin-left: 24px;">
+                    <span class="field-label">Enroll No.</span>
+                    <span class="field-value-line">${enrollNo}</span>
                   </div>
-                  <div class="sig-col">
-                    <div class="sig-line">Principal Sign</div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Name Student</span>
+                    <span class="field-value-line">${inv.student_name}</span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">F/Name</span>
+                    <span class="field-value-line">${inv.father_name || ''}</span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Enroll No.</span>
+                    <span class="field-value-line">${enrollNo}</span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Class</span>
+                    <span class="field-value-line">${inv.class_name || ''}</span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col" style="margin-top: 4mm;">
+                  <div class="field-group">
+                    <span class="field-label">Tuition Fee</span>
+                    <span class="field-value-line">${tuitionFee > 0 ? tuitionFee.toLocaleString() : ''}</span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Books Fee</span>
+                    <span class="field-value-line">${booksFee > 0 ? booksFee.toLocaleString() : ''}</span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Admission</span>
+                    <span class="field-value-line">${admissionFee > 0 ? admissionFee.toLocaleString() : ''}</span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Promotion Fee</span>
+                    <span class="field-value-line">${promotionFee > 0 ? promotionFee.toLocaleString() : ''}</span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Total Fee</span>
+                    <span class="field-value-line" style="font-weight: 800;">${totalFee > 0 ? totalFee.toLocaleString() : ''}</span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Remain Fee</span>
+                    <span class="field-value-line">${remainFee > 0 ? remainFee.toLocaleString() : ''}</span>
+                  </div>
+                </div>
+
+                <div class="signature-container">
+                  <div class="signature-box">
+                    <span class="field-label">Signature</span>
+                    <span class="field-value-line"></span>
                   </div>
                 </div>
               </div>
@@ -630,79 +652,81 @@ export default function FeePage() {
           <div class="challan">
             <div class="challan-inner">
               <div class="challan-header">
-                <div class="school-name">${challanSchoolName || 'EduManage School System'}</div>
-                <div class="challan-title">FEE CHALLAN</div>
+                <div class="school-name">${challanSchoolName || 'THE ABU OBAIDA ISLAMIC MODEL SCHOOL (THE AIMS)'}</div>
+                <div class="sub-banner">Al Haj Bahri Karam Colony Amankot Swat</div>
               </div>
               
               <div class="challan-body">
-                <table class="details-table">
-                  <tr>
-                    <td style="width: 18%;"><strong>Student Name:</strong></td>
-                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px; width: 32%;"></td>
-                    <td style="width: 15%;"><strong>Invoice No:</strong></td>
-                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px; width: 35%;"></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Billing Period:</strong></td>
-                    <td style="border-bottom: 1px dashed #94a3b8; height: 24px;"></td>
-                    <td><strong>Due Date:</strong></td>
-                    <td><span class="highlight">${challanDueDate || '___________________'}</span></td>
-                  </tr>
-                  <tr>
-                    <td><strong>Bank Name:</strong></td>
-                    <td>${challanBankName || '___________________'}</td>
-                    <td><strong>Account No:</strong></td>
-                    <td><strong>${challanAccountNo || '___________________'}</strong></td>
-                  </tr>
-                </table>
-
-                <table class="fee-table">
-                  <thead>
-                    <tr>
-                      <th style="text-align: left;">Fee Description</th>
-                      <th style="text-align: right; width: 30%;">Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                    </tr>
-                    <tr>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                    </tr>
-                    <tr>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                    </tr>
-                    <tr>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                    </tr>
-                    <tr>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                      <td style="height: 28px; border-bottom: 1px dashed #cbd5e1;"></td>
-                    </tr>
-                    <tr class="total-row">
-                      <td><strong>NET PAYABLE AMOUNT:</strong></td>
-                      <td style="text-align: right; border-bottom: 1.5px dashed #0f172a; height: 32px;"></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <div class="challan-footer">
-                <div class="instructions">${challanPenalty}</div>
-                <div class="signatures">
-                  <div class="sig-col">
-                    <div class="sig-line">Parent Sign</div>
+                <div class="field-row">
+                  <div class="field-group">
+                    <span class="field-label">Date:</span>
+                    <span class="field-value-line"></span>
                   </div>
-                  <div class="sig-col">
-                    <div class="sig-line">Cashier Sign</div>
+                  <div class="field-group" style="margin-left: 24px;">
+                    <span class="field-label">Enroll No.</span>
+                    <span class="field-value-line"></span>
                   </div>
-                  <div class="sig-col">
-                    <div class="sig-line">Principal Sign</div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Name Student</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">F/Name</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Enroll No.</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Class</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col" style="margin-top: 4mm;">
+                  <div class="field-group">
+                    <span class="field-label">Tuition Fee</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Books Fee</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Admission</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Promotion Fee</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                </div>
+
+                <div class="grid-2-col">
+                  <div class="field-group">
+                    <span class="field-label">Total Fee</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                  <div class="field-group">
+                    <span class="field-label">Remain Fee</span>
+                    <span class="field-value-line"></span>
+                  </div>
+                </div>
+
+                <div class="signature-container">
+                  <div class="signature-box">
+                    <span class="field-label">Signature</span>
+                    <span class="field-value-line"></span>
                   </div>
                 </div>
               </div>
@@ -875,6 +899,11 @@ export default function FeePage() {
                 {templates.length === 0 && <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem', padding: '0.5rem' }}>No templates found. Create one first!</div>}
               </div>
             </div>
+            {!assignStudent && assignClass && (
+              <div style={{ background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.25)', padding: '0.85rem 1rem', borderRadius: '10px', fontSize: '0.85rem', color: '#065f46' }}>
+                🏷️ <strong>Automatic Student Discount:</strong> Any individual student with a custom discount configured in their profile will automatically have their discount deducted when generating class fee vouchers.
+              </div>
+            )}
             {assignStudent && (
               <div style={{ background: 'var(--bg-surface)', padding: '1rem', borderRadius: '12px', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

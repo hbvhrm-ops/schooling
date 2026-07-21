@@ -1009,6 +1009,42 @@ export default function StudentsPage() {
               <div className="form-group"><label className="form-label">Address</label><input className="form-input" value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} /></div>
             </div>
             
+            {/* Student Specific Fee Discount */}
+            <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', gridColumn: 'span 2' }}>
+              <h4 style={{ fontWeight: 700, fontSize: '1rem', marginBottom: '0.5rem' }}>🏷️ Student Specific Fee Discount</h4>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                Pre-configure an individual discount for this student. When generating class fees, this discount will be calculated and applied automatically.
+              </p>
+              <div className="grid-2">
+                <div className="form-group">
+                  <label className="form-label">Discount Type</label>
+                  <select
+                    className="form-select"
+                    value={customForm['fee_discount_type'] || 'none'}
+                    onChange={e => setCustomForm(prev => ({ ...prev, fee_discount_type: e.target.value }))}
+                  >
+                    <option value="none">No Discount</option>
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="fixed">Fixed Amount (₨)</option>
+                  </select>
+                </div>
+                {(customForm['fee_discount_type'] && customForm['fee_discount_type'] !== 'none') && (
+                  <div className="form-group">
+                    <label className="form-label">Discount Value *</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      placeholder={customForm['fee_discount_type'] === 'percentage' ? 'e.g. 10' : 'e.g. 500'}
+                      value={customForm['fee_discount_value'] || ''}
+                      onChange={e => setCustomForm(prev => ({ ...prev, fee_discount_value: e.target.value }))}
+                      min="0"
+                      max={customForm['fee_discount_type'] === 'percentage' ? '100' : undefined}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Custom Dynamic Fields */}
             <div style={{ marginTop: '0.5rem', borderTop: '1px solid var(--border)', paddingTop: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', gridColumn: 'span 2' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>

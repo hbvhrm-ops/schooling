@@ -37,3 +37,47 @@ export async function POST(req: NextRequest) {
   }
   return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
 }
+
+export async function PUT(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const body = await req.json()
+  const supabase = createServerClient()
+
+  if (!body.id || !body.date || !body.amount) {
+    return NextResponse.json({ error: 'ID, date and amount are required' }, { status: 400 })
+  }
+
+  const { data, error } = await supabase
+    .from('expenses')
+    .update({
+      date: body.date,
+      amount: parseFloat(body.amount),
+      description: body.description || null,
+    })
+    .eq('id', body.id)
+    .eq('school_id', session.schoolId)
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ expense: data }, { status: 200 })
+}
+
+export async function DELETE(req: NextRequest) {
+  const session = await getSession()
+  if (!session?.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const { searchParams } = new URL(req.url)
+  const id = searchParams.get('id')
+  if (!id) return NextResponse.json({ error: 'ID parameter is required' }, { status: 400 })
+
+  const supabase = createServerClient()
+  const { error } = await supabase
+    .from('expenses')
+    .delete()
+    .eq('id', id)
+    .eq('school_id', session.schoolId)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 400 })
+  return NextResponse.json({ success: true }, { status: 200 })
+}

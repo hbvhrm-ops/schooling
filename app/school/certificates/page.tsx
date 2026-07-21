@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary' | 'lesson_plan'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary' | 'lesson_plan' | 'weekly_lesson_plan'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -123,13 +123,56 @@ export default function CertificatesPage() {
     'English', 'Urdu', 'Science', 'Maths', 'G.Knowledge', 'S.Studies', 'Islamiyat', 'Presentation', 'Total Students', 'Name of Absent Students'
   ])
 
-  // Lesson Plan specific states
-  const [lessonPlanClassFilter, setLessonPlanClassFilter] = useState('')
-  const [lessonPlanSubjectFilter, setLessonPlanSubjectFilter] = useState('')
-  const [lessonPlanGrade, setLessonPlanGrade] = useState('')
-  const [lessonPlanSubject, setLessonPlanSubject] = useState('')
-  const [lessonPlanTeacher, setLessonPlanTeacher] = useState('')
-  const [lessonPlanDate, setLessonPlanDate] = useState('')
+  // Daily Lesson Plan specific states
+  const [dailyClassFilter, setDailyClassFilter] = useState('')
+  const [dailySubjectFilter, setDailySubjectFilter] = useState('')
+  const [dailyGrade, setDailyGrade] = useState('')
+  const [dailySubject, setDailySubject] = useState('')
+  const [dailyTopic, setDailyTopic] = useState('')
+  const [dailyDate, setDailyDate] = useState('')
+  const [dailyDuration, setDailyDuration] = useState('')
+  const [dailyTeacher, setDailyTeacher] = useState('')
+
+  // Two columns of content inputs for each section to support the template grid
+  const [dailyObjectives, setDailyObjectives] = useState({ col1: '', col2: '' })
+  const [dailyMaterials, setDailyMaterials] = useState({ col1: '', col2: '' })
+  const [dailyIntro, setDailyIntro] = useState({ col1: '', col2: '' })
+  const [dailyDevelopment, setDailyDevelopment] = useState({ col1: '', col2: '' })
+  const [dailyActivities, setDailyActivities] = useState({ col1: '', col2: '' })
+  const [dailyAssessments, setDailyAssessments] = useState({ col1: '', col2: '' })
+  const [dailyConclusion, setDailyConclusion] = useState({ col1: '', col2: '' })
+  const [dailyHomework, setDailyHomework] = useState({ col1: '', col2: '' })
+  const [dailyReflection, setDailyReflection] = useState({ col1: '', col2: '' })
+
+  // Weekly Lesson Plan specific states
+  const [weeklyClassFilter, setWeeklyClassFilter] = useState('')
+  const [weeklySubjectFilter, setWeeklySubjectFilter] = useState('')
+  const [weeklyGrade, setWeeklyGrade] = useState('')
+  const [weeklySubject, setWeeklySubject] = useState('')
+  const [weeklyDateFrom, setWeeklyDateFrom] = useState('')
+  const [weeklyDateTo, setWeeklyDateTo] = useState('')
+  const [weeklyPeriods, setWeeklyPeriods] = useState('')
+  const [weeklyTotalSlos, setWeeklyTotalSlos] = useState('')
+  const [weeklyTopics, setWeeklyTopics] = useState({
+    day1: '', day2: '', day3: '', day4: '', day5: '', day6: ''
+  })
+  const [weeklySloKnowledge, setWeeklySloKnowledge] = useState('')
+  const [weeklySloComprehension, setWeeklySloComprehension] = useState('')
+  const [weeklySloApplication, setWeeklySloApplication] = useState('')
+  const [weeklyResources, setWeeklyResources] = useState('')
+  const [weeklyAvAids, setWeeklyAvAids] = useState('')
+  const [weeklyPrevKnowledge, setWeeklyPrevKnowledge] = useState('')
+  const [weeklyMethodologies, setWeeklyMethodologies] = useState<Record<string, boolean>>({
+    lecture: false, discussion: false, tech_integration: false,
+    students_centered: false, pbl: false, flipped: false,
+    blended: false, kinesthetic: false, activity_based: false,
+    montessori: false, other: false
+  })
+  const [weeklyAssessments, setWeeklyAssessments] = useState('')
+  const [weeklyActivities, setWeeklyActivities] = useState('')
+  const [weeklyHomework, setWeeklyHomework] = useState({
+    day1: '', day2: '', day3: '', day4: '', day5: '', day6: ''
+  })
 
   // Load basic lists
   const loadData = useCallback(async () => {
@@ -211,7 +254,7 @@ export default function CertificatesPage() {
 
   // Load certificate template from client-side cache when activeDoc changes
   const loadTemplate = useCallback((type: string) => {
-    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary' || type === 'lesson_plan') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary' || type === 'lesson_plan' || type === 'weekly_lesson_plan') return
     const t = templatesCache[type]
     if (t) {
       setTemplate(t)
@@ -1442,233 +1485,7 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
-  function getLessonPlanPreviewHtml() {
-    return `
-      <div style="font-family: sans-serif; padding: 15px; color: #000; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
-        <div style="text-align: center; font-size: 14pt; font-weight: bold; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; color: #1e3a8a;">
-          ${schoolName}
-        </div>
-        <div style="text-align: center; font-size: 11pt; font-weight: 800; margin-bottom: 12px; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
-          Lesson plan
-        </div>
-        <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #1e3a8a; font-size: 8.5pt;">
-          <tbody>
-            <tr style="height: 25px;">
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; width: 18%; color: #1e3a8a;">Subject:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; width: 32%; font-weight: 600;">
-                ${lessonPlanSubject ? lessonPlanSubject : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
-              </td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; width: 18%; color: #1e3a8a;">Class/Grade:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; width: 32%; font-weight: 600;">
-                ${lessonPlanGrade ? lessonPlanGrade : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
-              </td>
-            </tr>
-            <tr style="height: 25px;">
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Topic:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px;">
-                <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>
-              </td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Date:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: 600;">
-                ${lessonPlanDate ? new Date(lessonPlanDate).toLocaleDateString('en-GB') : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
-              </td>
-            </tr>
-            <tr style="height: 25px;">
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Duration:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px;">
-                <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>
-              </td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: bold; color: #1e3a8a;">Teacher:</td>
-              <td style="border: 1px solid #1e3a8a; padding: 6px 8px; font-weight: 600;">
-                ${lessonPlanTeacher ? lessonPlanTeacher : '<span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 90%; height: 12px;"></span>'}
-              </td>
-            </tr>
-            ${[
-              'Learning Objectives',
-              'Teaching Materials',
-              'Introduction',
-              'Lesson Development',
-              'Activities',
-              'Assessment',
-              'Conclusion',
-              'Homework',
-              'Teacher Reflection'
-            ].map(label => `
-              <tr style="height: 24px;">
-                <td style="border: 1px solid #1e3a8a; padding: 5px 8px; font-weight: bold; color: #1e3a8a;">${label}:</td>
-                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;">
-                  <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 95%; height: 12px;"></span>
-                </td>
-                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;">
-                  <span style="border-bottom: 1px solid #cbd5e1; display: inline-block; width: 95%; height: 12px;"></span>
-                </td>
-                <td style="border: 1px solid #1e3a8a; padding: 5px 8px;"></td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      </div>
-    `;
-  }
-
-  function handlePrintLessonPlan() {
-    const win = window.open('', '_blank')
-    if (!win) return
-
-    const tableRowsHTML = [
-      'Learning Objectives',
-      'Teaching Materials',
-      'Introduction',
-      'Lesson Development',
-      'Activities',
-      'Assessment',
-      'Conclusion',
-      'Homework',
-      'Teacher Reflection'
-    ].map(label => `
-      <tr style="height: 17mm;">
-        <td class="label-cell"><strong>${label}:</strong></td>
-        <td class="line-cell"><span class="write-line"></span></td>
-        <td class="line-cell"><span class="write-line"></span></td>
-        <td class="blank-cell"></td>
-      </tr>
-    `).join('')
-
-    win.document.write(`
-      <html>
-        <head>
-          <title>Lesson plan</title>
-          <style>
-            @page {
-              size: portrait;
-              margin: 12mm 15mm;
-            }
-            html, body {
-              margin: 0;
-              padding: 0;
-              background-color: #fff;
-              color: #000;
-              font-family: 'Arial', sans-serif;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            .lesson-plan-container {
-              width: 100%;
-              box-sizing: border-box;
-              display: flex;
-              flex-direction: column;
-              height: 100%;
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 6mm;
-            }
-            .school-name {
-              font-size: 20pt;
-              font-weight: bold;
-              text-transform: uppercase;
-              color: #1e3a8a;
-              margin-bottom: 2px;
-            }
-            .school-details {
-              font-size: 9pt;
-              color: #475569;
-              font-weight: 600;
-            }
-            .form-title {
-              font-size: 15pt;
-              font-weight: 800;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
-              color: #334155;
-              margin: 4mm 0 6mm 0;
-              border-bottom: 2px solid #1e3a8a;
-              padding-bottom: 2mm;
-            }
-            .lesson-plan-table {
-              width: 100%;
-              border-collapse: collapse;
-              border: 2px solid #1e3a8a;
-            }
-            .lesson-plan-table td {
-              border: 1px solid #1e3a8a;
-              padding: 4mm 5mm;
-              font-size: 10pt;
-              vertical-align: middle;
-              box-sizing: border-box;
-            }
-            .label-cell {
-              width: 18%;
-              font-weight: bold;
-              color: #1e3a8a;
-            }
-            .line-cell {
-              width: 32%;
-            }
-            .blank-cell {
-              width: 18%;
-            }
-            .write-line {
-              display: inline-block;
-              border-bottom: 1.2px solid #cbd5e1;
-              width: 95%;
-              height: 16px;
-            }
-          </style>
-        </head>
-        <body>
-          <div class="lesson-plan-container">
-            <div class="header">
-              <div class="school-name">${schoolName}</div>
-              ${schoolAddress ? `<div class="school-details">${schoolAddress}</div>` : ''}
-              <div class="form-title">Lesson plan</div>
-            </div>
-            
-            <table class="lesson-plan-table">
-              <tbody>
-                <tr style="height: 15mm;">
-                  <td class="label-cell"><strong>Subject:</strong></td>
-                  <td style="width: 32%; font-weight: bold;">
-                    ${lessonPlanSubject ? lessonPlanSubject : '<span class="write-line"></span>'}
-                  </td>
-                  <td class="label-cell"><strong>Class/Grade:</strong></td>
-                  <td style="width: 32%; font-weight: bold;">
-                    ${lessonPlanGrade ? lessonPlanGrade : '<span class="write-line"></span>'}
-                  </td>
-                </tr>
-                <tr style="height: 15mm;">
-                  <td class="label-cell"><strong>Topic:</strong></td>
-                  <td><span class="write-line"></span></td>
-                  <td class="label-cell"><strong>Date:</strong></td>
-                  <td style="font-weight: bold;">
-                    ${lessonPlanDate ? new Date(lessonPlanDate).toLocaleDateString('en-GB') : '<span class="write-line"></span>'}
-                  </td>
-                </tr>
-                <tr style="height: 15mm;">
-                  <td class="label-cell"><strong>Duration:</strong></td>
-                  <td><span class="write-line"></span></td>
-                  <td class="label-cell"><strong>Teacher:</strong></td>
-                  <td style="font-weight: bold;">
-                    ${lessonPlanTeacher ? lessonPlanTeacher : '<span class="write-line"></span>'}
-                  </td>
-                </tr>
-                ${tableRowsHTML}
-              </tbody>
-            </table>
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.print();
-                setTimeout(function() { window.close(); }, 500);
-              }, 300);
-            }
-          </script>
-        </body>
-      </html>
-    `)
-    win.document.close()
-  }
+  // Lesson Plan print and preview functions are defined below near live preview section.
 
   // Render full HTML body for admission form (shared between preview and print window)
   function getAdmissionFormHtml(studentInfo: Student | null) {
@@ -2522,6 +2339,326 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
+  function getDailyLessonPlanPreviewHtml() {
+    return `
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .dlp-container {
+          font-family: 'Inter', Arial, sans-serif;
+          color: #000;
+          background: #fff;
+          padding: 8mm 10mm;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .dlp-title {
+          text-align: center;
+          font-size: 14pt;
+          font-weight: 700;
+          margin-bottom: 6mm;
+          color: #000;
+          letter-spacing: 0.5px;
+        }
+        .dlp-table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 1.5px solid #000;
+          font-size: 10px;
+        }
+        .dlp-table td {
+          border: 1px solid #000;
+          padding: 5px 8px;
+          vertical-align: middle;
+        }
+        .dlp-line {
+          border-bottom: 1.2px dotted #555;
+          display: inline-block;
+          width: 90%;
+          height: 13px;
+          vertical-align: bottom;
+        }
+      </style>
+      <div class="dlp-container">
+        <div class="dlp-title">Lesson plan</div>
+        <table class="dlp-table">
+          <colgroup>
+            <col style="width: 22%;" />
+            <col style="width: 32%;" />
+            <col style="width: 28%;" />
+            <col style="width: 18%;" />
+          </colgroup>
+          <tr>
+            <td style="font-weight: 700;">Subject:</td>
+            <td>${dailySubject || '<span class="dlp-line"></span>'}</td>
+            <td style="font-weight: 700; border-left: 1px solid #000;">Class/Grade:</td>
+            <td>${dailyGrade || '<span class="dlp-line"></span>'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700;">Topic:</td>
+            <td>${dailyTopic || '<span class="dlp-line"></span>'}</td>
+            <td style="font-weight: 700; border-left: 1px solid #000;">Date:</td>
+            <td>${dailyDate || '<span class="dlp-line"></span>'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700;">Duration:</td>
+            <td>${dailyDuration || '<span class="dlp-line"></span>'}</td>
+            <td style="font-weight: 700; border-left: 1px solid #000;">Teacher:</td>
+            <td>${dailyTeacher || '<span class="dlp-line"></span>'}</td>
+          </tr>
+          ${[
+            ['Learning Objectives:', dailyObjectives],
+            ['Teaching Materials:', dailyMaterials],
+            ['Introduction:', dailyIntro],
+            ['Lesson Development:', dailyDevelopment],
+            ['Activities:', dailyActivities],
+            ['Assessment:', dailyAssessments],
+            ['Conclusion:', dailyConclusion],
+            ['Homework:', dailyHomework],
+            ['Teacher Reflection:', dailyReflection]
+          ].map(([label, stateObj]: any) => `
+            <tr style="height: 38px;">
+              <td style="font-weight: 700;">${label}</td>
+              <td style="vertical-align: middle;">
+                ${stateObj.col1 || '<span class="dlp-line"></span>'}
+              </td>
+              <td style="vertical-align: middle; border-left: 1px solid #000;">
+                ${stateObj.col2 || '<span class="dlp-line"></span>'}
+              </td>
+              <td>&nbsp;</td>
+            </tr>
+          `).join('')}
+        </table>
+      </div>
+    `
+  }
+
+  function handlePrintDailyLessonPlan() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+      <html>
+        <head>
+          <title>Daily Lesson Plan</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 6mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #fff;
+            }
+          </style>
+        </head>
+        <body>
+          ${getDailyLessonPlanPreviewHtml()}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
+  function getWeeklyLessonPlanPreviewHtml() {
+    return `
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .lp-container {
+          font-family: 'Inter', Arial, sans-serif;
+          color: #000;
+          background: #fff;
+          padding: 6mm 8mm;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
+        }
+        .lp-table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 1.5px solid #000;
+          font-size: 11px;
+        }
+        .lp-table th, .lp-table td {
+          border: 1px solid #000;
+          padding: 4px 6px;
+          vertical-align: middle;
+        }
+        .slo-orange-box {
+          border: 2px solid #e67e22;
+          width: 60px;
+          height: 34px;
+          margin: 6px auto 2px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 13px;
+          font-weight: 800;
+          color: #000;
+        }
+        .methodology-cell {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        .check-box-square {
+          width: 14px;
+          height: 14px;
+          border: 1px solid #000;
+          display: inline-block;
+          text-align: center;
+          line-height: 12px;
+          font-size: 11px;
+          font-weight: bold;
+        }
+      </style>
+      <div class="lp-container">
+        <table class="lp-table">
+          <tr>
+            <td style="width: 20%; font-weight: 700;">Days/Dates</td>
+            <td style="width: 8%; font-weight: 700;">From</td>
+            <td style="width: 16%; font-weight: 600;">${weeklyDateFrom || '&nbsp;'}</td>
+            <td style="width: 6%; font-weight: 700;">To</td>
+            <td style="width: 16%; font-weight: 600;">${weeklyDateTo || '&nbsp;'}</td>
+            <td style="width: 16%; font-weight: 700;">Class/Section</td>
+            <td style="width: 18%; font-weight: 600;">${weeklyGrade || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700;">No of Periods</td>
+            <td colspan="3" style="font-weight: 600;">${weeklyPeriods || '&nbsp;'}</td>
+            <td style="font-weight: 700;">Subject</td>
+            <td colspan="2" style="font-weight: 600;">${weeklySubject || '&nbsp;'}</td>
+          </tr>
+          <tr style="background: #f8fafc;">
+            <td style="font-weight: 700;">Days</td>
+            <td colspan="6" style="font-weight: 700;">Topics</td>
+          </tr>
+          <tr><td style="font-weight: 600;">Day-1</td><td colspan="6">${weeklyTopics.day1 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-2</td><td colspan="6">${weeklyTopics.day2 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-3</td><td colspan="6">${weeklyTopics.day3 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-4</td><td colspan="6">${weeklyTopics.day4 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-5</td><td colspan="6">${weeklyTopics.day5 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-6</td><td colspan="6">${weeklyTopics.day6 || '&nbsp;'}</td></tr>
+          <tr>
+            <td rowspan="3" style="text-align: center; vertical-align: middle; padding: 6px;">
+              <div style="font-weight: 700; font-size: 10px; line-height: 1.3;">
+                Total No of SLOs<br/>for the week.
+              </div>
+              <div class="slo-orange-box">${weeklyTotalSlos || ''}</div>
+            </td>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Knowledge</td>
+            <td colspan="5" style="min-height: 30px;">${weeklySloKnowledge || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Comprehension</td>
+            <td colspan="5" style="min-height: 30px;">${weeklySloComprehension || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Application</td>
+            <td colspan="5" style="min-height: 30px;">${weeklySloApplication || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Resources</td>
+            <td colspan="6" style="min-height: 25px;">${weeklyResources || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Av Aids</td>
+            <td colspan="6" style="min-height: 25px;">${weeklyAvAids || '&nbsp;'}</td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle; padding: 8px 4px;">
+              Previous<br/>Knowledge<br/>Questions
+            </td>
+            <td colspan="6" style="min-height: 50px;">${weeklyPrevKnowledge || '&nbsp;'}<br/><br/></td>
+          </tr>
+          <tr>
+            <td rowspan="4" style="font-weight: 700; text-align: center; vertical-align: middle;">Methodologies</td>
+            <td colspan="2"><div class="methodology-cell"><span>Lecture</span><span class="check-box-square">${weeklyMethodologies.lecture ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Discussion</span><span class="check-box-square">${weeklyMethodologies.discussion ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Tech Integration</span><span class="check-box-square">${weeklyMethodologies.tech_integration ? '✓' : ''}</span></div></td>
+          </tr>
+          <tr>
+            <td colspan="2"><div class="methodology-cell"><span>Students Centered</span><span class="check-box-square">${weeklyMethodologies.students_centered ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>PBL</span><span class="check-box-square">${weeklyMethodologies.pbl ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Flipped</span><span class="check-box-square">${weeklyMethodologies.flipped ? '✓' : ''}</span></div></td>
+          </tr>
+          <tr>
+            <td colspan="2"><div class="methodology-cell"><span>Blended</span><span class="check-box-square">${weeklyMethodologies.blended ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Kinesthetic</span><span class="check-box-square">${weeklyMethodologies.kinesthetic ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Activity Based</span><span class="check-box-square">${weeklyMethodologies.activity_based ? '✓' : ''}</span></div></td>
+          </tr>
+          <tr>
+            <td colspan="2"><div class="methodology-cell"><span>Montessori</span><span class="check-box-square">${weeklyMethodologies.montessori ? '✓' : ''}</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>&nbsp;</span></div></td>
+            <td colspan="2"><div class="methodology-cell"><span>Other</span><span class="check-box-square">${weeklyMethodologies.other ? '✓' : ''}</span></div></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Assessments</td>
+            <td colspan="6" style="min-height: 35px;">${weeklyAssessments || '&nbsp;'}<br/></td>
+          </tr>
+          <tr>
+            <td style="font-weight: 700; text-align: center; vertical-align: middle;">Activities</td>
+            <td colspan="6" style="min-height: 35px;">${weeklyActivities || '&nbsp;'}<br/></td>
+          </tr>
+          <tr>
+            <td rowspan="6" style="font-weight: 700; text-align: center; vertical-align: middle;">Homework</td>
+            <td style="font-weight: 600;">Day-1</td><td colspan="5">${weeklyHomework.day1 || '&nbsp;'}</td>
+          </tr>
+          <tr><td style="font-weight: 600;">Day-2</td><td colspan="5">${weeklyHomework.day2 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-3</td><td colspan="5">${weeklyHomework.day3 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-4</td><td colspan="5">${weeklyHomework.day4 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-5</td><td colspan="5">${weeklyHomework.day5 || '&nbsp;'}</td></tr>
+          <tr><td style="font-weight: 600;">Day-6</td><td colspan="5">${weeklyHomework.day6 || '&nbsp;'}</td></tr>
+        </table>
+      </div>
+    `
+  }
+
+  function handlePrintWeeklyLessonPlan() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+      <html>
+        <head>
+          <title>Weekly Lesson Plan</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 8mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #fff;
+            }
+          </style>
+        </head>
+        <body>
+          ${getWeeklyLessonPlanPreviewHtml()}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   // Pre-compiled live preview text
   const compiledPreviewBody = selectedStudent ? compileTemplate(template.body_text, selectedStudent) : ''
   const classSubjects = awardClass
@@ -2588,7 +2725,10 @@ export default function CertificatesPage() {
               <span style={{ marginRight: '0.5rem' }}>📔</span> Class Diary Sheet
             </button>
             <button className={`nav-item ${activeDoc === 'lesson_plan' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('lesson_plan')}>
-              <span style={{ marginRight: '0.5rem' }}>📋</span> Lesson Plan Structure
+              <span style={{ marginRight: '0.5rem' }}>📋</span> Daily Lesson Plan
+            </button>
+            <button className={`nav-item ${activeDoc === 'weekly_lesson_plan' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('weekly_lesson_plan')}>
+              <span style={{ marginRight: '0.5rem' }}>🗓️</span> Weekly Lesson Plan
             </button>
           </div>
         </nav>
@@ -2610,7 +2750,8 @@ export default function CertificatesPage() {
             {activeDoc === 'result_form' && '🎓 Student Class Result Sheet'}
             {activeDoc === 'progress_report' && '📈 Monthly Progress Report Card'}
             {activeDoc === 'diary' && '📔 Daily Class Diary Sheet'}
-            {activeDoc === 'lesson_plan' && '📋 Lesson plan'}
+            {activeDoc === 'lesson_plan' && '📋 Daily Lesson Plan'}
+            {activeDoc === 'weekly_lesson_plan' && '🗓️ Weekly Lesson Plan'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
@@ -2623,7 +2764,8 @@ export default function CertificatesPage() {
             {activeDoc === 'result_form' && 'Generate class-wide student result summaries containing all subject marks and calculated class positions.'}
             {activeDoc === 'progress_report' && 'Print blank student monthly progress reports to fill manually.'}
             {activeDoc === 'diary' && 'Print blank daily class diary sheets containing class subjects.'}
-            {activeDoc === 'lesson_plan' && 'Print blank or prefilled teacher lesson planning forms.'}
+            {activeDoc === 'lesson_plan' && 'Print blank or prefilled daily teacher lesson planning forms.'}
+            {activeDoc === 'weekly_lesson_plan' && 'Print blank or prefilled weekly teacher lesson planning forms.'}
           </p>
         </div>
 
@@ -2634,7 +2776,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -2652,7 +2794,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 
                 {/* Inputs card */}
@@ -2904,7 +3046,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Paragraph</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -3612,21 +3754,21 @@ export default function CertificatesPage() {
               </div>
             )}
 
-            {/* ── LESSON PLAN VIEW ── */}
+            {/* ── DAILY LESSON PLAN VIEW ── */}
             {activeDoc === 'lesson_plan' && (
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
                 <div className="card">
-                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Lesson Plan Prefill Settings</h3>
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Daily Lesson Plan Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                       <div className="form-group">
                         <label className="form-label">Prefill Class</label>
-                        <select className="form-select" value={lessonPlanClassFilter} onChange={e => {
-                          setLessonPlanClassFilter(e.target.value)
+                        <select className="form-select" value={dailyClassFilter} onChange={e => {
+                          setDailyClassFilter(e.target.value)
                           const className = classes.find(c => c.id === e.target.value)?.name || ''
-                          setLessonPlanGrade(className ? `${className} Grade` : '')
-                          setLessonPlanSubjectFilter('')
+                          setDailyGrade(className)
+                          setDailySubjectFilter('')
                         }}>
                           <option value="">Blank (No prefill)</option>
                           {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -3634,69 +3776,85 @@ export default function CertificatesPage() {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Prefill Subject</label>
-                        <select className="form-select" value={lessonPlanSubjectFilter} onChange={e => {
-                          setLessonPlanSubjectFilter(e.target.value)
+                        <select className="form-select" value={dailySubjectFilter} onChange={e => {
+                          setDailySubjectFilter(e.target.value)
                           const subName = subjects.find(s => s.id === e.target.value)?.name || ''
-                          setLessonPlanSubject(subName)
-                        }} disabled={!lessonPlanClassFilter}>
+                          setDailySubject(subName)
+                        }} disabled={!dailyClassFilter}>
                           <option value="">Blank (No prefill)</option>
-                          {subjects.filter(s => s.class_id === lessonPlanClassFilter).map(s => (
+                          {subjects.filter(s => s.class_id === dailyClassFilter).map(s => (
                             <option key={s.id} value={s.id}>{s.name}</option>
                           ))}
                         </select>
                       </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Class/Grade Label</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="e.g. 10th Class" 
-                        value={lessonPlanGrade} 
-                        onChange={e => setLessonPlanGrade(e.target.value)} 
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Class/Grade</label>
+                        <input type="text" className="form-input" placeholder="e.g. 10th Class" value={dailyGrade} onChange={e => setDailyGrade(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Subject</label>
+                        <input type="text" className="form-input" placeholder="e.g. Chemistry" value={dailySubject} onChange={e => setDailySubject(e.target.value)} />
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Subject Label</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="e.g. Chemistry" 
-                        value={lessonPlanSubject} 
-                        onChange={e => setLessonPlanSubject(e.target.value)} 
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Teacher</label>
+                        <input type="text" className="form-input" placeholder="e.g. Mr. John Doe" value={dailyTeacher} onChange={e => setDailyTeacher(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Date</label>
+                        <input type="text" className="form-input" placeholder="e.g. 15-08-2026" value={dailyDate} onChange={e => setDailyDate(e.target.value)} />
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Teacher Label</label>
-                      <input 
-                        type="text" 
-                        className="form-input" 
-                        placeholder="e.g. Mr. John Doe" 
-                        value={lessonPlanTeacher} 
-                        onChange={e => setLessonPlanTeacher(e.target.value)} 
-                      />
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Topic</label>
+                        <input type="text" className="form-input" placeholder="e.g. Acids & Bases" value={dailyTopic} onChange={e => setDailyTopic(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Duration</label>
+                        <input type="text" className="form-input" placeholder="e.g. 45 Mins" value={dailyDuration} onChange={e => setDailyDuration(e.target.value)} />
+                      </div>
                     </div>
 
-                    <div className="form-group">
-                      <label className="form-label">Date Label</label>
-                      <input 
-                        type="date" 
-                        className="form-input" 
-                        value={lessonPlanDate} 
-                        onChange={e => setLessonPlanDate(e.target.value)} 
-                      />
+                    {/* Detailed Columns Inputs */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📋 Plan Details (Col 1 & Col 2)</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: '350px', overflowY: 'auto', paddingRight: '0.25rem' }}>
+                        {[
+                          ['Learning Objectives', dailyObjectives, setDailyObjectives],
+                          ['Teaching Materials', dailyMaterials, setDailyMaterials],
+                          ['Introduction', dailyIntro, setDailyIntro],
+                          ['Lesson Development', dailyDevelopment, setDailyDevelopment],
+                          ['Activities', dailyActivities, setDailyActivities],
+                          ['Assessment', dailyAssessments, setDailyAssessments],
+                          ['Conclusion', dailyConclusion, setDailyConclusion],
+                          ['Homework', dailyHomework, setDailyHomework],
+                          ['Teacher Reflection', dailyReflection, setDailyReflection]
+                        ].map(([title, stateObj, setter]: any) => (
+                          <div key={title} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', marginBottom: '0.25rem' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{title}</span>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginTop: '0.25rem' }}>
+                              <input type="text" className="form-input form-input-sm" placeholder="Col 1 note..." value={stateObj.col1} onChange={e => setter({ ...stateObj, col1: e.target.value })} />
+                              <input type="text" className="form-input form-input-sm" placeholder="Col 2 note..." value={stateObj.col2} onChange={e => setter({ ...stateObj, col2: e.target.value })} />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
 
-                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintLessonPlan}>
-                      🖨️ Print Lesson Plan Form
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintDailyLessonPlan}>
+                      🖨️ Print Daily Lesson Plan
                     </button>
                   </div>
                 </div>
 
-                {/* Lesson Plan Preview */}
+                {/* Daily Lesson Plan Preview */}
                 <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                   <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
                     Form Sheet Preview
@@ -3713,7 +3871,182 @@ export default function CertificatesPage() {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
                     position: 'relative'
                   }}>
-                    <div dangerouslySetInnerHTML={{ __html: getLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                    <div dangerouslySetInnerHTML={{ __html: getDailyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── WEEKLY LESSON PLAN VIEW ── */}
+            {activeDoc === 'weekly_lesson_plan' && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Weekly Lesson Plan Settings</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Class</label>
+                        <select className="form-select" value={weeklyClassFilter} onChange={e => {
+                          setWeeklyClassFilter(e.target.value)
+                          const className = classes.find(c => c.id === e.target.value)?.name || ''
+                          setWeeklyGrade(className)
+                          setWeeklySubjectFilter('')
+                        }}>
+                          <option value="">Blank (No prefill)</option>
+                          {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Subject</label>
+                        <select className="form-select" value={weeklySubjectFilter} onChange={e => {
+                          setWeeklySubjectFilter(e.target.value)
+                          const subName = subjects.find(s => s.id === e.target.value)?.name || ''
+                          setWeeklySubject(subName)
+                        }} disabled={!weeklyClassFilter}>
+                          <option value="">Blank (No prefill)</option>
+                          {subjects.filter(s => s.class_id === weeklyClassFilter).map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Date From</label>
+                        <input type="text" className="form-input" placeholder="e.g. 15-08-2026" value={weeklyDateFrom} onChange={e => setWeeklyDateFrom(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Date To</label>
+                        <input type="text" className="form-input" placeholder="e.g. 20-08-2026" value={weeklyDateTo} onChange={e => setWeeklyDateTo(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Class/Section</label>
+                        <input type="text" className="form-input" placeholder="e.g. 10th-A" value={weeklyGrade} onChange={e => setWeeklyGrade(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Subject</label>
+                        <input type="text" className="form-input" placeholder="e.g. Chemistry" value={weeklySubject} onChange={e => setWeeklySubject(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">No of Periods</label>
+                        <input type="text" className="form-input" placeholder="e.g. 6" value={weeklyPeriods} onChange={e => setWeeklyPeriods(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Total No of SLOs (Orange Box)</label>
+                        <input type="text" className="form-input" placeholder="e.g. 12" value={weeklyTotalSlos} onChange={e => setWeeklyTotalSlos(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Topics (Day 1-6) */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📅 Daily Topics</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        {(['day1', 'day2', 'day3', 'day4', 'day5', 'day6'] as const).map((d, i) => (
+                          <input key={d} type="text" className="form-input" placeholder={`Day-${i + 1} Topic...`} value={weeklyTopics[d]} onChange={e => setWeeklyTopics(prev => ({ ...prev, [d]: e.target.value }))} />
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* SLOs Breakdown */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem' }}>🎯 SLOs Breakdown</label>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                        <input type="text" className="form-input" placeholder="Knowledge SLOs..." value={weeklySloKnowledge} onChange={e => setWeeklySloKnowledge(e.target.value)} />
+                        <input type="text" className="form-input" placeholder="Comprehension SLOs..." value={weeklySloComprehension} onChange={e => setWeeklySloComprehension(e.target.value)} />
+                        <input type="text" className="form-input" placeholder="Application SLOs..." value={weeklySloApplication} onChange={e => setWeeklySloApplication(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Resources & AV Aids */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Resources</label>
+                        <input type="text" className="form-input" placeholder="Textbook, Notes..." value={weeklyResources} onChange={e => setWeeklyResources(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">AV Aids</label>
+                        <input type="text" className="form-input" placeholder="Projector, Charts..." value={weeklyAvAids} onChange={e => setWeeklyAvAids(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Previous Knowledge Questions */}
+                    <div className="form-group">
+                      <label className="form-label">Previous Knowledge Questions</label>
+                      <textarea className="form-textarea" rows={2} placeholder="Questions to test baseline knowledge..." value={weeklyPrevKnowledge} onChange={e => setWeeklyPrevKnowledge(e.target.value)} />
+                    </div>
+
+                    {/* Methodologies */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem' }}>🔬 Methodologies</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', fontSize: '0.8rem' }}>
+                        {[
+                          ['lecture', 'Lecture'], ['discussion', 'Discussion'], ['tech_integration', 'Tech Integration'],
+                          ['students_centered', 'Students Centered'], ['pbl', 'PBL'], ['flipped', 'Flipped'],
+                          ['blended', 'Blended'], ['kinesthetic', 'Kinesthetic'], ['activity_based', 'Activity Based'],
+                          ['montessori', 'Montessori'], ['other', 'Other']
+                        ].map(([k, label]) => (
+                          <label key={k} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                            <input type="checkbox" checked={!!weeklyMethodologies[k]} onChange={e => setWeeklyMethodologies(prev => ({ ...prev, [k]: e.target.checked }))} />
+                            <span>{label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Assessments & Activities */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Assessments</label>
+                        <textarea className="form-textarea" rows={2} placeholder="Quiz, Oral test..." value={weeklyAssessments} onChange={e => setWeeklyAssessments(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Activities</label>
+                        <textarea className="form-textarea" rows={2} placeholder="Group work, Experiment..." value={weeklyActivities} onChange={e => setWeeklyActivities(e.target.value)} />
+                      </div>
+                    </div>
+
+                    {/* Homework (Day 1-6) */}
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: '0.75rem' }}>
+                      <label className="form-label" style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📝 Homework</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        {(['day1', 'day2', 'day3', 'day4', 'day5', 'day6'] as const).map((d, i) => (
+                          <input key={d} type="text" className="form-input" placeholder={`Day-${i + 1} Homework...`} value={weeklyHomework[d]} onChange={e => setWeeklyHomework(prev => ({ ...prev, [d]: e.target.value }))} />
+                        ))}
+                      </div>
+                    </div>
+
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintWeeklyLessonPlan}>
+                      🖨️ Print Weekly Lesson Plan
+                    </button>
+                  </div>
+                </div>
+
+                {/* Weekly Lesson Plan Preview */}
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
+                    Form Sheet Preview
+                  </h3>
+
+                  <div style={{ 
+                    border: '1px solid #777', 
+                    background: '#fff', 
+                    boxSizing: 'border-box', 
+                    width: '210mm', 
+                    height: '297mm',
+                    minWidth: '210mm',
+                    minHeight: '297mm',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    position: 'relative'
+                  }}>
+                    <div dangerouslySetInnerHTML={{ __html: getWeeklyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
                   </div>
                 </div>
               </div>

@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
     const year = searchParams.get('year') || sessionYear
     const classId = searchParams.get('class_id')
     const studentId = searchParams.get('student_id')
-    let query = supabase.from('fee_invoices').select('*, students(name, class_id), fee_templates(name)').eq('school_id', session.schoolId)
+    let query = supabase.from('fee_invoices').select('*, students(name, father_name, roll_no, class_id, classes(name)), fee_templates(name)').eq('school_id', session.schoolId)
     if (studentId) query = query.eq('student_id', studentId)
     if (month) query = query.eq('month', month)
     if (year && !studentId) query = query.eq('year', year)
@@ -27,9 +27,12 @@ export async function GET(req: NextRequest) {
     
     const { data } = await query.order('created_at', { ascending: false })
     const invoices = (data || []).filter((inv: { students: { class_id: string } | null }) => !classId || inv.students?.class_id === classId)
-      .map((inv: { id: string; students: { name: string } | null; amount: number; month: number; year: number; status: string; paid_date: string; amount_paid?: number }) => ({
+      .map((inv: any) => ({
         ...inv,
         student_name: inv.students?.name || 'Unknown',
+        father_name: inv.students?.father_name || '',
+        roll_no: inv.students?.roll_no || '',
+        class_name: inv.students?.classes?.name || '',
       }))
     return NextResponse.json({ invoices })
   }
@@ -85,6 +88,27 @@ export async function POST(req: NextRequest) {
       const discountValue = parseFloat(body.discount_value) || 0
       let remainingDiscount = discountValue
 
+      // Save/persist student-specific discount in student profile
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('additional_info')
+        .eq('id', body.student_id)
+        .eq('school_id', session.schoolId)
+        .single()
+
+      if (studentData) {
+        const updatedAddInfo = {
+          ...(studentData.additional_info || {}),
+          fee_discount_type: discountType,
+          fee_discount_value: discountValue
+        }
+        await supabase
+          .from('students')
+          .update({ additional_info: updatedAddInfo })
+          .eq('id', body.student_id)
+          .eq('school_id', session.schoolId)
+      }
+
       for (const template of templates) {
         let finalAmount = template.amount
         if (discountType === 'percentage') {
@@ -113,7 +137,7 @@ export async function POST(req: NextRequest) {
     } else {
       const { data: students } = await supabase
         .from('students')
-        .select('id')
+        .select('id, additional_info')
         .eq('school_id', session.schoolId)
         .eq('class_id', body.class_id)
         .eq('status', 'active')
@@ -121,13 +145,25 @@ export async function POST(req: NextRequest) {
 
       for (const template of templates) {
         for (const student of (students || [])) {
+          const addInfo = student.additional_info || {}
+          const sDiscountType = addInfo.fee_discount_type || addInfo.discount_type || 'none'
+          const sDiscountVal = parseFloat(addInfo.fee_discount_value || addInfo.discount_value || '0') || 0
+
+          let finalAmount = template.amount
+          if (sDiscountType === 'percentage' && sDiscountVal > 0) {
+            finalAmount = template.amount - (template.amount * (sDiscountVal / 100))
+          } else if (sDiscountType === 'fixed' && sDiscountVal > 0) {
+            finalAmount = template.amount - sDiscountVal
+          }
+          if (finalAmount < 0) finalAmount = 0
+
           invoices.push({
             school_id: session.schoolId,
             student_id: student.id,
             fee_template_id: template.id,
             month: body.month,
             year: targetYear,
-            amount: template.amount,
+            amount: finalAmount,
             status: 'pending'
           })
         }
