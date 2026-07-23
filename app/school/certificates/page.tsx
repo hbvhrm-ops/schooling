@@ -2668,8 +2668,41 @@ export default function CertificatesPage() {
     : []
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-base)', animation: 'fadeIn 0.3s ease' }}>
+    <div className="cert-layout-container">
       <style dangerouslySetInnerHTML={{ __html: `
+        .cert-layout-container {
+          display: flex;
+          min-height: 100vh;
+          background: var(--bg-base);
+          animation: fadeIn 0.3s ease;
+        }
+        .cert-sidebar {
+          width: 240px;
+          background: var(--bg-surface);
+          border-right: 1px solid var(--border);
+          display: flex;
+          flex-direction: column;
+          flex-shrink: 0;
+        }
+        .cert-workspace {
+          flex: 1;
+          padding: 2rem;
+          overflow-y: auto;
+        }
+        .cert-grid-split {
+          display: grid;
+          grid-template-columns: 1fr 1.25fr;
+          gap: 1.5rem;
+          max-width: 1250px;
+          align-items: start;
+        }
+        .preview-page-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          display: flex;
+          justify-content: center;
+          padding: 10px 0;
+        }
         .cert-underline {
           font-weight: 800;
           color: #1a1a1a;
@@ -2677,10 +2710,31 @@ export default function CertificatesPage() {
           padding: 0 4px;
           display: inline;
         }
+        @media (max-width: 1024px) {
+          .cert-grid-split {
+            grid-template-columns: 1fr;
+          }
+        }
+        @media (max-width: 768px) {
+          .cert-layout-container {
+            flex-direction: column;
+          }
+          .cert-sidebar {
+            width: 100%;
+            border-right: none;
+            border-bottom: 1px solid var(--border);
+          }
+          .cert-workspace {
+            padding: 1rem;
+          }
+          .preview-page-wrapper {
+            justify-content: flex-start;
+          }
+        }
       `}} />
       
       {/* Workspace Sub-sidebar */}
-      <aside style={{ width: '240px', background: 'var(--bg-surface)', borderRight: '1px solid var(--border)', display: 'flex', flexDirection: 'column', flexShrink: 0 }}>
+      <aside className="cert-sidebar">
         <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ fontSize: '1rem', fontWeight: 800, margin: 0 }}>📜 Documents Hub</h3>
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '0.2rem 0 0 0' }}>Generate certificates & forms</p>
@@ -2735,7 +2789,7 @@ export default function CertificatesPage() {
       </aside>
 
       {/* Main Workspace Body */}
-      <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+      <main className="cert-workspace">
         
         {/* Module Header */}
         <div style={{ marginBottom: '1.75rem' }}>
@@ -2795,7 +2849,7 @@ export default function CertificatesPage() {
           <>
             {/* ── GENERATE VIEW ── */}
             {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 
                 {/* Inputs card */}
                 <div className="card">
@@ -2946,90 +3000,95 @@ export default function CertificatesPage() {
                   </h3>
                   
                   {selectedStudent ? (
-                    <div style={{ 
-                      position: 'relative',
-                      border: '1px solid #1c1c1c',
-                      padding: '1.25rem',
-                      background: '#fdfbf7',
-                      color: '#2c2c2c',
-                      fontFamily: "'Playfair Display', Georgia, serif",
-                      aspectRatio: '1.414 / 1',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      boxSizing: 'border-box',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
-                      overflow: 'hidden'
-                    }}>
-                      {/* Nested border layout */}
-                      <div style={{ position: 'absolute', top: '3px', left: '3px', right: '3px', bottom: '3px', border: '5px solid #c5a85c', pointerEvents: 'none', zIndex: 10 }}></div>
-                      <div style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', bottom: '8px', border: '0.75px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
-                      <div style={{ position: 'absolute', top: '13px', left: '13px', right: '13px', bottom: '13px', border: '1px double #b19343', pointerEvents: 'none', zIndex: 10 }}></div>
-                      <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', bottom: '16px', border: '0.5px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
+                    <div className="preview-page-wrapper">
+                      <div style={{ 
+                        position: 'relative',
+                        border: '1px solid #1c1c1c',
+                        padding: '1.25rem',
+                        background: '#fdfbf7',
+                        color: '#2c2c2c',
+                        fontFamily: "'Playfair Display', Georgia, serif",
+                        aspectRatio: '1.414 / 1',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                        overflow: 'hidden',
+                        width: '100%',
+                        minWidth: '550px'
+                      }}>
+                        {/* Nested border layout */}
+                        <div style={{ position: 'absolute', top: '3px', left: '3px', right: '3px', bottom: '3px', border: '5px solid #c5a85c', pointerEvents: 'none', zIndex: 10 }}></div>
+                        <div style={{ position: 'absolute', top: '8px', left: '8px', right: '8px', bottom: '8px', border: '0.75px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
+                        <div style={{ position: 'absolute', top: '13px', left: '13px', right: '13px', bottom: '13px', border: '1px double #b19343', pointerEvents: 'none', zIndex: 10 }}></div>
+                        <div style={{ position: 'absolute', top: '16px', left: '16px', right: '16px', bottom: '16px', border: '0.5px solid #1c1c1c', pointerEvents: 'none', zIndex: 10 }}></div>
 
-                      {/* Corner triangles */}
-                      <div style={{ position: 'absolute', top: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
-                      <div style={{ position: 'absolute', top: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 100% 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
-                      <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(100% 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
-                      <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                        {/* Corner triangles */}
+                        <div style={{ position: 'absolute', top: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                        <div style={{ position: 'absolute', top: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 0, 100% 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                        <div style={{ position: 'absolute', bottom: '8px', right: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(100% 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
+                        <div style={{ position: 'absolute', bottom: '8px', left: '8px', width: '22px', height: '22px', background: '#4e3620', clipPath: 'polygon(0 0, 100% 100%, 0 100%)', pointerEvents: 'none', zIndex: 20 }}></div>
 
-                      {/* Gold Ribbon Seal */}
-                      <div style={{ position: 'absolute', top: '18px', left: '26px', zIndex: 12, width: '30px', height: '45px', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none' }}>
-                        <div style={{ position: 'absolute', top: '15px', display: 'flex', justifyContent: 'space-between', width: '20px', height: '26px', zIndex: 1 }}>
-                          <div style={{ width: '7px', height: '100%', background: '#c5a85c', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(-8deg)' }}></div>
-                          <div style={{ width: '7px', height: '100%', background: '#b19343', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(8deg)' }}></div>
-                        </div>
-                        <div style={{ position: 'relative', width: '24px', height: '24px', borderRadius: '50%', background: 'radial-gradient(circle, #f3e5ab 0%, #d4af37 60%, #aa7c11 100%)', border: '1px double #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.15)', zIndex: 2 }}>
-                          <span style={{ fontSize: '10px' }}>🎓</span>
-                        </div>
-                      </div>
-
-                      {/* Content wrapper */}
-                      <div style={{ position: 'relative', zIndex: 11, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', minHeight: 0, padding: '36px 14px 10px 14px' }}>
-                        <div style={{ textAlign: 'center', marginBottom: '4px', flexShrink: 0 }}>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: "'Cinzel', serif", color: '#4e3620', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                            {schoolName}
+                        {/* Gold Ribbon Seal */}
+                        <div style={{ position: 'absolute', top: '18px', left: '26px', zIndex: 12, width: '30px', height: '45px', display: 'flex', flexDirection: 'column', alignItems: 'center', pointerEvents: 'none' }}>
+                          <div style={{ position: 'absolute', top: '15px', display: 'flex', justifyContent: 'space-between', width: '20px', height: '26px', zIndex: 1 }}>
+                            <div style={{ width: '7px', height: '100%', background: '#c5a85c', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(-8deg)' }}></div>
+                            <div style={{ width: '7px', height: '100%', background: '#b19343', clipPath: 'polygon(0 0, 100% 0, 100% 100%, 50% 80%, 0 100%)', transform: 'rotate(8deg)' }}></div>
                           </div>
-                          
-                          <div style={{ textAlign: 'center', margin: '14px 0 2px 0' }}>
-                            <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.95rem', fontWeight: 800, color: '#c5a85c', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '1.1' }}>
-                              {template.title || 'CERTIFICATE'}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
-                              <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
-                              <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '0.55rem', fontStyle: 'italic', color: '#4e3620', fontWeight: 600 }}>
-                                Of Achievement
-                              </span>
-                              <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
-                            </div>
+                          <div style={{ position: 'relative', width: '24px', height: '24px', borderRadius: '50%', background: 'radial-gradient(circle, #f3e5ab 0%, #d4af37 60%, #aa7c11 100%)', border: '1px double #fff', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 4px rgba(0,0,0,0.15)', zIndex: 2 }}>
+                            <span style={{ fontSize: '10px' }}>🎓</span>
                           </div>
                         </div>
 
-                        <div style={{ 
-                          margin: '2px 0', 
-                          fontSize: '0.54rem',
-                          lineHeight: '1.8',
-                          flex: '1 1 auto', 
-                          minHeight: 0, 
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'center'
-                        }}>
-                          <p style={{ margin: 0, textAlign: 'justify', textIndent: '15px', whiteSpace: 'pre-line', width: '100%' }} dangerouslySetInnerHTML={{ __html: compiledPreviewBody }} />
-                        </div>
-
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
-                          <div style={{ fontSize: '0.55rem', color: '#555' }}>
-                            <strong>Date:</strong> <span style={{ borderBottom: '0.75px solid #000', display: 'inline-block', minWidth: '40px', fontWeight: 'bold' }}>{new Date().toLocaleDateString()}</span>
-                          </div>
-                          
-                          <div style={{ position: 'relative' }}>
-                            {/* Signature stamp seal */}
-                            <div style={{ position: 'absolute', bottom: '6px', right: '15px', width: '22px', height: '22px', border: '0.5px solid rgba(28, 70, 160, 0.6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-8deg)', zIndex: 10 }}>
-                              <span style={{ fontSize: '2px', color: 'rgba(28, 70, 160, 0.6)', fontWeight: 'bold' }}>APPROVED</span>
+                        {/* Content wrapper */}
+                        <div style={{ position: 'relative', zIndex: 11, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: '100%', minHeight: 0, padding: '36px 14px 10px 14px' }}>
+                          <div style={{ textAlign: 'center', marginBottom: '4px', flexShrink: 0 }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 800, fontFamily: "'Cinzel', serif", color: '#4e3620', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                              {schoolName}
                             </div>
-                            <div style={{ textAlign: 'center', borderTop: '0.75px solid #000', width: '70px', paddingTop: '2px', fontSize: '0.5rem', fontWeight: 'bold', color: '#4a3e28', fontFamily: "'Cinzel', serif" }}>
-                              {template.signature_title}
+                            
+                            <div style={{ textAlign: 'center', margin: '14px 0 2px 0' }}>
+                              <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.95rem', fontWeight: 800, color: '#c5a85c', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '1.1' }}>
+                                {template.title || 'CERTIFICATE'}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
+                                <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                                <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '0.55rem', fontStyle: 'italic', color: '#4e3620', fontWeight: 600 }}>
+                                  Of Achievement
+                                </span>
+                                <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ 
+                            fontSize: '0.58rem', 
+                            lineHeight: '1.7', 
+                            color: '#333', 
+                            fontFamily: "'Playfair Display', Georgia, serif", 
+                            fontWeight: 500,
+                            flexGrow: 1, 
+                            display: 'flex', 
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <p style={{ margin: 0, textAlign: 'justify', textIndent: '15px', whiteSpace: 'pre-line', width: '100%' }} dangerouslySetInnerHTML={{ __html: compiledPreviewBody }} />
+                          </div>
+
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 'auto', flexShrink: 0 }}>
+                            <div style={{ fontSize: '0.55rem', color: '#555' }}>
+                              <strong>Date:</strong> <span style={{ borderBottom: '0.75px solid #000', display: 'inline-block', minWidth: '40px', fontWeight: 'bold' }}>{new Date().toLocaleDateString()}</span>
+                            </div>
+                            
+                            <div style={{ position: 'relative' }}>
+                              {/* Signature stamp seal */}
+                              <div style={{ position: 'absolute', bottom: '6px', right: '15px', width: '22px', height: '22px', border: '0.5px solid rgba(28, 70, 160, 0.6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-8deg)', zIndex: 10 }}>
+                                <span style={{ fontSize: '2px', color: 'rgba(28, 70, 160, 0.6)', fontWeight: 'bold' }}>APPROVED</span>
+                              </div>
+                              <div style={{ textAlign: 'center', borderTop: '0.75px solid #000', width: '70px', paddingTop: '2px', fontSize: '0.5rem', fontWeight: 'bold', color: '#4a3e28', fontFamily: "'Cinzel', serif" }}>
+                                {template.signature_title}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -3168,7 +3227,7 @@ export default function CertificatesPage() {
 
             {/* ── ADMISSION FORM VIEW ── */}
             {activeDoc === 'admission' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Admission Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3214,18 +3273,20 @@ export default function CertificatesPage() {
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ 
-                    border: '1px solid #777', 
-                    padding: '8mm 12mm', 
-                    background: '#fff', 
-                    boxSizing: 'border-box', 
-                    width: '210mm', 
-                    height: '297mm',
-                    minWidth: '210mm',
-                    minHeight: '297mm',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                  }}>
-                    <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      padding: '8mm 12mm', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '210mm', 
+                      height: '297mm',
+                      minWidth: '210mm',
+                      minHeight: '297mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}>
+                      <div dangerouslySetInnerHTML={{ __html: getAdmissionFormHtml(admissionFormMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3233,7 +3294,7 @@ export default function CertificatesPage() {
 
             {/* ── CLASS DIARY VIEW ── */}
             {activeDoc === 'diary' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Class Diary Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3283,30 +3344,32 @@ export default function CertificatesPage() {
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ 
-                    border: '1px solid #777', 
-                    padding: '8mm 12mm', 
-                    background: '#fff', 
-                    boxSizing: 'border-box', 
-                    width: '210mm', 
-                    height: '297mm',
-                    minWidth: '210mm',
-                    minHeight: '297mm',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    position: 'relative'
-                  }}>
-                    {/* Render all 3 stacked in preview to show exact layout */}
-                    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
-                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
-                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
-                      </div>
-                      <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
-                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
-                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
-                      </div>
-                      <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
-                      <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
-                        <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      padding: '8mm 12mm', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '210mm', 
+                      height: '297mm',
+                      minWidth: '210mm',
+                      minHeight: '297mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      position: 'relative'
+                    }}>
+                      {/* Render all 3 stacked in preview to show exact layout */}
+                      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+                        <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                          <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                        </div>
+                        <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
+                        <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                          <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                        </div>
+                        <div style={{ textAlign: 'center', fontSize: '9px', color: '#888', borderTop: '1px dashed #000', margin: '2px 0' }}>✂️ [Cut Line]</div>
+                        <div style={{ height: '31%', overflow: 'hidden', border: '1px dashed #ddd', padding: '5px' }}>
+                          <div dangerouslySetInnerHTML={{ __html: getDiaryPreviewHtml() }} style={{ height: '100%' }} />
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -3316,7 +3379,7 @@ export default function CertificatesPage() {
 
             {/* ── PROGRESS REPORT VIEW ── */}
             {activeDoc === 'progress_report' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Progress Report Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3362,18 +3425,20 @@ export default function CertificatesPage() {
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ 
-                    border: '1px solid #777', 
-                    padding: '6mm 10mm', 
-                    background: '#fff', 
-                    boxSizing: 'border-box', 
-                    width: '210mm', 
-                    height: '297mm',
-                    minWidth: '210mm',
-                    minHeight: '297mm',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
-                  }}>
-                    <div dangerouslySetInnerHTML={{ __html: getProgressReportHtml(progressReportMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      padding: '6mm 10mm', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '210mm', 
+                      height: '297mm',
+                      minWidth: '210mm',
+                      minHeight: '297mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)'
+                    }}>
+                      <div dangerouslySetInnerHTML={{ __html: getProgressReportHtml(progressReportMode === 'student' && selectedStudent ? selectedStudent : null) }} style={{ height: '100%' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3756,7 +3821,7 @@ export default function CertificatesPage() {
 
             {/* ── DAILY LESSON PLAN VIEW ── */}
             {activeDoc === 'lesson_plan' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Daily Lesson Plan Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -3860,18 +3925,20 @@ export default function CertificatesPage() {
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ 
-                    border: '1px solid #777', 
-                    background: '#fff', 
-                    boxSizing: 'border-box', 
-                    width: '210mm', 
-                    height: '297mm',
-                    minWidth: '210mm',
-                    minHeight: '297mm',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    position: 'relative'
-                  }}>
-                    <div dangerouslySetInnerHTML={{ __html: getDailyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '210mm', 
+                      height: '297mm',
+                      minWidth: '210mm',
+                      minHeight: '297mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      position: 'relative'
+                    }}>
+                      <div dangerouslySetInnerHTML={{ __html: getDailyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3879,7 +3946,7 @@ export default function CertificatesPage() {
 
             {/* ── WEEKLY LESSON PLAN VIEW ── */}
             {activeDoc === 'weekly_lesson_plan' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.3fr', gap: '1.5rem', maxWidth: '1250px', alignItems: 'start' }}>
+              <div className="cert-grid-split">
                 <div className="card">
                   <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Weekly Lesson Plan Settings</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -4035,18 +4102,20 @@ export default function CertificatesPage() {
                     Form Sheet Preview
                   </h3>
 
-                  <div style={{ 
-                    border: '1px solid #777', 
-                    background: '#fff', 
-                    boxSizing: 'border-box', 
-                    width: '210mm', 
-                    height: '297mm',
-                    minWidth: '210mm',
-                    minHeight: '297mm',
-                    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                    position: 'relative'
-                  }}>
-                    <div dangerouslySetInnerHTML={{ __html: getWeeklyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '210mm', 
+                      height: '297mm',
+                      minWidth: '210mm',
+                      minHeight: '297mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      position: 'relative'
+                    }}>
+                      <div dangerouslySetInnerHTML={{ __html: getWeeklyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                    </div>
                   </div>
                 </div>
               </div>
