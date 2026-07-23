@@ -32,7 +32,7 @@ interface CertificateTemplate {
   signature_title: string
 }
 
-type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary' | 'lesson_plan' | 'weekly_lesson_plan'
+type DocType = 'slc' | 'birth' | 'character' | 'sports' | 'top_positions' | 'admission' | 'award_list' | 'progress_report' | 'result_form' | 'diary' | 'lesson_plan' | 'weekly_lesson_plan' | 'attendance'
 type TabType = 'generate' | 'template'
 
 export default function CertificatesPage() {
@@ -174,6 +174,14 @@ export default function CertificatesPage() {
     day1: '', day2: '', day3: '', day4: '', day5: '', day6: ''
   })
 
+  // Attendance Sheet specific states
+  const [attendanceClassFilter, setAttendanceClassFilter] = useState('')
+  const [attendanceSectionFilter, setAttendanceSectionFilter] = useState('')
+  const [attendanceGrade, setAttendanceGrade] = useState('')
+  const [attendanceSection, setAttendanceSection] = useState('')
+  const [attendanceMonth, setAttendanceMonth] = useState('')
+  const [attendanceSubject, setAttendanceSubject] = useState('')
+
   // Load basic lists
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -254,7 +262,7 @@ export default function CertificatesPage() {
 
   // Load certificate template from client-side cache when activeDoc changes
   const loadTemplate = useCallback((type: string) => {
-    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary' || type === 'lesson_plan' || type === 'weekly_lesson_plan') return
+    if (type === 'admission' || type === 'award_list' || type === 'progress_report' || type === 'result_form' || type === 'diary' || type === 'lesson_plan' || type === 'weekly_lesson_plan' || type === 'attendance') return
     const t = templatesCache[type]
     if (t) {
       setTemplate(t)
@@ -2659,6 +2667,162 @@ export default function CertificatesPage() {
     win.document.close()
   }
 
+  function getAttendanceSheetPreviewHtml() {
+    const list = attendanceClassFilter
+      ? students.filter(s => {
+          const matchClass = s.class_id === attendanceClassFilter
+          const matchSection = !attendanceSectionFilter || s.section_id === attendanceSectionFilter
+          return matchClass && matchSection
+        })
+      : []
+
+    const displayList = list.length > 0 ? list : Array.from({ length: 15 })
+
+    return `
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        .att-container {
+          font-family: 'Inter', Arial, sans-serif;
+          color: #000;
+          background: #fff;
+          padding: 6mm 8mm;
+          box-sizing: border-box;
+          width: 100%;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        .att-header {
+          text-align: center;
+          margin-bottom: 3mm;
+        }
+        .att-school-name {
+          font-size: 13pt;
+          font-weight: 800;
+          text-transform: uppercase;
+          color: #1e3a8a;
+          letter-spacing: 0.5px;
+        }
+        .att-title {
+          font-size: 10pt;
+          font-weight: 700;
+          color: #475569;
+          text-transform: uppercase;
+          margin-top: 1px;
+          letter-spacing: 0.5px;
+        }
+        .att-meta {
+          display: flex;
+          justify-content: space-between;
+          font-size: 9px;
+          font-weight: 600;
+          margin-bottom: 3mm;
+          border-bottom: 1.5px solid #000;
+          padding-bottom: 1.5mm;
+        }
+        .att-table {
+          width: 100%;
+          border-collapse: collapse;
+          border: 1.5px solid #000;
+          font-size: 8.5px;
+        }
+        .att-table th, .att-table td {
+          border: 1px solid #000;
+          padding: 3px 2px;
+          text-align: center;
+          vertical-align: middle;
+        }
+        .att-table th {
+          background: #f8fafc;
+          font-weight: 700;
+        }
+        .att-align-left {
+          text-align: left !important;
+          padding-left: 4px !important;
+        }
+        .att-blank-line {
+          border-bottom: 1px dotted #888;
+          display: inline-block;
+          width: 90%;
+          height: 10px;
+        }
+      </style>
+      <div class="att-container">
+        <div class="att-header">
+          <div class="att-school-name">${schoolName}</div>
+          <div class="att-title">STUDENT MONTHLY ATTENDANCE REGISTER</div>
+        </div>
+        <div class="att-meta">
+          <div><strong>Class/Grade:</strong> ${attendanceGrade || '___________________'}</div>
+          <div><strong>Section:</strong> ${attendanceSection || '___________________'}</div>
+          <div><strong>Month/Year:</strong> ${attendanceMonth || '___________________'}</div>
+          <div><strong>Subject/Teacher:</strong> ${attendanceSubject || '___________________'}</div>
+        </div>
+        <table class="att-table">
+          <thead>
+            <tr>
+              <th style="width: 3.5%;">S.No</th>
+              <th style="width: 18.5%;" class="att-align-left">Student Name</th>
+              <th style="width: 18%;" class="att-align-left">Father's Name</th>
+              ${Array.from({ length: 31 }, (_, i) => `<th style="width: 1.8%; font-size: 7px; padding: 2px 0;">${i + 1}</th>`).join('')}
+              <th style="width: 4%; font-size: 7px; padding: 2px 0;">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${displayList.map((s: any, idx: number) => `
+              <tr style="height: 24px;">
+                <td style="font-weight: bold;">${idx + 1}</td>
+                <td class="att-align-left" style="font-weight: 600;">
+                  ${s ? s.name : '<span class="att-blank-line"></span>'}
+                </td>
+                <td class="att-align-left" style="color: #334155;">
+                  ${s ? (s.father_name || '—') : '<span class="att-blank-line"></span>'}
+                </td>
+                ${Array.from({ length: 31 }, () => `<td>&nbsp;</td>`).join('')}
+                <td>&nbsp;</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `
+  }
+
+  function handlePrintAttendanceSheet() {
+    const win = window.open('', '_blank')
+    if (!win) return
+    win.document.write(`
+      <html>
+        <head>
+          <title>Attendance Sheet</title>
+          <style>
+            @page {
+              size: A4 landscape;
+              margin: 6mm 8mm;
+            }
+            html, body {
+              margin: 0;
+              padding: 0;
+              background: #fff;
+            }
+          </style>
+        </head>
+        <body>
+          ${getAttendanceSheetPreviewHtml()}
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                setTimeout(function() { window.close(); }, 500);
+              }, 300);
+            }
+          </script>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
   // Pre-compiled live preview text
   const compiledPreviewBody = selectedStudent ? compileTemplate(template.body_text, selectedStudent) : ''
   const classSubjects = awardClass
@@ -2784,6 +2948,9 @@ export default function CertificatesPage() {
             <button className={`nav-item ${activeDoc === 'weekly_lesson_plan' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('weekly_lesson_plan')}>
               <span style={{ marginRight: '0.5rem' }}>🗓️</span> Weekly Lesson Plan
             </button>
+            <button className={`nav-item ${activeDoc === 'attendance' ? 'active' : ''}`} style={{ width: '100%', textAlign: 'left', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => setActiveDoc('attendance')}>
+              <span style={{ marginRight: '0.5rem' }}>📅</span> Attendance Sheet
+            </button>
           </div>
         </nav>
       </aside>
@@ -2806,6 +2973,7 @@ export default function CertificatesPage() {
             {activeDoc === 'diary' && '📔 Daily Class Diary Sheet'}
             {activeDoc === 'lesson_plan' && '📋 Daily Lesson Plan'}
             {activeDoc === 'weekly_lesson_plan' && '🗓️ Weekly Lesson Plan'}
+            {activeDoc === 'attendance' && '📅 Student Attendance Sheet'}
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>
             {activeDoc === 'slc' && 'Customize default templates and print official release papers.'}
@@ -2820,6 +2988,7 @@ export default function CertificatesPage() {
             {activeDoc === 'diary' && 'Print blank daily class diary sheets containing class subjects.'}
             {activeDoc === 'lesson_plan' && 'Print blank or prefilled daily teacher lesson planning forms.'}
             {activeDoc === 'weekly_lesson_plan' && 'Print blank or prefilled weekly teacher lesson planning forms.'}
+            {activeDoc === 'attendance' && 'Print blank or prefilled monthly class attendance register sheets.'}
           </p>
         </div>
 
@@ -2830,7 +2999,7 @@ export default function CertificatesPage() {
         )}
 
         {/* Tab Selection (only for customizable certificates) */}
-        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
+        {activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && activeDoc !== 'attendance' && (
           <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
             <button className={`tab-btn ${tab === 'generate' ? 'active' : ''}`} onClick={() => setTab('generate')}>
               ⚡ Generate Document
@@ -2848,7 +3017,7 @@ export default function CertificatesPage() {
         ) : (
           <>
             {/* ── GENERATE VIEW ── */}
-            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
+            {tab === 'generate' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && activeDoc !== 'attendance' && (
               <div className="cert-grid-split">
                 
                 {/* Inputs card */}
@@ -3105,7 +3274,7 @@ export default function CertificatesPage() {
             )}
 
             {/* ── CUSTOMIZE TEMPLATE VIEW ── */}
-            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && (
+            {tab === 'template' && activeDoc !== 'admission' && activeDoc !== 'award_list' && activeDoc !== 'progress_report' && activeDoc !== 'result_form' && activeDoc !== 'diary' && activeDoc !== 'lesson_plan' && activeDoc !== 'weekly_lesson_plan' && activeDoc !== 'attendance' && (
               <div className="card" style={{ maxWidth: '800px' }}>
                 <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>⚙️ Configure Certificate Paragraph</h3>
                 <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>
@@ -4115,6 +4284,94 @@ export default function CertificatesPage() {
                       position: 'relative'
                     }}>
                       <div dangerouslySetInnerHTML={{ __html: getWeeklyLessonPlanPreviewHtml() }} style={{ height: '100%' }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ── ATTENDANCE SHEET VIEW ── */}
+            {activeDoc === 'attendance' && (
+              <div className="cert-grid-split">
+                <div className="card">
+                  <h3 style={{ fontWeight: 700, marginBottom: '1.25rem' }}>Attendance Sheet Settings</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Class</label>
+                        <select className="form-select" value={attendanceClassFilter} onChange={e => {
+                          setAttendanceClassFilter(e.target.value)
+                          const className = classes.find(c => c.id === e.target.value)?.name || ''
+                          setAttendanceGrade(className)
+                          setAttendanceSectionFilter('')
+                        }}>
+                          <option value="">Blank (No prefill)</option>
+                          {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Prefill Section</label>
+                        <select className="form-select" value={attendanceSectionFilter} onChange={e => {
+                          setAttendanceSectionFilter(e.target.value)
+                          const secName = sections.find(s => s.id === e.target.value)?.name || ''
+                          setAttendanceSection(secName)
+                        }} disabled={!attendanceClassFilter}>
+                          <option value="">Blank (No prefill)</option>
+                          {sections.filter(s => s.class_id === attendanceClassFilter).map(s => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Class/Grade Label</label>
+                        <input type="text" className="form-input" placeholder="e.g. 10th Class" value={attendanceGrade} onChange={e => setAttendanceGrade(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Section Label</label>
+                        <input type="text" className="form-input" placeholder="e.g. A" value={attendanceSection} onChange={e => setAttendanceSection(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group">
+                        <label className="form-label">Month/Year Label</label>
+                        <input type="text" className="form-input" placeholder="e.g. August 2026" value={attendanceMonth} onChange={e => setAttendanceMonth(e.target.value)} />
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Subject/Teacher Label</label>
+                        <input type="text" className="form-input" placeholder="e.g. English" value={attendanceSubject} onChange={e => setAttendanceSubject(e.target.value)} />
+                      </div>
+                    </div>
+
+                    <button className="btn btn-primary" style={{ marginTop: '0.5rem', justifyContent: 'center' }} onClick={handlePrintAttendanceSheet}>
+                      🖨️ Print Attendance Sheet
+                    </button>
+                  </div>
+                </div>
+
+                {/* Attendance Sheet Preview */}
+                <div className="card" style={{ background: '#fcfcfc', border: '1px solid #ccc', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', color: '#111', overflow: 'auto', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <h3 style={{ fontWeight: 700, color: '#333', marginBottom: '1.25rem', borderBottom: '1px solid #ccc', paddingBottom: '0.5rem', width: '100%' }}>
+                    Form Sheet Preview
+                  </h3>
+
+                  <div className="preview-page-wrapper">
+                    <div style={{ 
+                      border: '1px solid #777', 
+                      background: '#fff', 
+                      boxSizing: 'border-box', 
+                      width: '297mm', 
+                      height: '210mm',
+                      minWidth: '297mm',
+                      minHeight: '210mm',
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                      position: 'relative'
+                    }}>
+                      <div dangerouslySetInnerHTML={{ __html: getAttendanceSheetPreviewHtml() }} style={{ height: '100%' }} />
                     </div>
                   </div>
                 </div>
