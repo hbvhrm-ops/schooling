@@ -921,11 +921,13 @@ export default function CertificatesPage() {
                   
                   <div class="certificate-title-wrap">
                     <div class="cert-title">${template.title}</div>
+                    ${(activeDoc === 'sports' || activeDoc === 'top_positions') ? `
                     <div class="cert-subtitle-wrap">
                       <span class="gold-line"></span>
                       <span class="cert-subtitle-text">Of Achievement</span>
                       <span class="gold-line"></span>
                     </div>
+                    ` : ''}
                   </div>
                 </div>
                 
@@ -939,14 +941,6 @@ export default function CertificatesPage() {
                   </div>
                   
                   <div class="sig-block" style="position: relative;">
-                    <!-- Blue seal stamp -->
-                    <div style="position: absolute; bottom: 35px; right: 50px; width: 75px; height: 75px; border: 1.5px solid rgba(28, 70, 160, 0.7); border-radius: 50%; display: flex; align-items: center; justify-content: center; transform: rotate(-8deg); z-index: 10; pointer-events: none;">
-                      <div style="width: 67px; height: 67px; border: 0.75px dashed rgba(28, 70, 160, 0.7); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-                        <span style="font-size: 5px; font-weight: bold; color: rgba(28, 70, 160, 0.7); text-transform: uppercase;">ISLAMIA MODEL</span>
-                        <span style="font-size: 8px; font-weight: 900; color: rgba(28, 70, 160, 0.7); border-top: 1px solid rgba(28, 70, 160, 0.7); border-bottom: 1px solid rgba(28, 70, 160, 0.7); padding: 1px 2px; margin: 1px 0;">APPROVED</span>
-                        <span style="font-size: 5px; font-weight: bold; color: rgba(28, 70, 160, 0.7); text-transform: uppercase;">OFFICE SEAL</span>
-                      </div>
-                    </div>
                     <!-- Signature Line -->
                     <div class="sig-line" style="border-top: 1.5px solid #000; padding-top: 6px; font-weight: bold;">
                       ${template.signature_title}
@@ -1828,15 +1822,15 @@ export default function CertificatesPage() {
       const s = item.student
       const totalObtained = item.totalObtained
       const totalMax = item.totalMax
-      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
-      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
+      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : ''
+      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : ''
       
       const subjectCellsHTML = classSubjects.map(sub => {
         const resultObj = awardResults.find(r => r.student_id === s.id && r.subject_id === sub.id)
         if (resultObj) {
           return `<td>${resultObj.marks_obtained}</td>`
         }
-        return `<td>—</td>`
+        return `<td></td>`
       }).join('')
 
       const isTop3 = item.position === 1 || item.position === 2 || item.position === 3
@@ -1845,7 +1839,7 @@ export default function CertificatesPage() {
       return `
         <tr>
           <td>${idx + 1}</td>
-          <td class="roll-no">${s.roll_no || '—'}</td>
+          <td class="roll-no">${s.roll_no || ''}</td>
           <td class="student-name">${s.name}</td>
           ${subjectCellsHTML}
           <td class="marks-obtained" style="font-weight: bold;">${totalDisplay}</td>
@@ -2114,16 +2108,16 @@ export default function CertificatesPage() {
           totalMax += Number(resultObj.total_marks) || 100
           return `<td>${resultObj.marks_obtained}</td>`
         }
-        return `<td>—</td>`
+        return `<td></td>`
       }).join('')
       
-      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : '—'
-      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : '—'
+      const percentage = totalMax > 0 ? ((totalObtained / totalMax) * 100).toFixed(1) + '%' : ''
+      const totalDisplay = totalMax > 0 ? `${totalObtained} / ${totalMax}` : ''
       
       return `
         <tr>
           <td>${idx + 1}</td>
-          <td class="roll-no">${s.roll_no || '—'}</td>
+          <td class="roll-no">${s.roll_no || ''}</td>
           <td class="student-name">${s.name}</td>
           ${subjectCellsHTML}
           <td class="marks-obtained" style="font-weight: bold;">${totalDisplay}</td>

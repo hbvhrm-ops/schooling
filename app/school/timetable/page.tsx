@@ -649,7 +649,7 @@ export default function TimetablePage() {
                               list={`subjects-list-${selectedClassId}`}
                               value={cellValue}
                               onChange={(e) => handleCellChange(day, periodIndex, e.target.value)}
-                              placeholder="-"
+                              placeholder=""
                               style={{
                                 width: '100%',
                                 height: '100%',
@@ -725,7 +725,7 @@ export default function TimetablePage() {
               <tr key={day}>
                 <td style={{ fontWeight: 'bold', backgroundColor: '#f9fafb' }}>{day}</td>
                 {periods.map((_, periodIndex) => {
-                  const val = grid[day]?.[periodIndex] || '-'
+                  const val = grid[day]?.[periodIndex] || ''
                   return (
                     <td key={periodIndex}>
                       <div className="print-cell-subject">{val}</div>
