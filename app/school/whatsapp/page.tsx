@@ -19,12 +19,12 @@ const WA_TEMPLATES = [
 export default function WhatsAppPage() {
   const [tab, setTab] = useState<Tab>('connect')
   const [customMsg, setCustomMsg] = useState('')
-  
+
   // Custom templates states
   const [customTemplates, setCustomTemplates] = useState<CustomTemplate[]>([])
   const [activeTplId, setActiveTplId] = useState<string>('default-0')
   const [editableMsg, setEditableMsg] = useState<string>(WA_TEMPLATES[0].message)
-  
+
   const [newTplName, setNewTplName] = useState('')
   const [newTplMessage, setNewTplMessage] = useState('')
   const [loadingTpl, setLoadingTpl] = useState(false)
@@ -47,6 +47,10 @@ export default function WhatsAppPage() {
 
   function sendViaWhatsApp(message: string) {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
+  }
+
+  function sendViaSMS(message: string) {
+    window.open(`sms:?body=${encodeURIComponent(message)}`, '_blank')
   }
 
   async function handleCreateTemplate(e: React.FormEvent) {
@@ -80,8 +84,8 @@ export default function WhatsAppPage() {
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
       <div style={{ marginBottom: '2rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>💬 WhatsApp</h1>
-        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Send messages to parents via WhatsApp</p>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>💬 WhatsApp & SMS</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Send messages to parents via WhatsApp or SMS through your SIM</p>
       </div>
 
       <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
@@ -92,36 +96,73 @@ export default function WhatsAppPage() {
 
       {tab === 'connect' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+          {/* Connection Info */}
           <div className="card">
-            <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>🔗 WhatsApp Connection</h3>
-            <div style={{ background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.25)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>💬</div>
+            <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>📡 Available Channels</h3>
+
+            {/* WhatsApp */}
+            <div style={{ background: 'rgba(37,211,102,0.1)', border: '1px solid rgba(37,211,102,0.25)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>💬</div>
                 <div>
-                  <div style={{ fontWeight: 700 }}>WhatsApp Web</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Free · No API needed</div>
+                  <div style={{ fontWeight: 700 }}>WhatsApp</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Free · No API needed</div>
                 </div>
               </div>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)' }}>
-                Clicking &ldquo;Send via WhatsApp&rdquo; opens WhatsApp Web or the app with the message pre-filled. Completely free — no gateway or API key required!
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Opens WhatsApp Web or the app with the message pre-filled. Select recipients inside WhatsApp.
               </p>
             </div>
+
+            {/* SMS via SIM */}
+            <div style={{ background: 'rgba(59,130,246,0.1)', border: '1px solid rgba(59,130,246,0.25)', borderRadius: '12px', padding: '1.25rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem' }}>
+                <div style={{ width: '38px', height: '38px', borderRadius: '50%', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.2rem', flexShrink: 0 }}>📱</div>
+                <div>
+                  <div style={{ fontWeight: 700 }}>SMS via SIM</div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Native SMS · Uses your SIM card</div>
+                </div>
+              </div>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+                Opens your phone&apos;s native SMS app with the message pre-filled. Sends via your SIM — works on any mobile device. Standard SMS charges apply.
+              </p>
+            </div>
+
             <div className="alert alert-success">
-              <span>✅</span> WhatsApp is ready to use — just click Send on any message!
+              <span>✅</span> Both channels are ready — just click Send on any message!
             </div>
           </div>
 
+          {/* Quick Message */}
           <div className="card">
             <h3 style={{ fontWeight: 700, marginBottom: '1rem' }}>📤 Quick Message</h3>
             <div className="form-group" style={{ marginBottom: '1rem' }}>
               <label className="form-label">Message</label>
-              <textarea className="form-textarea" placeholder="Type your WhatsApp message..." value={customMsg} onChange={e => setCustomMsg(e.target.value)} />
+              <textarea className="form-textarea" placeholder="Type your message to parents..." value={customMsg} onChange={e => setCustomMsg(e.target.value)} style={{ minHeight: '120px' }} />
             </div>
-            <button onClick={() => sendViaWhatsApp(customMsg)} className="btn btn-success" disabled={!customMsg} style={{ background: '#25D366', border: 'none', width: '100%', justifyContent: 'center' }}>
-              💬 Open in WhatsApp
-            </button>
+
+            {/* Send buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+              <button
+                onClick={() => sendViaWhatsApp(customMsg)}
+                className="btn btn-success"
+                disabled={!customMsg}
+                style={{ background: '#25D366', border: 'none', width: '100%', justifyContent: 'center' }}
+              >
+                💬 Send via WhatsApp
+              </button>
+              <button
+                onClick={() => sendViaSMS(customMsg)}
+                className="btn btn-primary"
+                disabled={!customMsg}
+                style={{ width: '100%', justifyContent: 'center' }}
+              >
+                📱 Send via SMS (SIM)
+              </button>
+            </div>
+
             <p style={{ color: 'var(--text-muted)', fontSize: '0.75rem', marginTop: '0.75rem', textAlign: 'center' }}>
-              Opens WhatsApp app/web where you select the recipient
+              WhatsApp: select recipient inside app &nbsp;·&nbsp; SMS: uses your SIM card
             </p>
           </div>
         </div>
@@ -198,17 +239,37 @@ export default function WhatsAppPage() {
             <div className="alert alert-info" style={{ marginBottom: '1rem' }}>
               <span>📎</span> Variables: {'{{name}}'}, {'{{date}}'}, {'{{amount}}'}, {'{{month}}'}, {'{{marks}}'}, {'{{grade}}'}
             </div>
-            <button onClick={() => sendViaWhatsApp(editableMsg)} className="btn" style={{ background: '#25D366', color: '#fff', border: 'none', width: '100%', justifyContent: 'center', padding: '0.75rem', cursor: 'pointer' }}>
+
+            {/* Send via WhatsApp */}
+            <button
+              onClick={() => sendViaWhatsApp(editableMsg)}
+              className="btn"
+              style={{ background: '#25D366', color: '#fff', border: 'none', width: '100%', justifyContent: 'center', padding: '0.75rem', cursor: 'pointer', marginBottom: '0.6rem', borderRadius: '8px' }}
+            >
               💬 Send via WhatsApp
             </button>
+
+            {/* Send via SMS (SIM) */}
+            <button
+              onClick={() => sendViaSMS(editableMsg)}
+              className="btn btn-primary"
+              style={{ width: '100%', justifyContent: 'center', padding: '0.75rem', cursor: 'pointer' }}
+            >
+              📱 Send via SMS (SIM)
+            </button>
+
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginTop: '0.75rem', textAlign: 'center', lineHeight: 1.6 }}>
+              WhatsApp: select recipient inside the app<br />
+              SMS: opens your phone&apos;s native SMS app and uses your SIM
+            </p>
           </div>
         </div>
       )}
 
       {tab === 'history' && (
         <div className="card">
-          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📋 WhatsApp Message History</h3>
-          <div className="empty-state"><div className="empty-icon">💬</div><p>No WhatsApp messages sent yet. Messages are sent via the WhatsApp app directly.</p></div>
+          <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>📋 Message History</h3>
+          <div className="empty-state"><div className="empty-icon">💬</div><p>No messages sent yet. Messages are sent via the WhatsApp app or native SMS app directly.</p></div>
         </div>
       )}
     </div>
