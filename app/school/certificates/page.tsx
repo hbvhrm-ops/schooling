@@ -3215,13 +3215,15 @@ export default function CertificatesPage() {
                               <div style={{ fontFamily: "'Cinzel', serif", fontSize: '0.95rem', fontWeight: 800, color: '#c5a85c', letterSpacing: '1px', textTransform: 'uppercase', lineHeight: '1.1' }}>
                                 {template.title || 'CERTIFICATE'}
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
-                                <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
-                                <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '0.55rem', fontStyle: 'italic', color: '#4e3620', fontWeight: 600 }}>
-                                  Of Achievement
-                                </span>
-                                <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
-                              </div>
+                              {(activeDoc === 'sports' || activeDoc === 'top_positions') && (
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '5px', marginTop: '2px' }}>
+                                  <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                                  <span style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '0.55rem', fontStyle: 'italic', color: '#4e3620', fontWeight: 600 }}>
+                                    Of Achievement
+                                  </span>
+                                  <span style={{ borderBottom: '0.75px solid #c5a85c', width: '30px', display: 'inline-block' }}></span>
+                                </div>
+                              )}
                             </div>
                           </div>
 
@@ -3245,10 +3247,6 @@ export default function CertificatesPage() {
                             </div>
                             
                             <div style={{ position: 'relative' }}>
-                              {/* Signature stamp seal */}
-                              <div style={{ position: 'absolute', bottom: '6px', right: '15px', width: '22px', height: '22px', border: '0.5px solid rgba(28, 70, 160, 0.6)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transform: 'rotate(-8deg)', zIndex: 10 }}>
-                                <span style={{ fontSize: '2px', color: 'rgba(28, 70, 160, 0.6)', fontWeight: 'bold' }}>APPROVED</span>
-                              </div>
                               <div style={{ textAlign: 'center', borderTop: '0.75px solid #000', width: '70px', paddingTop: '2px', fontSize: '0.5rem', fontWeight: 'bold', color: '#4a3e28', fontFamily: "'Cinzel', serif" }}>
                                 {template.signature_title}
                               </div>
