@@ -23,7 +23,7 @@ interface CustomField {
   is_required: boolean
 }
 
-type Tab = 'list' | 'register' | 'bulk' | 'promote' | 'review'
+type Tab = 'list' | 'register' | 'bulk' | 'promote'
 
 const getTodayString = () => {
   const today = new Date()
@@ -780,24 +780,65 @@ export default function StudentsPage() {
 
   return (
     <div style={{ padding: '2rem', animation: 'fadeIn 0.3s ease' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <div>
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>🎓 Students</h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage student records and admissions</p>
-        </div>
-        <button onClick={() => { setTab('register'); setShowModal(true) }} className="btn btn-primary">➕ Register Student</button>
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 800, marginBottom: '0.25rem' }}>🎓 Students</h1>
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Manage student records and admissions</p>
       </div>
 
       {msg && <div className={`alert alert-${msg.type} animate-fade`} style={{ marginBottom: '1.5rem' }}>{msg.text}</div>}
 
-      {/* Tabs */}
-      <div className="tab-bar" style={{ marginBottom: '1.5rem' }}>
-        {(['list', 'register', 'bulk', 'promote', 'review'] as Tab[]).map(t => (
-          <button key={t} className={`tab-btn ${tab === t ? 'active' : ''}`} onClick={() => setTab(t)}>
-            {t === 'list' ? '📋 Student List' : t === 'register' ? '➕ Register' : t === 'bulk' ? '📥 Bulk Enrollment' : t === 'promote' ? '⬆️ Promote' : '🔍 Review Profile'}
-          </button>
-        ))}
-      </div>
+      {/* Main layout: sidebar + content */}
+      <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+        {/* Left Sidebar Nav */}
+        <div style={{
+          width: '200px',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.4rem',
+          background: 'var(--bg-card)',
+          border: '1px solid var(--border)',
+          borderRadius: '14px',
+          padding: '0.75rem',
+          position: 'sticky',
+          top: '1rem',
+        }}>
+          {([
+            { key: 'list', icon: '📋', label: 'Student List' },
+            { key: 'register', icon: '➕', label: 'Register' },
+            { key: 'bulk', icon: '📥', label: 'Bulk Enrollment' },
+            { key: 'promote', icon: '⬆️', label: 'Promote' },
+          ] as { key: Tab; icon: string; label: string }[]).map(({ key, icon, label }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                padding: '0.65rem 0.85rem',
+                borderRadius: '10px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: tab === key ? 700 : 500,
+                fontSize: '0.875rem',
+                textAlign: 'left',
+                width: '100%',
+                background: tab === key ? 'var(--primary)' : 'transparent',
+                color: tab === key ? '#fff' : 'var(--text-secondary)',
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={e => { if (tab !== key) e.currentTarget.style.background = 'var(--bg-surface)' }}
+              onMouseLeave={e => { if (tab !== key) e.currentTarget.style.background = 'transparent' }}
+            >
+              <span style={{ fontSize: '1rem' }}>{icon}</span>
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Right Content Area */}
+        <div style={{ flex: 1, minWidth: 0 }}>
 
       {/* List Tab */}
       {tab === 'list' && (
@@ -863,6 +904,8 @@ export default function StudentsPage() {
                         </td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.father_name || '—'}</td>
                         <td><span className="badge badge-primary">{s.class_name || '—'} {s.section_name && `(${s.section_name})`}</span></td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{s.roll_no || '—'}</td>
+                        <td style={{ color: 'var(--text-secondary)' }}>{s.gender || '—'}</td>
                         <td style={{ color: 'var(--text-secondary)' }}>{s.contact || '—'}</td>
                         <td>
                            {s.status === 'discharged' ? (
@@ -891,11 +934,6 @@ export default function StudentsPage() {
                         <td>
                           <div style={{ display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                             <button onClick={() => setViewStudent(s)} className="btn btn-secondary btn-sm" title="View Profile">👁️</button>
-                            <button onClick={() => {
-                              setReviewStudentId(s.id)
-                              loadStudentReviewData(s.id)
-                              setTab('review')
-                            }} className="btn btn-secondary btn-sm" title="Review Records">📊 Review</button>
                             <button type="button" onClick={() => {
                               setEditingStudent(s)
                               setEditForm({
@@ -1530,404 +1568,8 @@ export default function StudentsPage() {
           </div>
         </div>
       )}
-
-      {/* Review Profile Tab */}
-      {tab === 'review' && (
-        <>
-          {!reviewStudentId ? (
-            <div className="card" style={{ padding: '3rem', textAlign: 'center', background: 'var(--bg-surface)' }}>
-              <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
-              <h3 style={{ fontWeight: 700, marginBottom: '0.5rem' }}>No Student Selected</h3>
-              <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
-                Please select a student from the Student List tab and click "📊 Review" to view their profile, progress report cards, attendance records, and fee invoice ledger.
-              </p>
-              <button className="btn btn-primary" onClick={() => setTab('list')}>Go to Student List</button>
-            </div>
-          ) : (() => {
-            const student = students.find(s => s.id === reviewStudentId)
-            if (!student) {
-              return (
-                <div className="card" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-danger)' }}>
-                  Error: Selected student record not found in cache.
-                </div>
-              )
-            }
-
-            return (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 2.5fr', gap: '1.5rem', alignItems: 'start' }}>
-                
-                {/* Left Side: Profile Information */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div className="card" style={{ padding: '1.5rem', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', width: '100px', height: '100px', borderRadius: '50%', background: 'var(--bg-input)', border: '3px solid var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', marginBottom: '1rem' }}>
-                      {student.photo_url ? (
-                        <img src={student.photo_url} alt={student.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '3rem', color: 'var(--text-muted)' }}>👤</span>
-                      )}
-                    </div>
-                    <h3 style={{ fontWeight: 800, fontSize: '1.25rem', marginBottom: '0.25rem' }}>{student.name}</h3>
-                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: '0.75rem' }}>Roll No: {student.roll_no || '—'}</p>
-                    
-                    <div style={{ display: 'flex', gap: '0.4rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '1rem' }}>
-                      <span className={`badge ${student.status === 'active' ? 'badge-success' : 'badge-danger'}`}>{student.status}</span>
-                      <span className="badge badge-primary">{student.class_name || '—'} {student.section_name && `(${student.section_name})`}</span>
-                      {student.has_unpaid_dues && <span className="badge badge-warning">⚠️ Unpaid Dues</span>}
-                    </div>
-
-                    <button 
-                      onClick={() => setViewStudent(student)} 
-                      className="btn btn-secondary btn-sm" 
-                      style={{ width: '100%', justifyContent: 'center' }}
-                    >
-                      🖨️ ID Card View
-                    </button>
-                  </div>
-
-                  <div className="card" style={{ padding: '1.5rem' }}>
-                    <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--primary)' }}>Personal Details</h4>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-                      <div>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Father's Name</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{student.father_name || '—'}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Contact Phone</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{student.contact || '—'}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Gender</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{student.gender || '—'}</strong>
-                      </div>
-                      {student.dob && (
-                        <div>
-                          <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Date of Birth</span>
-                          <strong style={{ color: 'var(--text-base)' }}>{new Date(student.dob).toLocaleDateString()}</strong>
-                        </div>
-                      )}
-                      <div>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Resident Address</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{student.address || '—'}</strong>
-                      </div>
-                      <div>
-                        <span style={{ color: 'var(--text-secondary)', display: 'block' }}>Admission Date</span>
-                        <strong style={{ color: 'var(--text-base)' }}>{formatDateToUI(student.reg_date)}</strong>
-                      </div>
-                    </div>
-                  </div>
-
-                  {student.additional_info && Object.entries(student.additional_info).length > 0 && (
-                    <div className="card" style={{ padding: '1.5rem' }}>
-                      <h4 style={{ fontWeight: 700, fontSize: '0.95rem', marginBottom: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem', color: 'var(--primary)' }}>Custom Information</h4>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.85rem' }}>
-                        {Object.entries(student.additional_info).map(([k, v]) => (
-                          <div key={k}>
-                            <span style={{ color: 'var(--text-secondary)', display: 'block' }}>{k}</span>
-                            <strong style={{ color: 'var(--text-base)' }}>{String(v || '—')}</strong>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right Side: Tabbed Dynamic Ledger panels */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  
-                  <div className="card" style={{ padding: '0.75rem 1.25rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button 
-                      onClick={() => setActiveReviewSubTab('results')}
-                      className={`btn btn-sm ${activeReviewSubTab === 'results' ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                      📊 Progress Report
-                    </button>
-                    <button 
-                      onClick={() => setActiveReviewSubTab('fees')}
-                      className={`btn btn-sm ${activeReviewSubTab === 'fees' ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                      💳 Fee Submissions
-                    </button>
-                    <button 
-                      onClick={() => setActiveReviewSubTab('attendance')}
-                      className={`btn btn-sm ${activeReviewSubTab === 'attendance' ? 'btn-primary' : 'btn-secondary'}`}
-                    >
-                      📅 Attendance History
-                    </button>
-                  </div>
-
-                  {loadingReviewData ? (
-                    <div className="card" style={{ padding: '4rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                      ⏳ Loading student database logs...
-                    </div>
-                  ) : (
-                    <>
-                      {/* Results / Progress Report Panel */}
-                      {activeReviewSubTab === 'results' && (
-                        <div className="card">
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
-                            <h3 style={{ fontWeight: 800, fontSize: '1.1rem', margin: 0 }}>📊 Academic Examinations Progress Report</h3>
-                            {reviewResults.length > 0 && (
-                              <button onClick={() => printStudentProgressReport(student)} className="btn btn-secondary btn-sm" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                🖨️ Print Report
-                              </button>
-                            )}
-                          </div>
-                          
-                          {reviewResults.length === 0 ? (
-                            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-                              No examination result grades found for this student.
-                            </p>
-                          ) : (() => {
-                            // Group results by exam type
-                            const grouped: Record<string, { examName: string; list: any[] }> = {}
-                            reviewResults.forEach(r => {
-                              const examId = r.exam_type_id
-                              const examName = r.exam_types?.name || 'Standard Test'
-                              if (!grouped[examId]) {
-                                grouped[examId] = { examName, list: [] }
-                              }
-                              grouped[examId].list.push(r)
-                            })
-
-                            // Simple grading criteria helper
-                            const getGrade = (percentage: number) => {
-                              if (percentage >= 90) return { label: 'A+', color: 'var(--success)' }
-                              if (percentage >= 80) return { label: 'A', color: 'var(--success)' }
-                              if (percentage >= 70) return { label: 'B', color: 'var(--primary)' }
-                              if (percentage >= 60) return { label: 'C', color: 'var(--primary)' }
-                              if (percentage >= 50) return { label: 'D', color: 'var(--warning)' }
-                              return { label: 'F', color: 'var(--danger)' }
-                            }
-
-                            return (
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                                {Object.entries(grouped).map(([examId, data]) => {
-                                  let totalObtained = 0
-                                  let totalMax = 0
-
-                                  return (
-                                    <div key={examId} style={{ border: '1px solid var(--border)', borderRadius: '10px', overflow: 'hidden' }}>
-                                      <div style={{ background: 'var(--bg-surface)', padding: '0.88rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <h4 style={{ fontWeight: 800, fontSize: '0.95rem', margin: 0 }}>{data.examName}</h4>
-                                      </div>
-                                      <div className="table-wrap" style={{ margin: 0, border: 'none', borderRadius: 0 }}>
-                                        <table>
-                                          <thead>
-                                            <tr>
-                                              <th>Subject</th>
-                                              <th style={{ textAlign: 'center' }}>Max Marks</th>
-                                              <th style={{ textAlign: 'center' }}>Obtained</th>
-                                              <th style={{ textAlign: 'center' }}>Percentage</th>
-                                              <th style={{ textAlign: 'center' }}>Grade</th>
-                                            </tr>
-                                          </thead>
-                                          <tbody>
-                                            {data.list.map(r => {
-                                              const obt = Number(r.marks_obtained) || 0
-                                              const max = Number(r.total_marks) || 100
-                                              const percentage = max > 0 ? (obt / max) * 100 : 0
-                                              const grade = getGrade(percentage)
-                                              totalObtained += obt
-                                              totalMax += max
-
-                                              return (
-                                                <tr key={r.id}>
-                                                  <td style={{ fontWeight: 600 }}>{r.subjects?.name || 'Subject'}</td>
-                                                  <td style={{ textAlign: 'center' }}>{max}</td>
-                                                  <td style={{ textAlign: 'center', fontWeight: 'bold' }}>{r.marks_obtained}</td>
-                                                  <td style={{ textAlign: 'center' }}>{percentage.toFixed(1)}%</td>
-                                                  <td style={{ textAlign: 'center' }}>
-                                                    <span style={{ color: grade.color, fontWeight: 'bold' }}>{grade.label}</span>
-                                                  </td>
-                                                </tr>
-                                              )
-                                            })}
-                                          </tbody>
-                                        </table>
-                                      </div>
-                                      
-                                      {/* Cumulative Card summary */}
-                                      {(() => {
-                                        const overallPercent = totalMax > 0 ? (totalObtained / totalMax) * 100 : 0
-                                        const overallGrade = getGrade(overallPercent)
-                                        return (
-                                          <div style={{ background: 'var(--bg-base)', padding: '1rem 1.25rem', borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem', fontSize: '0.9rem' }}>
-                                            <div>
-                                              Total Score: <strong style={{ fontSize: '1rem' }}>{totalObtained} / {totalMax}</strong>
-                                            </div>
-                                            <div>
-                                              Overall Percentage: <strong style={{ fontSize: '1rem', color: 'var(--primary)' }}>{overallPercent.toFixed(1)}%</strong>
-                                            </div>
-                                            <div>
-                                              Exam Grade: <strong style={{ fontSize: '1.05rem', color: overallGrade.color }}>{overallGrade.label}</strong>
-                                            </div>
-                                          </div>
-                                        )
-                                      })()}
-                                    </div>
-                                  )
-                                })}
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      )}
-
-                      {/* Fee Ledger Panel */}
-                      {activeReviewSubTab === 'fees' && (
-                        <div className="card">
-                          <h3 style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '1.25rem' }}>💳 Student Fee Invoice & Payment Ledger</h3>
-                          
-                          {reviewInvoices.length === 0 ? (
-                            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-                              No fee invoices registered for this student.
-                            </p>
-                          ) : (() => {
-                            const totalAmount = reviewInvoices.reduce((acc, inv) => acc + (inv.amount || 0), 0)
-                            const totalPaid = reviewInvoices.reduce((acc, inv) => acc + (inv.amount_paid || (inv.status === 'paid' ? inv.amount : 0)), 0)
-                            const totalUnpaid = Math.max(0, totalAmount - totalPaid)
-
-                            // Months array mapping
-                            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-
-                            return (
-                              <div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1rem', marginBottom: '1.5rem' }}>
-                                  <div style={{ padding: '0.88rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Total Invoiced</span>
-                                    <strong style={{ fontSize: '1.2rem', color: 'var(--text-base)' }}>Rs. {totalAmount}</strong>
-                                  </div>
-                                  <div style={{ padding: '0.88rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Total Paid</span>
-                                    <strong style={{ fontSize: '1.2rem', color: 'var(--success)' }}>Rs. {totalPaid}</strong>
-                                  </div>
-                                  <div style={{ padding: '0.88rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: '0.2rem' }}>Outstanding</span>
-                                    <strong style={{ fontSize: '1.2rem', color: 'var(--danger)' }}>Rs. {totalUnpaid}</strong>
-                                  </div>
-                                </div>
-
-                                <div className="table-wrap">
-                                  <table>
-                                    <thead>
-                                      <tr>
-                                        <th>Billing Month</th>
-                                        <th style={{ textAlign: 'center' }}>Invoice Amount</th>
-                                        <th style={{ textAlign: 'center' }}>Paid Amount</th>
-                                        <th style={{ textAlign: 'center' }}>Payment Date</th>
-                                        <th style={{ textAlign: 'center' }}>Status</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {reviewInvoices.map(inv => {
-                                        const billingMonth = months[inv.month - 1] || `Month ${inv.month}`
-                                        const billingPeriod = `${billingMonth} ${inv.year}`
-                                        const paidVal = inv.amount_paid || (inv.status === 'paid' ? inv.amount : 0)
-                                        const statusColor = inv.status === 'paid' ? 'badge-success' : inv.status === 'partial' ? 'badge-warning' : 'badge-danger'
-
-                                        return (
-                                          <tr key={inv.id}>
-                                            <td style={{ fontWeight: 600 }}>{billingPeriod}</td>
-                                            <td style={{ textAlign: 'center' }}>Rs. {inv.amount}</td>
-                                            <td style={{ textAlign: 'center', fontWeight: 'bold' }}>Rs. {paidVal}</td>
-                                            <td style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>
-                                              {inv.paid_date ? new Date(inv.paid_date).toLocaleDateString() : '—'}
-                                            </td>
-                                            <td style={{ textAlign: 'center' }}>
-                                              <span className={`badge ${statusColor}`}>{inv.status}</span>
-                                            </td>
-                                          </tr>
-                                        )
-                                      })}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      )}
-
-                      {/* Attendance Timeline Panel */}
-                      {activeReviewSubTab === 'attendance' && (
-                        <div className="card">
-                          <h3 style={{ fontWeight: 800, fontSize: '1.1rem', marginBottom: '1.25rem' }}>📅 Attendance Performance Summary</h3>
-                          
-                          {reviewAttendance.length === 0 ? (
-                            <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem' }}>
-                              No attendance registration logs found for this student.
-                            </p>
-                          ) : (() => {
-                            const total = reviewAttendance.length
-                            const present = reviewAttendance.filter(a => a.status === 'present').length
-                            const absent = reviewAttendance.filter(a => a.status === 'absent').length
-                            const leave = reviewAttendance.filter(a => a.status === 'leave').length
-                            const late = reviewAttendance.filter(a => a.status === 'late').length
-                            const rate = total > 0 ? ((present + leave + late) / total) * 100 : 0
-
-                            return (
-                              <div>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
-                                  <div style={{ padding: '0.75rem 0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>Presence Rate</span>
-                                    <strong style={{ fontSize: '1.1rem', color: 'var(--primary)' }}>{rate.toFixed(1)}%</strong>
-                                  </div>
-                                  <div style={{ padding: '0.75rem 0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>Present</span>
-                                    <strong style={{ fontSize: '1.1rem', color: 'var(--success)' }}>{present}</strong>
-                                  </div>
-                                  <div style={{ padding: '0.75rem 0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>Absent</span>
-                                    <strong style={{ fontSize: '1.1rem', color: 'var(--danger)' }}>{absent}</strong>
-                                  </div>
-                                  <div style={{ padding: '0.75rem 0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>On Leave</span>
-                                    <strong style={{ fontSize: '1.1rem', color: 'var(--warning)' }}>{leave}</strong>
-                                  </div>
-                                  <div style={{ padding: '0.75rem 0.5rem', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', textTransform: 'uppercase', display: 'block' }}>Late Arrival</span>
-                                    <strong style={{ fontSize: '1.1rem', color: 'purple' }}>{late}</strong>
-                                  </div>
-                                </div>
-
-                                <h4 style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '0.75rem' }}>Attendance Marked Log</h4>
-                                <div className="table-wrap" style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                                  <table>
-                                    <thead>
-                                      <tr>
-                                        <th>Date</th>
-                                        <th style={{ textAlign: 'center' }}>Status</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {reviewAttendance.map((att, attIdx) => {
-                                        const badgeStyle = att.status === 'present' ? 'badge-success' : att.status === 'absent' ? 'badge-danger' : att.status === 'leave' ? 'badge-warning' : 'badge-primary'
-                                        return (
-                                          <tr key={att.id || attIdx}>
-                                            <td style={{ fontWeight: 600 }}>{new Date(att.date).toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</td>
-                                            <td style={{ textAlign: 'center' }}>
-                                              <span className={`badge ${badgeStyle}`}>{att.status}</span>
-                                            </td>
-                                          </tr>
-                                        )
-                                      })}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              </div>
-                            )
-                          })()}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </div>
-
-              </div>
-            )
-          })()}
-        </>
-      )}
+        </div>
+      </div>
 
       {/* Add Inline Custom Field Modal */}
       {showAddFieldModal && (
