@@ -215,7 +215,7 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
 
           <div style={{ padding: '1rem', borderTop: '1px solid var(--border)' }}>
             {(!collapsed || isMobile) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '0.75rem' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 <div style={{
                   background: 'rgba(255,255,255,0.03)', borderRadius: '10px',
                   padding: '0.75rem',
@@ -254,33 +254,47 @@ export default function SchoolLayout({ children }: { children: React.ReactNode }
                 </div>
               </div>
             )}
+          </div>
+        </aside>
+
+        {/* Content */}
+        <main style={{ marginLeft: isMobile ? '0' : (collapsed ? '70px' : '260px'), flex: 1, minHeight: '100vh', width: '100%', transition: 'margin-left 0.25s ease', display: 'flex', flexDirection: 'column' }}>
+          {/* Top Bar Header */}
+          <header style={{
+            display: 'flex',
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            padding: '0.75rem 2rem',
+            background: 'var(--bg-card, #ffffff)',
+            borderBottom: '1px solid var(--border)',
+          }}>
             <button
               onClick={handleLogout}
               className="btn"
               title="Logout"
               style={{
-                width: '100%',
-                justifyContent: 'center',
-                background: 'rgba(255,255,255,0.05)',
-                color: '#f87171',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: '#ef4444',
+                color: '#ffffff',
+                border: 'none',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '0.5rem',
-                padding: '0.6rem',
-                fontSize: '0.875rem',
-                borderRadius: '8px',
-                cursor: 'pointer'
+                gap: '0.4rem',
+                padding: '0.45rem 0.9rem',
+                fontSize: '0.85rem',
+                fontWeight: 600,
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'opacity 0.2s ease'
               }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}
             >
-              🚪{(!collapsed || isMobile) && ' Logout'}
+              🚪 Logout
             </button>
+          </header>
+          <div style={{ flex: 1 }}>
+            {children}
           </div>
-        </aside>
-
-        {/* Content */}
-        <main style={{ marginLeft: isMobile ? '0' : (collapsed ? '70px' : '260px'), flex: 1, minHeight: '100vh', width: '100%', transition: 'margin-left 0.25s ease' }}>
-          {children}
         </main>
       </div>
     </div>

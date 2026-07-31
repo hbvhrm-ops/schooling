@@ -32,72 +32,14 @@
     }
   ],
   "subjects": [],
-  "students": [
-    {
-      "id": "30eed0f7-8872-4c1a-a8d3-84c29bac451d",
-      "created_at": "2026-06-16T20:32:09.620Z",
-      "school_id": "749bcadc-9310-4032-a241-bad7aa1d23d7",
-      "name": "Hamza Haidar",
-      "father_name": "Haidar",
-      "class_id": "43fcc12d-5010-488e-ac13-229284c86a67",
-      "section_id": "c673e78e-aab2-46bf-ae82-1b9ba99e3947",
-      "roll_no": "1",
-      "gender": "Male",
-      "dob": "2006-02-02",
-      "contact": "03150507575",
-      "address": "Clinic of Dr. Muhammad AMankot Mingora Swat",
-      "status": "active"
-    },
-    {
-      "id": "6e025fe4-39ea-43c3-a6df-7767da05ce90",
-      "created_at": "2026-06-16T20:32:53.948Z",
-      "school_id": "749bcadc-9310-4032-a241-bad7aa1d23d7",
-      "name": "Shah Khalid",
-      "father_name": "Nasar",
-      "class_id": "43fcc12d-5010-488e-ac13-229284c86a67",
-      "section_id": null,
-      "roll_no": null,
-      "gender": "Male",
-      "dob": null,
-      "contact": null,
-      "address": null,
-      "status": "active"
-    }
-  ],
-  "attendance": [
-    {
-      "id": "008699bb-b6d4-4027-b0a8-dc9b5c913937",
-      "created_at": "2026-06-16T20:34:05.131Z",
-      "student_id": "30eed0f7-8872-4c1a-a8d3-84c29bac451d",
-      "status": "absent",
-      "date": "2026-06-16"
-    },
-    {
-      "id": "9dd7f60c-a067-4daf-968b-7f8d6bc20e43",
-      "created_at": "2026-06-16T20:34:05.131Z",
-      "student_id": "6e025fe4-39ea-43c3-a6df-7767da05ce90",
-      "status": "present",
-      "date": "2026-06-16"
-    }
-  ],
+  "students": [],
+  "attendance": [],
   "exam_types": [],
   "results": [],
   "grading_policy": [],
   "fee_templates": [],
   "fee_criteria": [],
-  "fee_invoices": [
-    {
-      "id": "mock-invoice-1",
-      "created_at": "2026-06-16T20:34:05.131Z",
-      "school_id": "749bcadc-9310-4032-a241-bad7aa1d23d7",
-      "student_id": "30eed0f7-8872-4c1a-a8d3-84c29bac451d",
-      "fee_template_id": "some-template-id",
-      "month": 6,
-      "year": 2026,
-      "amount": 1500,
-      "status": "pending"
-    }
-  ],
+  "fee_invoices": [],
   "expense_heads": [],
   "payment_sources": [],
   "expenses": [],
