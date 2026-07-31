@@ -29,7 +29,6 @@ export default function SchoolDashboard() {
   const statCards = [
     { label: 'Total Active Students', value: stats.totalStudents, icon: '🎓', color: '#0093cb', glow: 'rgba(0,147,203,0.15)', href: '/school/students', suffix: '' },
     { label: 'New Admissions', value: stats.newAdmissions, icon: '📥', color: '#10b981', glow: 'rgba(16,185,129,0.15)', href: '/school/students', suffix: '' },
-    { label: 'Discharged Students', value: stats.dischargedStudents, icon: '📤', color: '#f59e0b', glow: 'rgba(245,158,11,0.15)', href: '/school/students', suffix: '' },
     { label: 'Fee Collected (Month)', value: stats.feeCollected, icon: '💰', color: '#22d3ee', glow: 'rgba(34,211,238,0.15)', href: '/school/fee', suffix: '₨', isAmount: true },
     { label: 'Total Expenses (Month)', value: stats.totalExpenses, icon: '💸', color: '#ef4444', glow: 'rgba(239,68,68,0.15)', href: '/school/expenses', suffix: '₨', isAmount: true },
     { label: 'Net Profit/Loss', value: stats.profit, icon: stats.profit >= 0 ? '📈' : '📉', color: stats.profit >= 0 ? '#10b981' : '#ef4444', glow: stats.profit >= 0 ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)', href: '/school/finance', suffix: '₨', isAmount: true },
@@ -40,7 +39,7 @@ export default function SchoolDashboard() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.75rem', flexWrap: 'wrap' }}>
-          <h1 style={{ fontSize: '2.25rem', fontWeight: 300, color: '#333333', margin: 0 }}>Dashboard</h1>
+          <h1 style={{ fontSize: '1.75rem', fontWeight: 700, color: '#333333', margin: 0 }}>Dashboard</h1>
           <span style={{ fontSize: '0.875rem', color: '#777777', fontWeight: 400 }}>statistics and more. You can see summary of your institute.</span>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
